@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <meta content="web_standard" name="shell-type"/>
+  <title>All Schemes &amp; Fellowships | National Tribal Scholarship Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+  <link rel="stylesheet" href="styles.css"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface-container-lowest": "#ffffff",
+            "secondary": "#a04100",
+            "surface-tint": "#455e8d",
+            "inverse-surface": "#2a303d",
+            "on-tertiary-fixed-variant": "#00531b",
+            "tertiary": "#001e05",
+            "background": "#f9f9ff",
+            "secondary-fixed": "#ffdbcb",
+            "surface-dim": "#d4daea",
+            "inverse-on-surface": "#ecf0ff",
+            "outline-variant": "#c4c6d0",
+            "outline": "#747780",
+            "on-secondary-fixed-variant": "#7a3000",
+            "secondary-fixed-dim": "#ffb692",
+            "primary-fixed-dim": "#adc7fc",
+            "error": "#ba1a1a",
+            "on-primary-fixed-variant": "#2c4674",
+            "surface-container-highest": "#dde2f3",
+            "surface-container-high": "#e3e8f9",
+            "on-primary-container": "#7c95c8",
+            "primary": "#00183b",
+            "on-error": "#ffffff",
+            "on-tertiary-container": "#4ca758",
+            "on-background": "#161c27",
+            "error-container": "#ffdad6",
+            "inverse-primary": "#adc7fc",
+            "on-error-container": "#93000a",
+            "on-surface": "#161c27",
+            "tertiary-fixed": "#99f89e",
+            "primary-container": "#0f2d59",
+            "on-secondary-container": "#672800",
+            "on-tertiary-fixed": "#002106",
+            "on-secondary": "#ffffff",
+            "surface-container": "#e8eeff",
+            "secondary-container": "#fd8544",
+            "surface-container-low": "#f1f3ff",
+            "on-secondary-fixed": "#341000",
+            "surface-variant": "#dde2f3",
+            "surface": "#f9f9ff",
+            "on-primary": "#ffffff",
+            "tertiary-container": "#00360f",
+            "tertiary-fixed-dim": "#7edb85",
+            "on-surface-variant": "#44474f",
+            "on-tertiary": "#ffffff",
+            "on-primary-fixed": "#001b3f",
+            "surface-bright": "#f9f9ff",
+            "primary-fixed": "#d7e2ff"
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-surface font-body-md text-body-md text-on-surface">
+  <!-- Top Bar -->
+  <header class="w-full bg-surface-container-lowest shadow-sm">
+    <div class="w-full flex h-1.5">
+      <div class="flex-1 bg-secondary"></div>
+      <div class="flex-1 bg-surface-container-lowest"></div>
+      <div class="flex-1 bg-tertiary-container"></div>
+    </div>
+    <div class="bg-primary-container text-surface-container-lowest py-1 px-margin">
+      <div class="max-w-7xl mx-auto flex justify-between items-center text-label-sm font-label-sm">
+        <span>GOVERNMENT OF INDIA • MINISTRY OF TRIBAL AFFAIRS</span>
+        <div class="flex items-center gap-3">
+          <button data-font-action="decrease">A-</button>
+          <button data-font-action="reset" class="font-bold">A</button>
+          <button data-font-action="increase">A+</button>
+          <button data-contrast-toggle><span class="material-symbols-outlined text-[16px]">contrast</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Branding Header -->
+    <div class="max-w-7xl mx-auto px-margin py-space-md flex flex-col sm:flex-row items-center justify-between gap-space-md">
+      <a href="index.html" class="flex items-center gap-space-md">
+        <img alt="MoTA Official Portal Logo" class="h-12 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5iDY8HhCiAkZClSCqpitPAV8V9PCXpPODREIZWl9JAovXtMpZ0ScQpbOUIrtNEhFCzZImajxDNREYqgn5jrgmkI-tvDQCRsug3A3DNZb7_kb737zfcL3HqI48DAVo55z_jAZAQmLGS_T3hL6XoSyfC5VdXh9EpmohXr_hjt79edFc2ZkLR1bfl9uZgNUooT1OG_pl5mxF7sCxBWnTveN0oh2O5Zn2WdUwr2_XCIKh5bYdpX3gxKSdiA"/>
+        <div class="border-l border-outline-variant pl-space-md">
+          <p class="font-headline-sm text-headline-sm text-primary font-bold">National Tribal Scholarship Portal</p>
+          <p class="font-label-sm text-label-sm text-on-surface-variant">Ministry of Tribal Affairs, Government of India</p>
+        </div>
+      </a>
+      <div class="flex items-center gap-3">
+        <a href="login.html" class="px-4 py-2 text-primary font-semibold hover:bg-surface-container rounded">Login</a>
+        <a href="register.html" class="px-4 py-2 bg-secondary text-white font-semibold rounded shadow-sm">New Registration</a>
+      </div>
+    </div>
+
+    <nav class="bg-primary-container text-on-primary-container">
+      <div class="max-w-7xl mx-auto px-margin flex items-center overflow-x-auto whitespace-nowrap">
+        <a class="px-space-md py-space-sm font-label-md text-surface-container-lowest hover:bg-primary/40" href="index.html">Home (मुख्य पृष्ठ)</a>
+        <a class="px-space-md py-space-sm bg-primary text-on-primary font-label-lg rounded-t font-semibold" href="schemes.html">All Schemes &amp; Fellowships (सभी योजनाएं)</a>
+        <a class="px-space-md py-space-sm font-label-md text-surface-container-lowest hover:bg-primary/40" href="eligibility.html">Eligibility Checker (पात्रता जांचें)</a>
+        <a class="px-space-md py-space-sm font-label-md text-surface-container-lowest hover:bg-primary/40" href="wizard.html">Application Wizard (आवेदन विज़ार्ड)</a>
+        <a class="px-space-md py-space-sm font-label-md text-surface-container-lowest hover:bg-primary/40" href="track.html">Track Application (आवेदन की स्थिति)</a>
+        <a class="px-space-md py-space-sm font-label-md text-surface-container-lowest hover:bg-primary/40" href="grievance.html">Grievance / Helpdesk (सहायता केंद्र)</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-margin py-space-xl">
+    <div class="mb-space-lg">
+      <div class="inline-flex items-center gap-1 text-secondary font-label-sm font-bold uppercase tracking-wider mb-1">
+        Ministry of Tribal Affairs • Central Repository
+      </div>
+      <h1 class="font-headline-lg text-primary font-bold text-3xl">All Central Schemes &amp; Fellowships</h1>
+      <p class="font-body-lg text-on-surface-variant mt-1">
+        Comprehensive repository of centrally sponsored educational scholarships, international awards, and doctoral fellowships.
+      </p>
+    </div>
+
+    <!-- Filter Pills -->
+    <div class="flex flex-wrap items-center gap-2 mb-space-lg bg-surface-container-low p-2 rounded-xl border border-outline-variant/30">
+      <button onclick="filterCategory('all', this)" class="category-pill px-4 py-2 rounded-lg font-semibold text-sm bg-primary text-white shadow-sm">
+        All Schemes (14)
+      </button>
+      <button onclick="filterCategory('research', this)" class="category-pill px-4 py-2 rounded-lg font-semibold text-sm bg-surface-container-lowest text-primary hover:bg-surface-container">
+        Research &amp; Ph.D.
+      </button>
+      <button onclick="filterCategory('overseas', this)" class="category-pill px-4 py-2 rounded-lg font-semibold text-sm bg-surface-container-lowest text-primary hover:bg-surface-container">
+        Overseas / Study Abroad
+      </button>
+      <button onclick="filterCategory('higher', this)" class="category-pill px-4 py-2 rounded-lg font-semibold text-sm bg-surface-container-lowest text-primary hover:bg-surface-container">
+        Post-Matric &amp; Degree
+      </button>
+      <button onclick="filterCategory('merit', this)" class="category-pill px-4 py-2 rounded-lg font-semibold text-sm bg-surface-container-lowest text-primary hover:bg-surface-container">
+        Top Class Education
+      </button>
+    </div>
+
+    <!-- Schemes Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-space-lg" id="schemes-container">
+
+      <!-- Scheme 1: NOS -->
+      <div class="scheme-card bg-surface-container-lowest rounded-xl shadow-md overflow-hidden flex flex-col justify-between border border-outline-variant/30" data-cat="overseas">
+        <div class="h-2 bg-secondary"></div>
+        <div class="p-space-lg flex-1 flex flex-col justify-between">
+          <div>
+            <div class="flex justify-between items-center mb-2">
+              <span class="px-2.5 py-0.5 rounded text-xs font-semibold bg-surface-container-highest text-primary">International</span>
+              <span class="text-xs font-mono text-outline">SCH-MOTA-NOS</span>
+            </div>
+            <h3 class="font-title-md text-primary font-bold text-lg mb-1">National Overseas Scholarship (NOS)</h3>
+            <p class="text-secondary font-medium text-sm mb-3">For higher studies abroad (Master's &amp; Ph.D.)</p>
+            <p class="text-on-surface-variant text-sm mb-4 leading-relaxed">
+              Provides 100% financial assistance including tuition fee, living allowance, and return airfare for ST students studying at QS Top 500 global institutions.
+            </p>
+            <div class="bg-surface-container-low p-3 rounded-lg text-xs space-y-1 mb-4">
+              <div class="flex justify-between"><span class="text-outline">Eligibility:</span> <span class="font-semibold text-on-surface">55%+ in Master's</span></div>
+              <div class="flex justify-between"><span class="text-outline">Income Ceiling:</span> <span class="font-semibold text-on-surface">≤ ₹6.00 Lakhs/yr</span></div>
+              <div class="flex justify-between"><span class="text-outline">Annual Awards:</span> <span class="font-semibold text-primary">20 Scholars</span></div>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <a href="wizard.html?track=nos&step=3" class="flex-1 py-2.5 text-center bg-secondary text-white font-semibold rounded text-sm hover:bg-secondary/90 transition shadow-sm">
+              Apply via Wizard
+            </a>
+            <a href="eligibility.html" class="px-3 py-2.5 bg-surface-container text-primary rounded text-sm font-semibold hover:bg-surface-container-high transition">
+              Check
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scheme 2: NFST -->
+      <div class="scheme-card bg-surface-container-lowest rounded-xl shadow-md overflow-hidden flex flex-col justify-between border border-outline-variant/30" data-cat="research">
+        <div class="h-2 bg-primary-container"></div>
+        <div class="p-space-lg flex-1 flex flex-col justify-between">
+          <div>
+            <div class="flex justify-between items-center mb-2">
+              <span class="px-2.5 py-0.5 rounded text-xs font-semibold bg-tertiary-container/15 text-on-tertiary-fixed-variant">Research / UGC</span>
+              <span class="text-xs font-mono text-outline">SCH-MOTA-NF</span>
+            </div>
+            <h3 class="font-title-md text-primary font-bold text-lg mb-1">National Fellowship for ST Students (NFST)</h3>
+            <p class="text-secondary font-medium text-sm mb-3">For M.Phil &amp; Ph.D. scholars in Indian Universities</p>
+            <p class="text-on-surface-variant text-sm mb-4 leading-relaxed">
+              Monthly fellowship of up to ₹38,000/month + contingency grant for pursuing regular full-time research degrees across recognized Indian universities.
+            </p>
+            <div class="bg-surface-container-low p-3 rounded-lg text-xs space-y-1 mb-4">
+              <div class="flex justify-between"><span class="text-outline">Eligibility:</span> <span class="font-semibold text-on-surface">Post-Grad + UGC NET</span></div>
+              <div class="flex justify-between"><span class="text-outline">Income Ceiling:</span> <span class="font-semibold text-on-surface">≤ ₹6.00 Lakhs/yr</span></div>
+              <div class="flex justify-between"><span class="text-outline">Annual Awards:</span> <span class="font-semibold text-primary">750 Slots</span></div>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <a href="wizard.html?track=nfst&step=3" class="flex-1 py-2.5 text-center bg-primary-container text-white font-semibold rounded text-sm hover:bg-primary transition shadow-sm">
+              Apply via Wizard
+            </a>
+            <a href="eligibility.html" class="px-3 py-2.5 bg-surface-container text-primary rounded text-sm font-semibold hover:bg-surface-container-high transition">
+              Check
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scheme 3: PMS -->
+      <div class="scheme-card bg-surface-container-lowest rounded-xl shadow-md overflow-hidden flex flex-col justify-between border border-outline-variant/30" data-cat="higher">
+        <div class="h-2 bg-secondary-container"></div>
+        <div class="p-space-lg flex-1 flex flex-col justify-between">
+          <div>
+            <div class="flex justify-between items-center mb-2">
+              <span class="px-2.5 py-0.5 rounded text-xs font-semibold bg-secondary-fixed text-on-secondary-fixed-variant">Undergraduate / Degree</span>
+              <span class="text-xs font-mono text-outline">SCH-MOTA-PMS</span>
+            </div>
+            <h3 class="font-title-md text-primary font-bold text-lg mb-1">Post-Matric Scholarship for ST Students</h3>
+            <p class="text-secondary font-medium text-sm mb-3">Class 11, 12, UG &amp; Professional degrees</p>
+            <p class="text-on-surface-variant text-sm mb-4 leading-relaxed">
+              Provides comprehensive course tuition fee reimbursement and monthly maintenance allowance directly credited through Aadhaar PFMS DBT.
+            </p>
+            <div class="bg-surface-container-low p-3 rounded-lg text-xs space-y-1 mb-4">
+              <div class="flex justify-between"><span class="text-outline">Eligibility:</span> <span class="font-semibold text-on-surface">Matriculation passed</span></div>
+              <div class="flex justify-between"><span class="text-outline">Income Ceiling:</span> <span class="font-semibold text-on-surface">≤ ₹2.50 Lakhs/yr</span></div>
+              <div class="flex justify-between"><span class="text-outline">Coverage:</span> <span class="font-semibold text-primary">All State Colleges</span></div>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <a href="wizard.html?track=pms&step=1" class="flex-1 py-2.5 text-center bg-primary-container text-white font-semibold rounded text-sm hover:bg-primary transition shadow-sm">
+              Apply via Wizard
+            </a>
+            <a href="eligibility.html" class="px-3 py-2.5 bg-surface-container text-primary rounded text-sm font-semibold hover:bg-surface-container-high transition">
+              Check
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scheme 4: Top Class Education -->
+      <div class="scheme-card bg-surface-container-lowest rounded-xl shadow-md overflow-hidden flex flex-col justify-between border border-outline-variant/30" data-cat="merit">
+        <div class="h-2 bg-primary"></div>
+        <div class="p-space-lg flex-1 flex flex-col justify-between">
+          <div>
+            <div class="flex justify-between items-center mb-2">
+              <span class="px-2.5 py-0.5 rounded text-xs font-semibold bg-primary-fixed text-on-primary-fixed">IITs / IIMs / AIIMS</span>
+              <span class="text-xs font-mono text-outline">SCH-MOTA-TCE</span>
+            </div>
+            <h3 class="font-title-md text-primary font-bold text-lg mb-1">Top Class Education for ST Students</h3>
+            <p class="text-secondary font-medium text-sm mb-3">Premier Notified Institutes of India</p>
+            <p class="text-on-surface-variant text-sm mb-4 leading-relaxed">
+              Full tuition fees, living allowances, books &amp; stationery allowance, and computer grant for students admitted to notified premier institutes (IITs, NITs, IIMs, NLUs, AIIMS).
+            </p>
+            <div class="bg-surface-container-low p-3 rounded-lg text-xs space-y-1 mb-4">
+              <div class="flex justify-between"><span class="text-outline">Eligibility:</span> <span class="font-semibold text-on-surface">Admission to Notified Inst.</span></div>
+              <div class="flex justify-between"><span class="text-outline">Income Ceiling:</span> <span class="font-semibold text-on-surface">≤ ₹6.00 Lakhs/yr</span></div>
+              <div class="flex justify-between"><span class="text-outline">Annual Awards:</span> <span class="font-semibold text-primary">1,000 Slots</span></div>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <a href="wizard.html?track=tce&step=1" class="flex-1 py-2.5 text-center bg-primary-container text-white font-semibold rounded text-sm hover:bg-primary transition shadow-sm">
+              Apply via Wizard
+            </a>
+            <a href="eligibility.html" class="px-3 py-2.5 bg-surface-container text-primary rounded text-sm font-semibold hover:bg-surface-container-high transition">
+              Check
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scheme 5: Pre-Matric -->
+      <div class="scheme-card bg-surface-container-lowest rounded-xl shadow-md overflow-hidden flex flex-col justify-between border border-outline-variant/30" data-cat="higher">
+        <div class="h-2 bg-tertiary-container"></div>
+        <div class="p-space-lg flex-1 flex flex-col justify-between">
+          <div>
+            <div class="flex justify-between items-center mb-2">
+              <span class="px-2.5 py-0.5 rounded text-xs font-semibold bg-tertiary-fixed text-on-tertiary-fixed">School (Class 9 &amp; 10)</span>
+              <span class="text-xs font-mono text-outline">SCH-MOTA-PRE</span>
+            </div>
+            <h3 class="font-title-md text-primary font-bold text-lg mb-1">Pre-Matric Scholarship for ST Students</h3>
+            <p class="text-secondary font-medium text-sm mb-3">Supporting secondary school retention</p>
+            <p class="text-on-surface-variant text-sm mb-4 leading-relaxed">
+              Financial support to minimize dropout rates between elementary and secondary school stages, ensuring smooth progression to higher classes.
+            </p>
+            <div class="bg-surface-container-low p-3 rounded-lg text-xs space-y-1 mb-4">
+              <div class="flex justify-between"><span class="text-outline">Eligibility:</span> <span class="font-semibold text-on-surface">Class 9th or 10th ST</span></div>
+              <div class="flex justify-between"><span class="text-outline">Income Ceiling:</span> <span class="font-semibold text-on-surface">≤ ₹2.50 Lakhs/yr</span></div>
+              <div class="flex justify-between"><span class="text-outline">Mode:</span> <span class="font-semibold text-primary">State DBT Channel</span></div>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <a href="wizard.html?track=pre&step=1" class="flex-1 py-2.5 text-center bg-primary-container text-white font-semibold rounded text-sm hover:bg-primary transition shadow-sm">
+              Apply via Wizard
+            </a>
+            <a href="eligibility.html" class="px-3 py-2.5 bg-surface-container text-primary rounded text-sm font-semibold hover:bg-surface-container-high transition">
+              Check
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="w-full bg-surface-container-high text-on-surface mt-space-xl border-t border-outline-variant py-space-lg px-margin text-center text-label-sm">
+    <p>National Tribal Scholarship Portal • Ministry of Tribal Affairs, Government of India</p>
+  </footer>
+
+  <script src="shared.js"></script>
+  <script>
+    function filterCategory(cat, btn) {
+      document.querySelectorAll('.category-pill').forEach(p => {
+        p.classList.remove('bg-primary', 'text-white', 'shadow-sm');
+        p.classList.add('bg-surface-container-lowest', 'text-primary');
+      });
+      btn.classList.add('bg-primary', 'text-white', 'shadow-sm');
+      btn.classList.remove('bg-surface-container-lowest', 'text-primary');
+
+      const cards = document.querySelectorAll('.scheme-card');
+      cards.forEach(card => {
+        if (cat === 'all' || card.dataset.cat === cat) {
+          card.classList.remove('hidden');
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const search = params.get('search');
+      if (search) {
+        showToast(`Filtered schemes for: "${search}"`, 'info');
+      }
+    });
+  </script>
+</body>
+</html>

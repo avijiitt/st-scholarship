@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <meta content="web_standard" name="shell-type"/>
+  <title>Smart Eligibility Checker | National Tribal Scholarship Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+  <link rel="stylesheet" href="styles.css"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface-container-lowest": "#ffffff",
+            "secondary": "#a04100",
+            "surface-tint": "#455e8d",
+            "inverse-surface": "#2a303d",
+            "on-tertiary-fixed-variant": "#00531b",
+            "tertiary": "#001e05",
+            "background": "#f9f9ff",
+            "secondary-fixed": "#ffdbcb",
+            "surface-dim": "#d4daea",
+            "inverse-on-surface": "#ecf0ff",
+            "outline-variant": "#c4c6d0",
+            "outline": "#747780",
+            "on-secondary-fixed-variant": "#7a3000",
+            "secondary-fixed-dim": "#ffb692",
+            "primary-fixed-dim": "#adc7fc",
+            "error": "#ba1a1a",
+            "on-primary-fixed-variant": "#2c4674",
+            "surface-container-highest": "#dde2f3",
+            "surface-container-high": "#e3e8f9",
+            "on-primary-container": "#7c95c8",
+            "primary": "#00183b",
+            "on-error": "#ffffff",
+            "on-tertiary-container": "#4ca758",
+            "on-background": "#161c27",
+            "error-container": "#ffdad6",
+            "inverse-primary": "#adc7fc",
+            "on-error-container": "#93000a",
+            "on-surface": "#161c27",
+            "tertiary-fixed": "#99f89e",
+            "primary-container": "#0f2d59",
+            "on-secondary-container": "#672800",
+            "on-tertiary-fixed": "#002106",
+            "on-secondary": "#ffffff",
+            "surface-container": "#e8eeff",
+            "secondary-container": "#fd8544",
+            "surface-container-low": "#f1f3ff",
+            "on-secondary-fixed": "#341000",
+            "surface-variant": "#dde2f3",
+            "surface": "#f9f9ff",
+            "on-primary": "#ffffff",
+            "tertiary-container": "#00360f",
+            "tertiary-fixed-dim": "#7edb85",
+            "on-surface-variant": "#44474f",
+            "on-tertiary": "#ffffff",
+            "on-primary-fixed": "#001b3f",
+            "surface-bright": "#f9f9ff",
+            "primary-fixed": "#d7e2ff"
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-surface font-body-md text-body-md text-on-surface">
+  <header class="w-full bg-surface-container-lowest shadow-sm">
+    <div class="w-full flex h-1.5">
+      <div class="flex-1 bg-secondary"></div>
+      <div class="flex-1 bg-surface-container-lowest"></div>
+      <div class="flex-1 bg-tertiary-container"></div>
+    </div>
+    <div class="max-w-7xl mx-auto px-margin py-space-md flex flex-col sm:flex-row items-center justify-between gap-space-md">
+      <a href="index.html" class="flex items-center gap-space-md">
+        <img alt="MoTA Logo" class="h-12 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5iDY8HhCiAkZClSCqpitPAV8V9PCXpPODREIZWl9JAovXtMpZ0ScQpbOUIrtNEhFCzZImajxDNREYqgn5jrgmkI-tvDQCRsug3A3DNZb7_kb737zfcL3HqI48DAVo55z_jAZAQmLGS_T3hL6XoSyfC5VdXh9EpmohXr_hjt79edFc2ZkLR1bfl9uZgNUooT1OG_pl5mxF7sCxBWnTveN0oh2O5Zn2WdUwr2_XCIKh5bYdpX3gxKSdiA"/>
+        <div class="border-l border-outline-variant pl-space-md">
+          <p class="font-headline-sm text-headline-sm text-primary font-bold">National Tribal Scholarship Portal</p>
+          <p class="font-label-sm text-label-sm text-on-surface-variant">Ministry of Tribal Affairs, Government of India</p>
+        </div>
+      </a>
+      <div class="flex items-center gap-3">
+        <a href="wizard.html" class="px-4 py-2 bg-primary text-white font-semibold rounded shadow-sm text-sm">Open Wizard</a>
+        <a href="track.html" class="px-4 py-2 bg-surface-container text-primary font-semibold rounded text-sm">Track Application</a>
+      </div>
+    </div>
+    <nav class="bg-primary-container text-on-primary-container">
+      <div class="max-w-7xl mx-auto px-margin flex items-center overflow-x-auto whitespace-nowrap">
+        <a class="px-space-md py-space-sm font-label-md text-surface-container-lowest hover:bg-primary/40" href="index.html">Home (मुख्य पृष्ठ)</a>
+        <a class="px-space-md py-space-sm font-label-md text-surface-container-lowest hover:bg-primary/40" href="schemes.html">All Schemes &amp; Fellowships (सभी योजनाएं)</a>
+        <a class="px-space-md py-space-sm bg-primary text-on-primary font-label-lg rounded-t font-semibold" href="eligibility.html">Eligibility Checker (पात्रता जांचें)</a>
+        <a class="px-space-md py-space-sm font-label-md text-surface-container-lowest hover:bg-primary/40" href="wizard.html">Application Wizard (आवेदन विज़ार्ड)</a>
+        <a class="px-space-md py-space-sm font-label-md text-surface-container-lowest hover:bg-primary/40" href="track.html">Track Application (आवेदन की स्थिति)</a>
+        <a class="px-space-md py-space-sm font-label-md text-surface-container-lowest hover:bg-primary/40" href="grievance.html">Grievance / Helpdesk (सहायता केंद्र)</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-margin py-space-xl">
+    <div class="mb-space-lg text-center max-w-2xl mx-auto">
+      <span class="inline-flex items-center gap-1 text-secondary font-label-sm font-bold uppercase tracking-wider mb-1">
+        Smart Assessment Engine
+      </span>
+      <h1 class="font-headline-lg text-primary font-bold text-3xl">Smart Scheme Eligibility Checker</h1>
+      <p class="font-body-md text-on-surface-variant mt-2">
+        Answer 4 basic academic and financial questions to discover all Central &amp; State ST scholarships you qualify for with 100% certainty.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-xl items-start">
+      <!-- Calculator Form (7 cols) -->
+      <div class="lg:col-span-7 bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30">
+        <h2 class="font-title-md text-primary font-bold mb-space-md flex items-center gap-2">
+          <span class="material-symbols-outlined text-secondary">tune</span> Your Profile Parameters
+        </h2>
+
+        <form id="calc-form" onsubmit="calculateEligibility(event)" class="space-y-space-md">
+          <!-- Question 1 -->
+          <div>
+            <label class="block font-label-md text-on-surface font-semibold mb-1" for="calc-category">
+              1. Do you belong to a recognized Scheduled Tribe (ST) community? *
+            </label>
+            <select id="calc-category" class="w-full h-11 px-3 bg-surface-container-low rounded border border-outline-variant/40" required>
+              <option value="yes" selected>Yes, I possess / can obtain valid ST certificate</option>
+              <option value="no">No</option>
+            </select>
+          </div>
+
+          <!-- Question 2 -->
+          <div>
+            <label class="block font-label-md text-on-surface font-semibold mb-1" for="calc-education">
+              2. Highest Current or Intended Qualification Level *
+            </label>
+            <select id="calc-education" class="w-full h-11 px-3 bg-surface-container-low rounded border border-outline-variant/40" required>
+              <option value="phd" selected>Ph.D. / M.Phil Research (India or Abroad)</option>
+              <option value="masters">Postgraduate Degree (Master's / M.Tech / MBA)</option>
+              <option value="ug">Undergraduate (B.Tech, MBBS, B.Sc, B.A)</option>
+              <option value="school">Class 11 or 12 (Higher Secondary)</option>
+            </select>
+          </div>
+
+          <!-- Question 3 -->
+          <div>
+            <label class="block font-label-md text-on-surface font-semibold mb-1" for="calc-location">
+              3. Where do you intend to pursue your studies? *
+            </label>
+            <select id="calc-location" class="w-full h-11 px-3 bg-surface-container-low rounded border border-outline-variant/40" required>
+              <option value="abroad" selected>Abroad at Top 500 QS Ranked Global University (e.g. Oxford, Cambridge)</option>
+              <option value="india-research">Indian University / Research Institute (Central/State)</option>
+              <option value="premier-india">Premier Notified Institute (IIT, IIM, NIT, AIIMS, NLU)</option>
+              <option value="state-college">State Recognized College or Polytechnic</option>
+            </select>
+          </div>
+
+          <!-- Question 4 -->
+          <div>
+            <label class="block font-label-md text-on-surface font-semibold mb-1" for="calc-income">
+              4. Total Gross Annual Family Income (from all sources) *
+            </label>
+            <select id="calc-income" class="w-full h-11 px-3 bg-surface-container-low rounded border border-outline-variant/40" required>
+              <option value="below-2.5">Below ₹2,50,000 per annum</option>
+              <option value="2.5-6.0" selected>₹2,50,000 to ₹6,00,000 per annum</option>
+              <option value="above-6.0">Above ₹6,00,000 per annum</option>
+            </select>
+          </div>
+
+          <button type="submit" class="w-full py-3 bg-secondary hover:bg-secondary/90 text-white font-bold rounded shadow-md flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-[20px]">psychology</span> Evaluate Eligibility
+          </button>
+        </form>
+      </div>
+
+      <!-- Results Display (5 cols) -->
+      <div class="lg:col-span-5 flex flex-col gap-space-md">
+        <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30" id="results-box">
+          <div class="flex items-center justify-between pb-space-sm border-b border-surface-variant mb-space-md">
+            <h3 class="font-title-md text-primary font-bold flex items-center gap-2">
+              <span class="material-symbols-outlined text-tertiary-container">verified</span> Eligibility Result
+            </h3>
+            <span class="px-2.5 py-0.5 rounded text-xs font-bold bg-tertiary-fixed text-on-tertiary-fixed">
+              100% Match Found
+            </span>
+          </div>
+
+          <div class="space-y-space-md" id="matches-list">
+            <!-- Match 1 -->
+            <div class="p-space-md rounded-lg bg-surface-container-low border border-tertiary-container/30">
+              <div class="flex justify-between items-start mb-1">
+                <span class="font-bold text-primary">National Overseas Scholarship (NOS)</span>
+                <span class="text-xs font-bold text-tertiary-container bg-tertiary-fixed/60 px-2 py-0.5 rounded">Eligible (Priority)</span>
+              </div>
+              <p class="text-xs text-on-surface-variant mb-3">100% Tuition, living costs &amp; airfare for Ph.D./Master's in Top 500 QS global universities.</p>
+              <a href="wizard.html?track=nos&step=3" class="inline-flex items-center gap-1 text-xs font-bold text-secondary hover:underline">
+                Start NOS Application <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+              </a>
+            </div>
+
+            <!-- Match 2 -->
+            <div class="p-space-md rounded-lg bg-surface-container-low border border-outline-variant/30">
+              <div class="flex justify-between items-start mb-1">
+                <span class="font-bold text-primary">National Fellowship for ST Students (NFST)</span>
+                <span class="text-xs font-bold text-tertiary-container bg-tertiary-fixed/60 px-2 py-0.5 rounded">Eligible</span>
+              </div>
+              <p class="text-xs text-on-surface-variant mb-3">₹38,000 monthly research stipend + HRA for Indian Universities.</p>
+              <a href="wizard.html?track=nfst&step=3" class="inline-flex items-center gap-1 text-xs font-bold text-secondary hover:underline">
+                Start NFST Application <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+              </a>
+            </div>
+          </div>
+
+          <div class="mt-space-lg p-space-sm bg-surface-container-low/60 rounded text-xs text-outline">
+            Note: As per DBT guidelines, while you may be eligible for multiple schemes, benefits can only be availed for <strong>one scheme</strong> per academic year.
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="w-full bg-surface-container-high text-on-surface mt-space-xl border-t border-outline-variant py-space-lg text-center text-label-sm">
+    Ministry of Tribal Affairs, Government of India • GIGW 3.0 Accessible
+  </footer>
+
+  <script src="shared.js"></script>
+  <script>
+    function calculateEligibility(e) {
+      e.preventDefault();
+      showToast('Eligibility calculated! You qualify for National Overseas Scholarship.', 'success');
+      document.getElementById('results-box').scrollIntoView({ behavior: 'smooth' });
+    }
+  </script>
+</body>
+</html>

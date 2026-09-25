@@ -1,0 +1,440 @@
+/**
+ * National Tribal Scholarship Portal (NTSP - MoTA)
+ * Client-Side SPA Router with Layout Engine & Route Protection
+ */
+
+class Router {
+  constructor() {
+    this.routes = {};
+    this.currentRoute = null;
+    this.currentParams = {};
+
+    window.addEventListener("hashchange", () => this.handleRouting());
+    window.addEventListener("popstate", () => this.handleRouting());
+
+    // Intercept standard internal links
+    document.addEventListener("click", (e) => {
+      const link = e.target.closest("a[data-route], a[href^='/'], a[href^='#/']");
+      if (link && !link.target && !link.hasAttribute("download")) {
+        const href = link.getAttribute("data-route") || link.getAttribute("href");
+        if (href && (href.startsWith("/") || href.startsWith("#/"))) {
+          e.preventDefault();
+          const cleanPath = href.startsWith("#") ? href.substring(1) : href;
+          this.navigate(cleanPath);
+        }
+      }
+    });
+  }
+
+  register(path, handler, options = {}) {
+    // Convert path with params like /admin/applications/:id to regex
+    const paramNames = [];
+    const regexPath = path.replace(/:([a-zA-Z0-9_]+)/g, (_, paramName) => {
+      paramNames.push(paramName);
+      return "([^/]+)";
+    });
+
+    const regex = new RegExp(`^${regexPath}$`);
+    this.routes[path] = {
+      regex,
+      paramNames,
+      handler,
+      layout: options.layout || "public", // "public", "applicant", "admin", "bare"
+      authRole: options.authRole || null // "applicant", "admin"
+    };
+  }
+
+  navigate(path) {
+    if (!path.startsWith("/")) path = "/" + path;
+    window.location.hash = "#" + path;
+  }
+
+  getCurrentPath() {
+    let hash = window.location.hash;
+    if (hash && hash.startsWith("#")) {
+      hash = hash.substring(1);
+      if (hash !== "") return hash;
+    }
+    let pathname = window.location.pathname || "/";
+    if (pathname.endsWith("/index.html")) {
+      pathname = pathname.replace("/index.html", "");
+    }
+    if (!pathname || pathname === "") pathname = "/";
+    return pathname;
+  }
+
+  matchRoute(path) {
+    for (const [routePattern, routeConfig] of Object.entries(this.routes)) {
+      const match = path.match(routeConfig.regex);
+      if (match) {
+        const params = {};
+        routeConfig.paramNames.forEach((name, idx) => {
+          params[name] = match[idx + 1];
+        });
+        return { config: routeConfig, pattern: routePattern, params };
+      }
+    }
+    return null;
+  }
+
+  handleRouting() {
+    const rawPath = this.getCurrentPath();
+    const matched = this.matchRoute(rawPath);
+
+    if (!matched) {
+      this.render404(rawPath);
+      return;
+    }
+
+    const { config, pattern, params } = matched;
+    this.currentRoute = pattern;
+    this.currentParams = params;
+
+    // Role-based protection check
+    const authUser = window.appStore.getAuthUser();
+    if (config.authRole) {
+      if (!authUser || authUser.role !== config.authRole) {
+        if (config.authRole === "admin") {
+          showToast("Admin access required. Please login with admin credentials.", "warning");
+          this.navigate("/admin/login");
+          return;
+        } else if (config.authRole === "applicant") {
+          showToast("Scholar login required.", "warning");
+          this.navigate("/login");
+          return;
+        }
+      }
+    }
+
+    // Render with specified layout
+    this.renderLayout(config.layout, () => {
+      config.handler(params);
+    });
+
+    // Update active nav highlights
+    this.updateActiveNavs(pattern);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  renderLayout(layoutType, contentCallback) {
+    const appContainer = document.getElementById("app");
+    if (!appContainer) return;
+
+    if (layoutType === "applicant") {
+      appContainer.innerHTML = this.getApplicantLayoutHTML();
+    } else if (layoutType === "admin") {
+      appContainer.innerHTML = this.getAdminLayoutHTML();
+    } else {
+      appContainer.innerHTML = this.getPublicLayoutHTML();
+    }
+
+    // Render view content inside #main-view-container
+    const mainContainer = document.getElementById("main-view-container");
+    if (mainContainer) {
+      contentCallback();
+    }
+  }
+
+  updateActiveNavs(currentPattern) {
+    document.querySelectorAll("[data-nav-link]").forEach(link => {
+      const target = link.getAttribute("data-nav-link");
+      if (target === currentPattern || (target !== "/" && currentPattern.startsWith(target))) {
+        link.classList.add("bg-primary", "text-on-primary", "font-bold");
+        link.classList.remove("text-surface-container-lowest", "hover:bg-primary/40");
+      } else {
+        link.classList.remove("bg-primary", "text-on-primary", "font-bold");
+        link.classList.add("text-surface-container-lowest");
+      }
+    });
+
+    // Sidebar active item highlight
+    document.querySelectorAll("[data-sidebar-link]").forEach(link => {
+      const target = link.getAttribute("data-sidebar-link");
+      if (target === currentPattern || (target !== "/" && currentPattern.startsWith(target))) {
+        link.classList.add("bg-primary", "text-white", "font-bold");
+        link.classList.remove("text-on-surface", "hover:bg-surface-container");
+      } else {
+        link.classList.remove("bg-primary", "text-white", "font-bold");
+        link.classList.add("text-on-surface");
+      }
+    });
+  }
+
+  render404(path) {
+    const appContainer = document.getElementById("app");
+    if (!appContainer) return;
+
+    appContainer.innerHTML = `
+      ${this.getTopRibbonHTML()}
+      <header class="w-full bg-surface-container-lowest shadow-sm py-4 px-margin flex justify-between items-center max-w-7xl mx-auto">
+        <a href="#/" class="flex items-center gap-3">
+          <img alt="MoTA Emblem" class="h-10 w-auto" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5iDY8HhCiAkZClSCqpitPAV8V9PCXpPODREIZWl9JAovXtMpZ0ScQpbOUIrtNEhFCzZImajxDNREYqgn5jrgmkI-tvDQCRsug3A3DNZb7_kb737zfcL3HqI48DAVo55z_jAZAQmLGS_T3hL6XoSyfC5VdXh9EpmohXr_hjt79edFc2ZkLR1bfl9uZgNUooT1OG_pl5mxF7sCxBWnTveN0oh2O5Zn2WdUwr2_XCIKh5bYdpX3gxKSdiA"/>
+          <div>
+            <h1 class="font-bold text-primary text-base">National Tribal Scholarship Portal</h1>
+            <p class="text-xs text-on-surface-variant">Ministry of Tribal Affairs</p>
+          </div>
+        </a>
+        <a href="#/" class="px-4 py-2 bg-primary text-white rounded text-sm font-semibold">Home</a>
+      </header>
+      <main class="max-w-2xl mx-auto px-margin py-20 text-center">
+        <div class="w-20 h-20 bg-secondary/10 text-secondary rounded-full flex items-center justify-center mx-auto mb-4">
+          <span class="material-symbols-outlined text-4xl">search_off</span>
+        </div>
+        <h2 class="text-3xl font-bold text-primary mb-2">404 - Page Not Found</h2>
+        <p class="text-on-surface-variant mb-6">
+          The requested route <code class="bg-surface-container-high px-2 py-0.5 rounded font-mono text-secondary">${path}</code> does not exist on this portal.
+        </p>
+        <div class="flex justify-center gap-4">
+          <button onclick="window.history.back()" class="px-5 py-2.5 bg-surface-container text-primary rounded font-semibold text-sm hover:bg-surface-container-high">
+            Go Back
+          </button>
+          <a href="#/" class="px-5 py-2.5 bg-secondary text-white rounded font-semibold text-sm hover:bg-secondary/90 shadow-md">
+            Return to Homepage
+          </a>
+        </div>
+      </main>
+      ${this.getPublicFooterHTML()}
+    `;
+  }
+
+  // Layout Templates
+  getTopRibbonHTML() {
+    return `
+      <div class="w-full bg-surface-container-lowest shadow-sm">
+        <div class="w-full flex h-1.5">
+          <div class="flex-1 bg-secondary"></div>
+          <div class="flex-1 bg-surface-container-lowest"></div>
+          <div class="flex-1 bg-tertiary-container"></div>
+        </div>
+        <div class="bg-primary-container text-surface-container-lowest py-1 px-margin">
+          <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center text-xs">
+            <span class="tracking-wide">GOVERNMENT OF INDIA • MINISTRY OF TRIBAL AFFAIRS</span>
+            <div class="flex items-center gap-3">
+              <button data-font-action="decrease" class="hover:text-secondary-fixed">A-</button>
+              <button data-font-action="reset" class="font-bold hover:text-secondary-fixed">A</button>
+              <button data-font-action="increase" class="hover:text-secondary-fixed">A+</button>
+              <button data-contrast-toggle title="High Contrast Mode"><span class="material-symbols-outlined text-[15px]">contrast</span></button>
+              <span class="text-outline">|</span>
+              <a href="#/admin/login" class="text-secondary-fixed hover:underline flex items-center gap-1 font-semibold">
+                <span class="material-symbols-outlined text-[14px]">admin_panel_settings</span> Official Portal
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  getPublicLayoutHTML() {
+    const authUser = window.appStore.getAuthUser();
+    return `
+      ${this.getTopRibbonHTML()}
+      <header class="w-full bg-surface-container-lowest shadow-sm">
+        <div class="max-w-7xl mx-auto px-margin py-space-md flex flex-col lg:flex-row items-center justify-between gap-space-md">
+          <a href="#/" class="flex items-center gap-space-md">
+            <img alt="MoTA Official Portal Logo" class="h-12 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5iDY8HhCiAkZClSCqpitPAV8V9PCXpPODREIZWl9JAovXtMpZ0ScQpbOUIrtNEhFCzZImajxDNREYqgn5jrgmkI-tvDQCRsug3A3DNZb7_kb737zfcL3HqI48DAVo55z_jAZAQmLGS_T3hL6XoSyfC5VdXh9EpmohXr_hjt79edFc2ZkLR1bfl9uZgNUooT1OG_pl5mxF7sCxBWnTveN0oh2O5Zn2WdUwr2_XCIKh5bYdpX3gxKSdiA"/>
+            <div class="border-l border-outline-variant pl-space-md">
+              <p class="font-headline-sm text-headline-sm text-primary font-bold tracking-tight">National Tribal Scholarship Portal</p>
+              <p class="font-label-md text-label-md text-secondary font-semibold">राष्ट्रीय जनजातीय छात्रवृत्ति एवं अध्येतावृत्ति पोर्टल</p>
+              <p class="font-label-sm text-label-sm text-on-surface-variant">Ministry of Tribal Affairs, Government of India</p>
+            </div>
+          </a>
+
+          <div class="flex items-center gap-space-md">
+            <div class="hidden sm:flex items-center bg-surface-container-low px-space-md py-space-xs rounded gap-space-sm border border-outline-variant/50">
+              <span class="material-symbols-outlined text-outline text-[18px]">search</span>
+              <input class="bg-transparent font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none w-44 xl:w-56" placeholder="Search schemes..." type="text" onkeydown="if(event.key==='Enter') router.navigate('/schemes')"/>
+            </div>
+            ${authUser && authUser.role === "applicant" ? `
+              <div class="flex items-center gap-2">
+                <a href="#/applicant/dashboard" class="px-4 py-2 bg-primary text-white font-semibold rounded text-sm flex items-center gap-1 shadow-sm">
+                  <span class="material-symbols-outlined text-[18px]">dashboard</span> Dashboard
+                </a>
+                <button onclick="window.appStore.logout(); router.navigate('/');" class="px-3 py-2 bg-surface-container text-on-surface rounded text-xs font-semibold hover:bg-surface-container-high" title="Sign Out">
+                  Logout
+                </button>
+              </div>
+            ` : `
+              <div class="flex items-center gap-2">
+                <a href="#/login" class="px-4 py-2 text-primary font-semibold hover:bg-surface-container rounded text-sm">
+                  Login
+                </a>
+                <a href="#/register" class="px-4 py-2 bg-secondary text-white font-semibold rounded text-sm hover:bg-secondary/90 shadow-sm">
+                  New Registration
+                </a>
+              </div>
+            `}
+          </div>
+        </div>
+
+        <nav class="bg-primary-container text-on-primary-container">
+          <div class="max-w-7xl mx-auto px-margin flex items-center overflow-x-auto whitespace-nowrap py-1">
+            <a href="#/" data-nav-link="/" class="px-4 py-2 font-medium text-sm text-surface-container-lowest hover:bg-primary/40 rounded transition">Home (मुख्य पृष्ठ)</a>
+            <a href="#/schemes" data-nav-link="/schemes" class="px-4 py-2 font-medium text-sm text-surface-container-lowest hover:bg-primary/40 rounded transition">All Schemes (सभी योजनाएं)</a>
+            <a href="#/schemes/nos" data-nav-link="/schemes/nos" class="px-4 py-2 font-medium text-sm text-surface-container-lowest hover:bg-primary/40 rounded transition">Overseas Scholarship (NOS)</a>
+            <a href="#/schemes/nfst" data-nav-link="/schemes/nfst" class="px-4 py-2 font-medium text-sm text-surface-container-lowest hover:bg-primary/40 rounded transition">National Fellowship (NFST)</a>
+            <a href="#/application/track" data-nav-link="/application/track" class="px-4 py-2 font-medium text-sm text-surface-container-lowest hover:bg-primary/40 rounded transition">Track Application</a>
+            <a href="#/application/deficiency" data-nav-link="/application/deficiency" class="px-4 py-2 font-medium text-sm text-surface-container-lowest hover:bg-primary/40 rounded transition">Deficiency Desk</a>
+          </div>
+        </nav>
+      </header>
+      <div id="main-view-container"></div>
+      ${this.getPublicFooterHTML()}
+    `;
+  }
+
+  getApplicantLayoutHTML() {
+    const app = window.appStore.getApplication();
+    const user = window.appStore.getAuthUser() || { name: "Priya Munda", otrId: "OTR-2025-ST-884129" };
+
+    return `
+      ${this.getTopRibbonHTML()}
+      <header class="w-full bg-surface-container-lowest shadow-sm border-b border-outline-variant/30">
+        <div class="max-w-7xl mx-auto px-margin py-3 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <a href="#/applicant/dashboard" class="flex items-center gap-2">
+              <img alt="MoTA Logo" class="h-9 w-auto" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5iDY8HhCiAkZClSCqpitPAV8V9PCXpPODREIZWl9JAovXtMpZ0ScQpbOUIrtNEhFCzZImajxDNREYqgn5jrgmkI-tvDQCRsug3A3DNZb7_kb737zfcL3HqI48DAVo55z_jAZAQmLGS_T3hL6XoSyfC5VdXh9EpmohXr_hjt79edFc2ZkLR1bfl9uZgNUooT1OG_pl5mxF7sCxBWnTveN0oh2O5Zn2WdUwr2_XCIKh5bYdpX3gxKSdiA"/>
+              <span class="font-bold text-primary text-base hidden sm:inline">National Tribal Scholarship Portal</span>
+            </a>
+            <span class="px-2 py-0.5 bg-surface-container text-primary font-bold text-xs rounded">Applicant Portal</span>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 bg-surface-container-low px-3 py-1 rounded border border-outline-variant/40">
+              <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs">
+                ${user.name.split(" ").map(n => n[0]).join("")}
+              </div>
+              <div class="text-left text-xs">
+                <p class="font-bold text-primary leading-tight">${user.name}</p>
+                <p class="text-outline text-[11px] leading-tight">${user.otrId}</p>
+              </div>
+              <span class="ml-1 px-1.5 py-0.5 bg-tertiary-container text-white rounded text-[10px] font-bold">ST Verified</span>
+            </div>
+            <button onclick="window.appStore.logout(); router.navigate('/');" class="text-xs text-on-surface-variant hover:text-error flex items-center gap-1 font-semibold px-2 py-1 rounded hover:bg-surface-container">
+              <span class="material-symbols-outlined text-[16px]">logout</span> Logout
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Applicant Workspace Layout with Sidebar -->
+      <div class="max-w-7xl mx-auto px-margin py-space-lg grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+        <!-- Sidebar Navigation -->
+        <aside class="lg:col-span-3 bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/30 p-space-md space-y-1">
+          <div class="pb-3 mb-2 border-b border-outline-variant/20 px-2">
+            <span class="text-xs uppercase font-bold text-secondary tracking-wider block">Candidate Menu</span>
+            <p class="font-bold text-primary text-sm">${user.name}</p>
+          </div>
+
+          <a href="#/applicant/dashboard" data-sidebar-link="/applicant/dashboard" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition">
+            <span class="material-symbols-outlined text-[20px]">dashboard</span> Dashboard
+          </a>
+          <a href="#/applicant/profile" data-sidebar-link="/applicant/profile" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition">
+            <span class="material-symbols-outlined text-[20px]">person</span> My Profile
+          </a>
+          <a href="#/application/track" data-sidebar-link="/application/track" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition">
+            <span class="material-symbols-outlined text-[20px]">timeline</span> My Applications &amp; Track
+          </a>
+          <a href="#/application/new" data-sidebar-link="/application/new" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition">
+            <span class="material-symbols-outlined text-[20px]">add_circle</span> Apply for New Scheme
+          </a>
+          <a href="#/schemes" data-sidebar-link="/schemes" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition">
+            <span class="material-symbols-outlined text-[20px]">explore</span> Recommended Schemes
+          </a>
+          <a href="#/application/deficiency" data-sidebar-link="/application/deficiency" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition">
+            <span class="material-symbols-outlined text-[20px]">warning</span> Deficiency Notifications
+          </a>
+
+          <div class="pt-4 mt-4 border-t border-outline-variant/20">
+            <div class="p-3 bg-surface-container-low rounded-lg text-xs space-y-1">
+              <span class="text-outline block font-semibold">Active Draft Status:</span>
+              <p class="font-bold text-primary">${app.schemeCode} 2026–27</p>
+              <p class="text-secondary font-semibold font-mono text-[11px]">${app.status}</p>
+              <a href="#${app.lastSavedStep || '/application/personal'}" class="mt-2 inline-block font-bold text-secondary hover:underline">
+                Continue Draft →
+              </a>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="lg:col-span-9 flex flex-col gap-space-lg" id="main-view-container">
+        </main>
+      </div>
+      ${this.getPublicFooterHTML()}
+    `;
+  }
+
+  getAdminLayoutHTML() {
+    const queue = window.appStore.getAdminQueue();
+    const pendingCount = queue.filter(q => q.status === "Under Document Scrutiny").length;
+
+    return `
+      ${this.getTopRibbonHTML()}
+      <header class="w-full bg-primary text-white shadow-md border-b border-primary-container">
+        <div class="max-w-7xl mx-auto px-margin py-3 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <a href="#/admin/dashboard" class="flex items-center gap-2 text-white">
+              <span class="material-symbols-outlined text-[26px] text-secondary-fixed">shield_person</span>
+              <span class="font-bold text-lg">MoTA Scholarship Administration Console</span>
+            </a>
+            <span class="px-2 py-0.5 bg-secondary text-white font-bold text-xs rounded">Officer Portal</span>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <span class="text-xs text-primary-fixed-dim hidden sm:inline">Officer: Shri K. S. Verma (Deputy Secretary)</span>
+            <button onclick="window.appStore.logout(); router.navigate('/admin/login');" class="text-xs bg-primary-container hover:bg-primary-container/80 text-white font-semibold px-3 py-1.5 rounded flex items-center gap-1">
+              <span class="material-symbols-outlined text-[16px]">logout</span> Sign Out
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div class="max-w-7xl mx-auto px-margin py-space-lg grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+        <!-- Admin Sidebar -->
+        <aside class="lg:col-span-3 bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/30 p-space-md space-y-1">
+          <div class="pb-3 mb-2 border-b border-outline-variant/20 px-2">
+            <span class="text-xs uppercase font-bold text-secondary tracking-wider block">Admin Control</span>
+            <p class="font-bold text-primary text-sm">Tribal Welfare Division</p>
+          </div>
+
+          <a href="#/admin/dashboard" data-sidebar-link="/admin/dashboard" class="flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition">
+            <span class="flex items-center gap-2.5"><span class="material-symbols-outlined text-[20px]">monitoring</span> Overview Dashboard</span>
+          </a>
+          <a href="#/admin/applications" data-sidebar-link="/admin/applications" class="flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition">
+            <span class="flex items-center gap-2.5"><span class="material-symbols-outlined text-[20px]">ballot</span> Application Queue</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-secondary-fixed text-on-secondary-fixed">${pendingCount}</span>
+          </a>
+          <a href="#/admin/schemes" data-sidebar-link="/admin/schemes" class="flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition">
+            <span class="flex items-center gap-2.5"><span class="material-symbols-outlined text-[20px]">tune</span> Scheme Quotas &amp; Rules</span>
+          </a>
+          <a href="#/" class="flex items-center justify-between px-3 py-2.5 rounded-lg text-sm text-on-surface hover:bg-surface-container transition">
+            <span class="flex items-center gap-2.5"><span class="material-symbols-outlined text-[20px]">public</span> Public Portal View</span>
+          </a>
+        </aside>
+
+        <!-- Admin Main Content -->
+        <main class="lg:col-span-9 flex flex-col gap-space-lg" id="main-view-container">
+        </main>
+      </div>
+      ${this.getPublicFooterHTML()}
+    `;
+  }
+
+  getPublicFooterHTML() {
+    return `
+      <footer class="w-full bg-surface-container-high text-on-surface mt-space-xl border-t border-outline-variant py-space-lg px-margin text-center text-xs text-on-surface-variant">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p>Designed and Maintained by <strong>National Informatics Centre (NIC)</strong> for Ministry of Tribal Affairs.</p>
+          <div class="flex items-center gap-4">
+            <a href="#/schemes" class="hover:underline">Schemes</a>
+            <a href="#/application/track" class="hover:underline">Tracking</a>
+            <a href="#/admin/login" class="hover:underline text-secondary font-bold">Admin Login</a>
+          </div>
+        </div>
+      </footer>
+    `;
+  }
+}
+
+window.router = new Router();

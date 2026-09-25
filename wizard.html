@@ -1,0 +1,1773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <meta content="web_standard" name="shell-type"/>
+  <title>Scholarship Application Wizard | National Tribal Scholarship Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+  <link rel="stylesheet" href="styles.css"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface-container-lowest": "#ffffff",
+            "secondary": "#a04100",
+            "surface-tint": "#455e8d",
+            "inverse-surface": "#2a303d",
+            "on-tertiary-fixed-variant": "#00531b",
+            "tertiary": "#001e05",
+            "background": "#f9f9ff",
+            "secondary-fixed": "#ffdbcb",
+            "surface-dim": "#d4daea",
+            "inverse-on-surface": "#ecf0ff",
+            "outline-variant": "#c4c6d0",
+            "outline": "#747780",
+            "on-secondary-fixed-variant": "#7a3000",
+            "secondary-fixed-dim": "#ffb692",
+            "primary-fixed-dim": "#adc7fc",
+            "error": "#ba1a1a",
+            "on-primary-fixed-variant": "#2c4674",
+            "surface-container-highest": "#dde2f3",
+            "surface-container-high": "#e3e8f9",
+            "on-primary-container": "#7c95c8",
+            "primary": "#00183b",
+            "on-error": "#ffffff",
+            "on-tertiary-container": "#4ca758",
+            "on-background": "#161c27",
+            "error-container": "#ffdad6",
+            "inverse-primary": "#adc7fc",
+            "on-error-container": "#93000a",
+            "on-surface": "#161c27",
+            "tertiary-fixed": "#99f89e",
+            "primary-container": "#0f2d59",
+            "on-secondary-container": "#672800",
+            "on-tertiary-fixed": "#002106",
+            "on-secondary": "#ffffff",
+            "surface-container": "#e8eeff",
+            "secondary-container": "#fd8544",
+            "surface-container-low": "#f1f3ff",
+            "on-secondary-fixed": "#341000",
+            "surface-variant": "#dde2f3",
+            "surface": "#f9f9ff",
+            "on-primary": "#ffffff",
+            "tertiary-container": "#00360f",
+            "tertiary-fixed-dim": "#7edb85",
+            "on-surface-variant": "#44474f",
+            "on-tertiary": "#ffffff",
+            "on-primary-fixed": "#001b3f",
+            "surface-bright": "#f9f9ff",
+            "primary-fixed": "#d7e2ff"
+          },
+          borderRadius: {
+            DEFAULT: "0.125rem",
+            lg: "0.25rem",
+            xl: "0.5rem",
+            full: "0.75rem"
+          },
+          spacing: {
+            "margin-mobile": "1rem", "space-lg": "1.5rem", "margin": "2rem",
+            "gutter-mobile": "1rem", "space-xl": "2.5rem", "space-sm": "0.5rem",
+            "space-md": "1rem", "space-xs": "0.25rem", "gutter": "1.5rem"
+          },
+          fontFamily: {
+            "body-lg": ["Noto Sans"], "label-md": ["Noto Sans"],
+            "title-md": ["Noto Sans"], "display-hero": ["Noto Sans"],
+            "headline-md": ["Noto Sans"], "headline-lg": ["Noto Sans"],
+            "label-lg": ["Noto Sans"], "label-sm": ["Noto Sans"],
+            "body-md": ["Noto Sans"], "headline-sm": ["Noto Sans"]
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-surface font-body-md text-body-md text-on-surface antialiased">
+  <a class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:px-space-md focus:py-space-sm focus:bg-secondary-container focus:text-on-secondary-fixed focus:font-label-md focus:text-label-md focus:shadow-md" href="#main-content">
+    Skip to Main Content / मुख्य सामग्री पर जाएं
+  </a>
+
+  <!-- Top Tricolor Ribbon -->
+  <header class="w-full bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+    <div class="w-full flex h-1.5">
+      <div class="flex-1 bg-secondary"></div>
+      <div class="flex-1 bg-surface-container-lowest"></div>
+      <div class="flex-1 bg-tertiary-container"></div>
+    </div>
+
+    <!-- Official Top Bar -->
+    <div class="bg-primary-container text-surface-container-lowest">
+      <div class="max-w-7xl mx-auto px-margin flex flex-wrap items-center justify-between py-space-xs font-label-sm text-label-sm">
+        <div class="flex items-center gap-space-sm divide-x divide-outline">
+          <span class="tracking-wide">GOVERNMENT OF INDIA | भारत सरकार</span>
+          <span class="pl-space-sm tracking-wide hidden sm:inline">MINISTRY OF TRIBAL AFFAIRS | जनजातीय कार्य मंत्रालय</span>
+        </div>
+        <div class="flex items-center gap-space-md">
+          <a class="hover:underline hidden md:inline text-surface-container-lowest" href="#main-content">Skip to Main Content</a>
+          <div class="flex items-center gap-space-xs border-x border-outline px-space-sm">
+            <span class="material-symbols-outlined text-[16px]">screen_search_desktop</span>
+            <span class="hidden lg:inline">Screen Reader</span>
+          </div>
+          <div aria-label="Font Size Controls" class="flex items-center gap-space-xs">
+            <button class="hover:text-secondary-fixed-dim px-1" type="button" data-font-action="decrease">A-</button>
+            <button class="hover:text-secondary-fixed-dim px-1 font-bold" type="button" data-font-action="reset">A</button>
+            <button class="hover:text-secondary-fixed-dim px-1" type="button" data-font-action="increase">A+</button>
+          </div>
+          <div class="flex items-center gap-space-xs pl-space-xs">
+            <button class="hover:text-secondary-fixed-dim" type="button" data-contrast-toggle>
+              <span class="material-symbols-outlined text-[16px]">contrast</span>
+            </button>
+            <span class="border-l border-outline pl-space-xs">
+              <a class="font-label-sm text-label-sm hover:underline" href="#">हिन्दी</a> | 
+              <a class="font-label-sm text-label-sm underline" href="#">English</a>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Branding Header with Logged-in Applicant Pill -->
+    <div class="max-w-7xl mx-auto px-margin py-space-md">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
+        <a href="index.html" class="flex items-center gap-space-md">
+          <img alt="MoTA Official Portal Emblem" class="h-12 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5iDY8HhCiAkZClSCqpitPAV8V9PCXpPODREIZWl9JAovXtMpZ0ScQpbOUIrtNEhFCzZImajxDNREYqgn5jrgmkI-tvDQCRsug3A3DNZb7_kb737zfcL3HqI48DAVo55z_jAZAQmLGS_T3hL6XoSyfC5VdXh9EpmohXr_hjt79edFc2ZkLR1bfl9uZgNUooT1OG_pl5mxF7sCxBWnTveN0oh2O5Zn2WdUwr2_XCIKh5bYdpX3gxKSdiA"/>
+          <div class="border-l border-outline-variant pl-space-md">
+            <p class="font-headline-sm text-headline-sm text-primary font-bold tracking-tight leading-tight">National Tribal Scholarship Portal</p>
+            <p class="font-label-md text-label-md text-secondary font-semibold">राष्ट्रीय जनजातीय छात्रवृत्ति एवं अध्येतावृत्ति पोर्टल</p>
+            <p class="font-label-sm text-label-sm text-on-surface-variant">Ministry of Tribal Affairs, Government of India</p>
+          </div>
+        </a>
+
+        <div class="flex items-center gap-space-md self-end lg:self-center">
+          <div class="hidden sm:flex items-center bg-surface-container-low px-space-md py-space-xs rounded gap-space-sm border border-outline-variant">
+            <span class="material-symbols-outlined text-outline text-[20px]">search</span>
+            <input class="bg-transparent font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none w-44 xl:w-56" placeholder="Search schemes / योजना खोजें..." type="text"/>
+          </div>
+          <!-- Verified Applicant Pill -->
+          <div class="flex items-center gap-space-sm bg-surface-container-low px-space-md py-space-xs rounded border border-outline-variant">
+            <div class="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold font-label-md text-label-md shadow-sm">
+              PM
+            </div>
+            <div class="text-left">
+              <p class="font-label-md text-label-md text-primary font-semibold leading-tight">Priya Munda</p>
+              <p class="font-label-sm text-label-sm text-on-surface-variant leading-none">OTR: OTR-2025-ST-884129</p>
+            </div>
+            <span class="inline-flex items-center px-space-xs py-0.5 rounded text-[11px] font-semibold bg-tertiary-container text-surface-container-lowest ml-space-xs">
+              ST Verified
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="bg-primary-container text-on-primary-container shadow-inner">
+      <div class="max-w-7xl mx-auto px-margin flex items-center overflow-x-auto">
+        <div class="flex items-center gap-space-xs py-1 whitespace-nowrap">
+          <a class="px-space-md py-space-sm font-label-md text-label-md text-surface-container-lowest hover:bg-primary/50 transition-colors" href="index.html">Home (मुख्य पृष्ठ)</a>
+          <a class="px-space-md py-space-sm font-label-md text-label-md text-surface-container-lowest hover:bg-primary/50 transition-colors" href="schemes.html">All Schemes &amp; Fellowships (सभी योजनाएं)</a>
+          <a class="px-space-md py-space-sm font-label-md text-label-md text-surface-container-lowest hover:bg-primary/50 transition-colors" href="eligibility.html">Eligibility Checker (पात्रता जांचें)</a>
+          <a class="px-space-md py-space-sm transition-colors bg-primary text-on-primary font-label-lg rounded-t font-semibold" href="wizard.html">Application Wizard (आवेदन विज़ार्ड)</a>
+          <a class="px-space-md py-space-sm font-label-md text-label-md text-surface-container-lowest hover:bg-primary/50 transition-colors" href="track.html">Track Application (आवेदन की स्थिति)</a>
+          <a class="px-space-md py-space-sm font-label-md text-label-md text-surface-container-lowest hover:bg-primary/50 transition-colors" href="grievance.html">Helpdesk (सहायता केंद्र)</a>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="w-full bg-surface min-h-[calc(100vh-280px)]" id="main-content">
+    <div class="flex flex-col w-full">
+
+      <!-- Wizard Header Banner -->
+      <div class="relative w-full overflow-hidden bg-primary text-on-primary shadow-md">
+        <div class="max-w-7xl mx-auto px-margin py-space-lg relative z-10">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md pb-space-md">
+            <div>
+              <div class="flex items-center gap-space-xs font-label-sm text-label-sm text-secondary-fixed mb-1 uppercase tracking-wider font-semibold">
+                <span class="material-symbols-outlined text-[16px]">verified</span>
+                <span id="wizard-step-indicator">Scholarship Application Wizard • Step 3 of 6</span>
+              </div>
+              <h1 class="font-headline-lg text-headline-lg text-surface-container-lowest tracking-tight font-bold text-2xl sm:text-3xl" id="wizard-step-title">
+                Academic Qualifications &amp; Research Track
+              </h1>
+              <p class="font-body-md text-body-md text-surface-container-highest mt-1">
+                Scheme: <span class="font-semibold text-surface-container-lowest" id="banner-scheme-name">National Overseas Scholarship (NOS) 2026–27</span> | Draft: <span class="font-mono bg-primary-container px-2 py-0.5 rounded text-surface-bright">MOTA-NOS-2026-DRAFT-0492</span>
+              </p>
+            </div>
+
+            <!-- Progress Meter -->
+            <div class="bg-surface-container-lowest/10 backdrop-blur px-space-md py-space-sm rounded-xl flex items-center gap-space-md self-start md:self-auto border border-white/10">
+              <div class="text-right">
+                <span class="block font-label-sm text-label-sm text-surface-container-highest">Verification Status</span>
+                <span class="font-headline-sm text-headline-sm text-tertiary-fixed font-bold" id="wizard-percent-label">50% Completed</span>
+              </div>
+              <div class="w-12 h-12 relative flex items-center justify-center">
+                <svg class="w-12 h-12 transform -rotate-90" viewbox="0 0 36 36">
+                  <path class="text-primary-container" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3"></path>
+                  <path class="text-tertiary-fixed" id="progress-circle-svg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="50, 100" stroke-linecap="round" stroke-width="3"></path>
+                </svg>
+                <span class="material-symbols-outlined absolute text-tertiary-fixed text-[20px]" style="font-variation-settings: 'FILL' 1;">task_alt</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Interactive Stepper 6 Steps Bar -->
+          <div class="pt-space-md">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-space-xs" id="stepper-cards">
+              <!-- Step 1 -->
+              <button onclick="goToStep(1)" class="step-card text-left p-space-sm rounded flex flex-col gap-1 transition-all bg-surface-container-lowest/15 hover:bg-surface-container-lowest/25" id="step-nav-1">
+                <div class="flex items-center justify-between text-tertiary-fixed">
+                  <span class="font-label-sm text-label-sm font-bold">01. Personal</span>
+                  <span class="material-symbols-outlined text-[16px] step-icon">check_circle</span>
+                </div>
+                <div class="w-full bg-tertiary-fixed h-1 rounded-full"></div>
+                <span class="font-label-sm text-label-sm text-surface-container-highest truncate">Completed</span>
+              </button>
+
+              <!-- Step 2 -->
+              <button onclick="goToStep(2)" class="step-card text-left p-space-sm rounded flex flex-col gap-1 transition-all bg-surface-container-lowest/15 hover:bg-surface-container-lowest/25" id="step-nav-2">
+                <div class="flex items-center justify-between text-tertiary-fixed">
+                  <span class="font-label-sm text-label-sm font-bold">02. Category</span>
+                  <span class="material-symbols-outlined text-[16px] step-icon">check_circle</span>
+                </div>
+                <div class="w-full bg-tertiary-fixed h-1 rounded-full"></div>
+                <span class="font-label-sm text-label-sm text-surface-container-highest truncate">Completed</span>
+              </button>
+
+              <!-- Step 3 -->
+              <button onclick="goToStep(3)" class="step-card text-left p-space-sm rounded flex flex-col gap-1 transition-all bg-secondary text-on-secondary shadow-lg ring-2 ring-secondary-fixed" id="step-nav-3">
+                <div class="flex items-center justify-between">
+                  <span class="font-label-sm text-label-sm font-bold tracking-wide">03. Academic</span>
+                  <span class="material-symbols-outlined text-[16px] step-icon">pending</span>
+                </div>
+                <div class="w-full bg-surface-container-lowest h-1 rounded-full"></div>
+                <span class="font-label-sm text-label-sm text-secondary-fixed truncate font-bold">Active Track</span>
+              </button>
+
+              <!-- Step 4 -->
+              <button onclick="goToStep(4)" class="step-card text-left p-space-sm rounded flex flex-col gap-1 transition-all bg-surface-container-lowest/15 hover:bg-surface-container-lowest/25" id="step-nav-4">
+                <div class="flex items-center justify-between text-surface-container-highest">
+                  <span class="font-label-sm text-label-sm font-bold">04. Financial</span>
+                  <span class="material-symbols-outlined text-[16px] step-icon">radio_button_unchecked</span>
+                </div>
+                <div class="w-full bg-surface-container-highest/40 h-1 rounded-full"></div>
+                <span class="font-label-sm text-label-sm text-surface-container-highest truncate">Pending</span>
+              </button>
+
+              <!-- Step 5 -->
+              <button onclick="goToStep(5)" class="step-card text-left p-space-sm rounded flex flex-col gap-1 transition-all bg-surface-container-lowest/15 hover:bg-surface-container-lowest/25" id="step-nav-5">
+                <div class="flex items-center justify-between text-surface-container-highest">
+                  <span class="font-label-sm text-label-sm font-bold">05. Documents</span>
+                  <span class="material-symbols-outlined text-[16px] step-icon">radio_button_unchecked</span>
+                </div>
+                <div class="w-full bg-surface-container-highest/40 h-1 rounded-full"></div>
+                <span class="font-label-sm text-label-sm text-surface-container-highest truncate">Pending</span>
+              </button>
+
+              <!-- Step 6 -->
+              <button onclick="goToStep(6)" class="step-card text-left p-space-sm rounded flex flex-col gap-1 transition-all bg-surface-container-lowest/15 hover:bg-surface-container-lowest/25" id="step-nav-6">
+                <div class="flex items-center justify-between text-surface-container-highest">
+                  <span class="font-label-sm text-label-sm font-bold">06. Review</span>
+                  <span class="material-symbols-outlined text-[16px] step-icon">radio_button_unchecked</span>
+                </div>
+                <div class="w-full bg-surface-container-highest/40 h-1 rounded-full"></div>
+                <span class="font-label-sm text-label-sm text-surface-container-highest truncate">Pending</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- STEP 1 CONTAINER: PERSONAL DETAILS -->
+      <!-- ========================================== -->
+      <div id="step-container-1" class="step-content hidden max-w-7xl mx-auto px-margin py-space-xl w-full">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-xl">
+          <div class="lg:col-span-8 flex flex-col gap-space-lg">
+            <div class="bg-surface-container-lowest rounded-xl shadow-md p-space-lg border border-outline-variant/30">
+              <div class="flex items-center justify-between pb-space-sm border-b border-surface-variant mb-space-md">
+                <h2 class="font-title-md text-title-md text-primary font-bold flex items-center gap-2">
+                  <span class="material-symbols-outlined text-secondary">badge</span>
+                  Applicant Personal Information (व्यक्तिगत विवरण)
+                </h2>
+                <span class="px-2 py-0.5 bg-tertiary-container text-white rounded text-label-sm font-semibold">
+                  Aadhaar e-KYC Verified
+                </span>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+                <div>
+                  <label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Full Legal Name *</label>
+                  <input class="w-full h-11 px-space-md bg-surface-container-low rounded font-body-md text-body-md text-on-surface" id="input-full-name" value="Priya Munda"/>
+                </div>
+                <div>
+                  <label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Date of Birth (DOB) *</label>
+                  <input class="w-full h-11 px-space-md bg-surface-container-low rounded font-body-md text-body-md text-on-surface" id="input-dob" type="date" value="1998-08-14"/>
+                </div>
+                <div>
+                  <label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Gender *</label>
+                  <select class="w-full h-11 px-space-md bg-surface-container-low rounded font-body-md text-body-md text-on-surface" id="input-gender">
+                    <option value="Female" selected>Female</option>
+                    <option value="Male">Male</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Primary Mobile Number *</label>
+                  <input class="w-full h-11 px-space-md bg-surface-container-low rounded font-body-md text-body-md text-on-surface" id="input-mobile" value="+91 98765 43210"/>
+                </div>
+                <div>
+                  <label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Email Address *</label>
+                  <input class="w-full h-11 px-space-md bg-surface-container-low rounded font-body-md text-body-md text-on-surface" id="input-email" value="priya.munda@email.com"/>
+                </div>
+                <div>
+                  <label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Father's / Guardian's Name *</label>
+                  <input class="w-full h-11 px-space-md bg-surface-container-low rounded font-body-md text-body-md text-on-surface" id="input-father" value="Shri Birsa Munda"/>
+                </div>
+                <div class="md:col-span-2">
+                  <label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Permanent Residential Address *</label>
+                  <textarea class="w-full h-20 p-space-sm bg-surface-container-low rounded font-body-md text-body-md text-on-surface" id="input-address">Village Torpa, Khunti, Jharkhand - 835227</textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bottom Actions -->
+            <div class="flex justify-end gap-space-md">
+              <button onclick="saveStepAndContinue(1, 2)" class="h-11 px-space-lg rounded font-label-md text-label-md text-white bg-secondary hover:bg-secondary/90 transition-all flex items-center gap-space-xs shadow-md">
+                Save &amp; Continue to Category
+                <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="lg:col-span-4 flex flex-col gap-space-md">
+            <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30">
+              <h3 class="font-title-md text-title-md text-primary font-bold mb-2 flex items-center gap-2">
+                <span class="material-symbols-outlined text-secondary">verified_user</span> UIDAI e-KYC
+              </h3>
+              <p class="font-body-md text-body-md text-on-surface-variant">
+                Your basic demographic details are locked with verified Aadhaar metadata. Discrepancies should be corrected at nearest Aadhaar Seva Kendra.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- STEP 2 CONTAINER: CATEGORY & TRIBE DETAILS -->
+      <!-- ========================================== -->
+      <div id="step-container-2" class="step-content hidden max-w-7xl mx-auto px-margin py-space-xl w-full">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-xl">
+          <div class="lg:col-span-8 flex flex-col gap-space-lg">
+            <div class="bg-surface-container-lowest rounded-xl shadow-md p-space-lg border border-outline-variant/30">
+              <div class="flex items-center justify-between pb-space-sm border-b border-surface-variant mb-space-md">
+                <h2 class="font-title-md text-title-md text-primary font-bold flex items-center gap-2">
+                  <span class="material-symbols-outlined text-secondary">diversity_3</span>
+                  Category &amp; Scheduled Tribe Certification (जनजातीय श्रेणी)
+                </h2>
+                <span class="px-2 py-0.5 bg-tertiary-container text-white rounded text-label-sm font-semibold">
+                  DigiLocker Synced
+                </span>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+                <div>
+                  <label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Scheduled Tribe Community *</label>
+                  <select class="w-full h-11 px-space-md bg-surface-container-low rounded font-body-md text-body-md text-on-surface" id="input-tribe">
+                    <option value="Munda (ST)" selected>Munda (ST)</option>
+                    <option value="Santhal (ST)">Santhal (ST)</option>
+                    <option value="Oraon (ST)">Oraon (ST)</option>
+                    <option value="Gond (ST)">Gond (ST)</option>
+                    <option value="Bhil (ST)">Bhil (ST)</option>
+                    <option value="Other Recognized ST">Other Recognized ST</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Caste Certificate Number *</label>
+                  <input class="w-full h-11 px-space-md bg-surface-container-low font-mono rounded font-body-md text-body-md text-on-surface" id="input-cert-no" value="JH/REV/ST/2022/984321"/>
+                </div>
+                <div>
+                  <label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Issuing Authority *</label>
+                  <input class="w-full h-11 px-space-md bg-surface-container-low rounded font-body-md text-body-md text-on-surface" id="input-cert-auth" value="SDM/Tehsildar, Khunti"/>
+                </div>
+                <div>
+                  <label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Date of Issuance *</label>
+                  <input class="w-full h-11 px-space-md bg-surface-container-low rounded font-body-md text-body-md text-on-surface" id="input-cert-date" type="date" value="2022-06-18"/>
+                </div>
+                <div>
+                  <label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Particularly Vulnerable Tribal Group (PVTG)?</label>
+                  <select class="w-full h-11 px-space-md bg-surface-container-low rounded font-body-md text-body-md text-on-surface" id="input-pvtg">
+                    <option value="No" selected>No</option>
+                    <option value="Yes">Yes (Priority Support)</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Person with Benchmark Disability (PwD)?</label>
+                  <select class="w-full h-11 px-space-md bg-surface-container-low rounded font-body-md text-body-md text-on-surface" id="input-pwd">
+                    <option value="No" selected>No</option>
+                    <option value="Yes">Yes (≥40% Impairment)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bottom Actions -->
+            <div class="flex justify-between gap-space-md">
+              <button onclick="goToStep(1)" class="h-11 px-space-md rounded font-label-md text-label-md text-primary bg-surface-container hover:bg-surface-container-high transition-colors flex items-center gap-space-xs">
+                <span class="material-symbols-outlined text-[18px]">arrow_back</span> Previous (1. Personal)
+              </button>
+              <button onclick="saveStepAndContinue(2, 3)" class="h-11 px-space-lg rounded font-label-md text-label-md text-white bg-secondary hover:bg-secondary/90 transition-all flex items-center gap-space-xs shadow-md">
+                Save &amp; Continue to Academic
+                <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="lg:col-span-4 flex flex-col gap-space-md">
+            <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30">
+              <h3 class="font-title-md text-title-md text-primary font-bold mb-2 flex items-center gap-2">
+                <span class="material-symbols-outlined text-secondary">policy</span> Central ST Ledger
+              </h3>
+              <p class="font-body-md text-body-md text-on-surface-variant">
+                Certificate issued under Article 342 of the Constitution of India. State e-District repository matches verified records for Khunti District.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- STEP 3 CONTAINER: ACADEMIC DETAILS (SCREEN 11) -->
+      <!-- ========================================== -->
+      <div id="step-container-3" class="step-content max-w-7xl mx-auto px-margin py-space-xl w-full">
+        <!-- Main Body Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-xl">
+          <!-- Left Column: Form Core (8 Cols) -->
+          <div class="lg:col-span-8 flex flex-col gap-space-lg">
+            <!-- Dynamic Dual Track Switcher Banner -->
+            <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden border border-outline-variant/30">
+              <div class="bg-primary px-space-md py-space-sm flex items-center justify-between text-surface-container-lowest">
+                <div class="flex items-center gap-space-xs">
+                  <span class="material-symbols-outlined text-[20px] text-secondary-container">tune</span>
+                  <span class="font-label-lg text-label-lg tracking-wide uppercase">Scheme Track Selector / योजना चयन</span>
+                </div>
+                <span class="font-label-sm text-label-sm bg-surface-container-lowest/15 px-space-xs py-0.5 rounded text-surface-container-lowest">
+                  Dual Scheme Compatible
+                </span>
+              </div>
+              <div class="p-space-lg">
+                <p class="font-body-md text-body-md text-on-surface-variant mb-space-md">
+                  Choose your primary scheme track. You can compare overseas parameters against the domestic national fellowship at any stage before final lock:
+                </p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md" id="scheme-tabs">
+                  <!-- NOS Tab (Default Active) -->
+                  <button class="flex flex-col text-left p-space-md rounded-xl bg-surface-container-low transition-all duration-200 shadow-sm relative overflow-hidden ring-2 ring-primary" id="tab-nos" onclick="switchScheme('NOS')" type="button">
+                    <div class="absolute top-2 right-2 text-secondary flex items-center">
+                      <span class="material-symbols-outlined text-[22px]">check_circle</span>
+                    </div>
+                    <div class="flex items-center gap-space-xs mb-1">
+                      <span class="material-symbols-outlined text-primary text-[20px]">public</span>
+                      <span class="font-title-md text-title-md text-primary font-bold">National Overseas (NOS)</span>
+                    </div>
+                    <p class="font-label-sm text-label-sm text-on-surface-variant">
+                      Full funding for Ph.D. &amp; Masters at QS Top 500 Global Universities abroad.
+                    </p>
+                    <div class="mt-space-sm flex items-center gap-space-xs">
+                      <span class="px-space-xs py-0.5 rounded text-[11px] bg-secondary-fixed text-on-secondary-fixed font-semibold">Overseas Track Active</span>
+                      <span class="font-label-sm text-label-sm text-outline">100 Annual Awards</span>
+                    </div>
+                  </button>
+
+                  <!-- NFST Tab -->
+                  <button class="flex flex-col text-left p-space-md rounded-xl bg-surface-container-lowest hover:bg-surface-container-low transition-all duration-200 shadow-sm relative overflow-hidden" id="tab-nfst" onclick="switchScheme('NFST')" type="button">
+                    <div class="flex items-center gap-space-xs mb-1">
+                      <span class="material-symbols-outlined text-outline text-[20px]">domain</span>
+                      <span class="font-title-md text-title-md text-on-surface font-bold">National Fellowship (NFST)</span>
+                    </div>
+                    <p class="font-label-sm text-label-sm text-on-surface-variant">
+                      Direct monthly fellowship stipend for M.Phil / Ph.D. scholars in Indian Universities / IITs / NITs.
+                    </p>
+                    <div class="mt-space-sm flex items-center gap-space-xs">
+                      <span class="px-space-xs py-0.5 rounded text-[11px] bg-surface-container-highest text-on-surface-variant font-semibold">Domestic Track</span>
+                      <span class="font-label-sm text-label-sm text-outline">750 Slots</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Eligibility Cutoff Validated Banner -->
+            <div class="bg-tertiary-fixed/20 rounded-xl p-space-md flex items-start gap-space-md shadow-sm border border-tertiary-fixed/40">
+              <span class="material-symbols-outlined text-on-tertiary-fixed-variant text-[28px] shrink-0 mt-0.5">verified_user</span>
+              <div>
+                <h4 class="font-label-lg text-label-lg text-on-tertiary-fixed-variant font-bold">Aggregate Eligibility Cutoff Satisfied (योग्यता मानक सत्यापित)</h4>
+                <p class="font-body-md text-body-md text-on-tertiary-fixed-variant/90 mt-0.5">
+                  National Overseas Scholarship (NOS) mandates a minimum aggregate of <strong>55.0%</strong> or equivalent grade in qualifying Master's degree. Your verified academic record yields <strong>74.60% (8.2 CGPA)</strong>, successfully clearing the eligibility threshold with merit advantage.
+                </p>
+              </div>
+            </div>
+
+            <!-- FORM SECTION: NOS Active Track -->
+            <div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-lg flex flex-col gap-space-lg border border-outline-variant/30" id="panel-nos">
+              <div class="flex items-center justify-between pb-space-sm border-b border-surface-variant">
+                <div>
+                  <h2 class="font-title-md text-title-md text-primary flex items-center gap-space-xs font-bold">
+                    <span class="material-symbols-outlined text-secondary">flight_takeoff</span>
+                    Target Overseas Course &amp; University Credentials
+                  </h2>
+                  <p class="font-label-sm text-label-sm text-on-surface-variant">Provide admission status and QS World Ranking compliance documentation.</p>
+                </div>
+                <span class="px-space-sm py-1 bg-surface-container text-primary font-mono text-label-sm rounded font-semibold">
+                  SEC: 3A-NOS
+                </span>
+              </div>
+
+              <div class="flex flex-col gap-space-lg">
+                <!-- Row 1: Course Level & Target Country -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+                  <div>
+                    <label class="block font-label-md text-label-md text-on-surface mb-1 font-semibold" for="course-level">
+                      Intended Course Level / पाठ्यक्रम स्तर <span class="text-error font-bold">*</span>
+                    </label>
+                    <select class="w-full h-11 px-space-md bg-surface-container-low rounded font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-secondary" id="course-level">
+                      <option selected value="phd">Ph.D. / Doctoral Research (Abroad)</option>
+                      <option value="masters">Master's Degree (Postgraduate Abroad)</option>
+                      <option value="postdoc">Post-Doctoral Fellowship</option>
+                    </select>
+                    <p class="font-label-sm text-label-sm text-outline mt-1">Duration sanctioned: 3 to 4 years for Ph.D.</p>
+                  </div>
+                  <div>
+                    <label class="block font-label-md text-label-md text-on-surface mb-1 font-semibold" for="host-country">
+                      Host Destination Country / देश <span class="text-error font-bold">*</span>
+                    </label>
+                    <select class="w-full h-11 px-space-md bg-surface-container-low rounded font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-secondary" id="host-country">
+                      <option selected value="UK">United Kingdom / Great Britain (UK)</option>
+                      <option value="USA">United States of America (USA)</option>
+                      <option value="AUS">Australia</option>
+                      <option value="CAN">Canada</option>
+                      <option value="GER">Germany</option>
+                      <option value="OTH">Other Specified Country</option>
+                    </select>
+                    <p class="font-label-sm text-label-sm text-outline mt-1">Full travel allowance granted on central DBT basis.</p>
+                  </div>
+                </div>
+
+                <!-- Row 2: Host University with QS Ranking Auto-Tag -->
+                <div>
+                  <div class="flex items-center justify-between mb-1">
+                    <label class="font-label-md text-label-md text-on-surface font-semibold" for="univ-name">
+                      Designated Foreign University / विदेशी विश्वविद्यालय <span class="text-error font-bold">*</span>
+                    </label>
+                    <span class="font-label-sm text-label-sm text-tertiary-container font-bold flex items-center gap-0.5">
+                      <span class="material-symbols-outlined text-[16px]">stars</span>
+                      QS Global Ranking: #3 Verified
+                    </span>
+                  </div>
+                  <div class="relative">
+                    <input class="w-full h-11 pl-10 pr-space-md bg-surface-container-low rounded font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-secondary font-semibold" id="univ-name" type="text" value="University of Oxford, United Kingdom"/>
+                    <span class="material-symbols-outlined absolute left-3 top-3 text-outline text-[20px]">account_balance</span>
+                  </div>
+                  <div class="mt-2 flex flex-wrap items-center gap-space-xs font-label-sm text-label-sm text-on-surface-variant">
+                    <span class="px-space-xs py-0.5 bg-surface-container rounded font-mono font-bold">QS 2026: Rank 3</span>
+                    <span>•</span>
+                    <span class="text-tertiary-container font-semibold">Eligible category: Top 500 QS Benchmark compliant</span>
+                    <span>•</span>
+                    <a class="text-secondary hover:underline flex items-center font-semibold" href="#" onclick="showToast('Oxford QS Ranking #3 confirmed via official registry', 'info'); return false;">
+                      Verify in official QS ledger <span class="material-symbols-outlined text-[14px]">open_in_new</span>
+                    </a>
+                  </div>
+                </div>
+
+                <!-- Row 3: Exact Course Name & Department -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+                  <div>
+                    <label class="block font-label-md text-label-md text-on-surface mb-1 font-semibold" for="course-title">
+                      Exact Course / Degree Nomenclature <span class="text-error font-bold">*</span>
+                    </label>
+                    <input class="w-full h-11 px-space-md bg-surface-container-low rounded font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-secondary" id="course-title" type="text" value="DPhil in Plant Sciences and Ethno-botany"/>
+                  </div>
+                  <div>
+                    <label class="block font-label-md text-label-md text-on-surface mb-1 font-semibold" for="dept-faculty">
+                      Faculty / Department
+                    </label>
+                    <input class="w-full h-11 px-space-md bg-surface-container-low rounded font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-secondary" id="dept-faculty" type="text" value="Department of Biology &amp; Linacre College"/>
+                  </div>
+                </div>
+
+                <!-- Row 4: Admission Status Selection -->
+                <div class="bg-surface-container-low p-space-md rounded-xl">
+                  <label class="block font-label-md text-label-md text-primary font-bold mb-space-sm">
+                    Nature of Admission Offer Letter / प्रवेश प्रस्ताव की स्थिति <span class="text-error font-bold">*</span>
+                  </label>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+                    <label class="flex items-start gap-space-sm p-space-md bg-surface-container-lowest rounded-lg cursor-pointer shadow-sm ring-2 ring-tertiary-container">
+                      <input checked class="mt-1 accent-primary" name="admission-nature" type="radio" value="unconditional"/>
+                      <div>
+                        <div class="flex items-center gap-space-xs">
+                          <span class="font-label-md text-label-md text-primary font-bold">Unconditional Offer Letter</span>
+                          <span class="px-space-xs py-0.5 rounded text-[10px] bg-tertiary-fixed text-on-tertiary-fixed font-bold uppercase">Priority Track</span>
+                        </div>
+                        <p class="font-label-sm text-label-sm text-on-surface-variant mt-0.5">
+                          All academic, language (IELTS/TOEFL) and financial prerequisites satisfied. Immediate disbursement consideration.
+                        </p>
+                      </div>
+                    </label>
+                    <label class="flex items-start gap-space-sm p-space-md bg-surface-container-lowest rounded-lg cursor-pointer hover:bg-surface-container transition-colors">
+                      <input class="mt-1 accent-primary" name="admission-nature" type="radio" value="conditional"/>
+                      <div>
+                        <span class="font-label-md text-label-md text-on-surface font-semibold">Conditional Offer Letter</span>
+                        <p class="font-label-sm text-label-sm text-outline mt-0.5">
+                          Subject to final transcripts, English certification, or supervisor endorsement prior to visa staging.
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Row 5: Offer Letter Specifics -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+                  <div>
+                    <label class="block font-label-md text-label-md text-on-surface mb-1 font-semibold" for="offer-ref">
+                      Offer Reference No. / ID <span class="text-error font-bold">*</span>
+                    </label>
+                    <input class="w-full h-11 px-space-md bg-surface-container-low font-mono rounded font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-secondary font-semibold" id="offer-ref" type="text" value="OX-INTL-2026-90412"/>
+                  </div>
+                  <div>
+                    <label class="block font-label-md text-label-md text-on-surface mb-1 font-semibold" for="session-start">
+                      Session Commencing Date <span class="text-error font-bold">*</span>
+                    </label>
+                    <input class="w-full h-11 px-space-md bg-surface-container-low rounded font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-secondary" id="session-start" type="date" value="2026-10-01"/>
+                  </div>
+                  <div>
+                    <label class="block font-label-md text-label-md text-on-surface mb-1 font-semibold" for="tuition-quoted">
+                      Annual Tuition Quoted <span class="text-error font-bold">*</span>
+                    </label>
+                    <div class="relative">
+                      <input class="w-full h-11 px-space-md bg-surface-container-low rounded font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-secondary" id="tuition-quoted" type="text" value="£28,500 / annum"/>
+                      <span class="material-symbols-outlined absolute right-3 top-3 text-outline text-[18px]">payments</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Qualifying Degree Prior Record (Summary Accordion Style) -->
+                <div class="bg-surface-container-low rounded-xl p-space-md border border-outline-variant/30">
+                  <div class="flex items-center justify-between mb-space-sm">
+                    <span class="font-label-lg text-label-lg text-primary flex items-center gap-space-xs font-bold">
+                      <span class="material-symbols-outlined text-[18px]">history_edu</span>
+                      Validated Indian Qualifying Degree (DigiLocker Synced)
+                    </span>
+                    <span class="font-label-sm text-label-sm text-tertiary-container flex items-center gap-1 font-bold">
+                      <span class="material-symbols-outlined text-[16px]">task_alt</span> Auto-Populated
+                    </span>
+                  </div>
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-space-md text-left">
+                    <div class="bg-surface-container-lowest p-space-sm rounded">
+                      <p class="font-label-sm text-label-sm text-outline">Degree Earned</p>
+                      <p class="font-label-md text-label-md text-on-surface font-semibold truncate">M.Sc. Forestry &amp; Env.</p>
+                    </div>
+                    <div class="bg-surface-container-lowest p-space-sm rounded">
+                      <p class="font-label-sm text-label-sm text-outline">University</p>
+                      <p class="font-label-md text-label-md text-on-surface font-semibold truncate">Ranchi University</p>
+                    </div>
+                    <div class="bg-surface-container-lowest p-space-sm rounded">
+                      <p class="font-label-sm text-label-sm text-outline">Passing Year</p>
+                      <p class="font-label-md text-label-md text-on-surface font-semibold">2024 (First Class)</p>
+                    </div>
+                    <div class="bg-surface-container-lowest p-space-sm rounded">
+                      <p class="font-label-sm text-label-sm text-outline">Marks Obtained</p>
+                      <p class="font-label-md text-label-md text-secondary font-bold">1492 / 2000 (74.6%)</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- CONDITIONAL PANEL: NFST Domestic Track Preview -->
+            <div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-lg flex flex-col gap-space-md border border-outline-variant/30 hidden" id="panel-nfst">
+              <div class="flex items-center justify-between pb-space-xs border-b border-surface-variant">
+                <div class="flex items-center gap-space-xs">
+                  <span class="material-symbols-outlined text-secondary text-[22px]">compare_arrows</span>
+                  <div>
+                    <h3 class="font-title-md text-title-md text-primary font-bold">National Fellowship (NFST) Domestic Track</h3>
+                    <p class="font-label-sm text-label-sm text-on-surface-variant">Fields pre-configured for UGC / MoTA Indian Universities:</p>
+                  </div>
+                </div>
+                <span class="px-space-sm py-1 bg-surface-container-high text-on-surface font-mono text-label-sm rounded font-semibold">
+                  NFST-2026 Preview
+                </span>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-space-md mt-space-sm">
+                <div>
+                  <label class="block font-label-md text-label-md text-on-surface mb-1">Registered Institution / University (India)</label>
+                  <input class="w-full h-11 px-space-md bg-surface-container rounded font-body-md text-body-md text-on-surface cursor-not-allowed font-semibold" readonly type="text" value="Ranchi University, Jharkhand (Govt. State Univ)"/>
+                </div>
+                <div>
+                  <label class="block font-label-md text-label-md text-on-surface mb-1">Postgraduate Subject Specialization</label>
+                  <input class="w-full h-11 px-space-md bg-surface-container rounded font-body-md text-body-md text-on-surface cursor-not-allowed" readonly type="text" value="Ethno-Botany &amp; Tribal Indigenous Knowledge Systems"/>
+                </div>
+              </div>
+              <div>
+                <label class="block font-label-md text-label-md text-on-surface mb-1">Broad Research Discipline / क्षेत्र</label>
+                <input class="w-full h-11 px-space-md bg-surface-container rounded font-body-md text-body-md text-on-surface cursor-not-allowed" readonly type="text" value="Sustainable Forest Resource Governance &amp; Livelihood in Chota Nagpur Plateau"/>
+              </div>
+              <div>
+                <label class="block font-label-md text-label-md text-on-surface mb-1">Doctoral Research Proposal Title / शोध शीर्षक</label>
+                <div class="p-space-md bg-surface-container rounded font-body-md text-body-md text-on-surface italic">
+                  "Impact of Joint Forest Management on Munda Tribal Livelihoods in Jharkhand (2015-2025): An Empirical Assessment of Community Forest Rights under FRA."
+                </div>
+              </div>
+              <div class="flex items-center justify-between text-label-sm bg-surface-container-low p-space-sm rounded">
+                <span class="text-on-surface-variant">UGC-NET / JRF Exemption: <strong>Valid NET Score (Roll: JH042091)</strong></span>
+                <span class="text-secondary font-bold">Stipend: ₹37,000 + HRA monthly</span>
+              </div>
+            </div>
+
+            <!-- Bottom Navigation Bar for Step 3 -->
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-space-md pt-space-xs">
+              <button onclick="goToStep(2)" class="w-full sm:w-auto h-11 px-space-md rounded font-label-md text-label-md text-on-surface bg-surface-container hover:bg-surface-container-high transition-colors flex items-center justify-center gap-space-xs">
+                <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                Previous (2. Category &amp; Tribe)
+              </button>
+              <button onclick="saveStepAndContinue(3, 4)" class="w-full sm:w-auto h-11 px-space-lg rounded font-label-md text-label-md text-surface-container-lowest bg-secondary hover:bg-secondary/90 transition-all flex items-center justify-center gap-space-xs shadow-md font-bold">
+                Save &amp; Continue (4. Financial)
+                <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Right Column: Institutional Guidance & Summary (4 Cols) -->
+          <div class="lg:col-span-4 flex flex-col gap-space-lg">
+            <!-- Guidance Card 1: QS Ranking Compliance -->
+            <div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm border border-outline-variant/30">
+              <div class="flex items-center gap-space-sm mb-space-sm text-primary">
+                <span class="material-symbols-outlined text-[24px]">policy</span>
+                <h3 class="font-title-md text-title-md text-primary font-bold">Mandatory Guidelines</h3>
+              </div>
+              <div class="space-y-space-md">
+                <div class="p-space-md bg-surface-container-low rounded-lg">
+                  <p class="font-label-md text-label-md text-primary font-bold flex items-center gap-1 mb-1">
+                    <span class="material-symbols-outlined text-secondary text-[18px]">verified</span>
+                    Top 500 QS World Ranking Rule
+                  </p>
+                  <p class="font-label-sm text-label-sm text-on-surface-variant">
+                    Under amended MoTA criteria, candidates must secure admission in top 500 QS world ranked universities. Your selected institution (Oxford) is ranked <strong>#3</strong>.
+                  </p>
+                </div>
+                <div class="p-space-md bg-surface-container-low rounded-lg">
+                  <p class="font-label-md text-label-md text-primary font-bold flex items-center gap-1 mb-1">
+                    <span class="material-symbols-outlined text-secondary text-[18px]">priority_high</span>
+                    Offer Letter Scoring Priority
+                  </p>
+                  <p class="font-label-sm text-label-sm text-on-surface-variant">
+                    <strong>Unconditional offer letters</strong> receive priority direct scoring in the Steering Committee selection list.
+                  </p>
+                </div>
+                <div class="p-space-md bg-surface-container-low rounded-lg">
+                  <p class="font-label-md text-label-md text-primary font-bold flex items-center gap-1 mb-1">
+                    <span class="material-symbols-outlined text-secondary text-[18px]">family_restroom</span>
+                    Family Income Capping
+                  </p>
+                  <p class="font-label-sm text-label-sm text-on-surface-variant">
+                    Annual family income must not exceed ₹6.00 Lakhs per annum for 100% overseas contingency cover (to be verified in Step 4).
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Guidance Card 2: Field Heritage Visual -->
+            <div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm border border-outline-variant/30">
+              <div class="relative h-44 w-full">
+                <img class="w-full h-full object-cover" alt="Tribal botanical research" src="https://lh3.googleusercontent.com/aida-public/AB6AXuARwOYOWKhZWcxwrZelaaoyRAbRk36gZDrCCtXNSZB_jivOmGzFc-w2KOls75pwoHTDyFmJ561zUgZAswfnvF1Xs1eAxBVJYZnztkyhMos6sTN-3335MUtNzkAOhYOXeLYpzG3HIZXmLgzPSG6tEHIJXEW-oYcdafQBrhSINdUuGn6g5RyA85-kCF7opJNiwpaHWC9bQQNvS_-PFVz1V2xcU2zZBVeBIfbl26A2xQScaMlEeZApgpcZYg"/>
+                <div class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/40 to-transparent flex flex-col justify-end p-space-md text-surface-container-lowest">
+                  <span class="px-space-xs py-0.5 w-fit rounded text-[10px] font-bold bg-secondary-container text-on-secondary-container mb-1 uppercase">Field Heritage</span>
+                  <p class="font-label-md text-label-md font-bold leading-tight">Preserving Tribal Botanical Science at Global Institutions</p>
+                </div>
+              </div>
+              <div class="p-space-md">
+                <p class="font-label-sm text-label-sm text-on-surface-variant leading-relaxed">
+                  Scholars under MoTA NOS have successfully completed research across 24 countries, bridging classical tribal wisdom with modern ecological research.
+                </p>
+              </div>
+            </div>
+
+            <!-- Guidance Card 3: Help Desk -->
+            <div class="bg-primary-container text-surface-container-lowest rounded-xl p-space-md shadow-sm">
+              <div class="flex items-center gap-space-sm mb-space-xs">
+                <span class="material-symbols-outlined text-secondary-container">contact_support</span>
+                <h4 class="font-label-lg text-label-lg font-bold">Academic Verification Desk</h4>
+              </div>
+              <p class="font-label-sm text-label-sm text-on-primary-container mb-space-sm">
+                Need help matching your university curriculum or course syllabus? Connect with our dedicated academic desk:
+              </p>
+              <div class="font-label-sm text-label-sm text-surface-container-lowest flex flex-col gap-1 font-mono">
+                <span>☎ Toll Free: 1800-11-7777 (Ext 3)</span>
+                <span>✉ mota-academic@gov.in</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- STEP 4 CONTAINER: FINANCIAL DETAILS (SCREEN 12) -->
+      <!-- ========================================== -->
+      <div id="step-container-4" class="step-content hidden max-w-7xl mx-auto px-margin py-space-xl w-full">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-xl items-start">
+          <div class="lg:col-span-8 flex flex-col gap-space-lg">
+            <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm space-y-space-xs border border-outline-variant/30">
+              <div class="flex flex-wrap items-center justify-between gap-space-sm">
+                <h2 class="font-headline-md text-headline-md text-primary font-bold text-xl sm:text-2xl">
+                  Financial Details &amp; Direct Benefit Transfer (DBT) Bank Account
+                </h2>
+                <span class="font-label-sm text-label-sm text-secondary font-bold bg-secondary-fixed/50 px-space-sm py-1 rounded">
+                  वित्तीय एवं बैंक विवरण
+                </span>
+              </div>
+              <p class="font-body-md text-body-md text-on-surface-variant">
+                Provide certified annual family income details and an active Aadhaar-seeded primary savings bank account for direct disbursement of scholarship allowance.
+              </p>
+            </div>
+
+            <!-- Section A: Family Income -->
+            <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm relative overflow-hidden border border-outline-variant/30">
+              <div class="absolute top-0 left-0 w-1.5 h-full bg-secondary"></div>
+              <div class="flex items-center justify-between pb-space-md">
+                <div class="flex items-center gap-space-sm">
+                  <span class="w-8 h-8 rounded bg-secondary/10 text-secondary flex items-center justify-center font-bold">
+                    <span class="material-symbols-outlined text-[20px]">payments</span>
+                  </span>
+                  <div>
+                    <h3 class="font-title-md text-title-md text-primary font-bold">Section A: Family Income Certification</h3>
+                    <p class="font-label-sm text-label-sm text-on-surface-variant">सक्षम प्राधिकारी द्वारा जारी परिवार का वार्षिक आय प्रमाण-पत्र</p>
+                  </div>
+                </div>
+                <span class="inline-flex items-center gap-1 px-space-sm py-0.5 rounded text-[12px] font-semibold bg-tertiary-container text-surface-container-lowest">
+                  <span class="material-symbols-outlined text-[14px]">verified</span> Digital Signature Valid
+                </span>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+                <div class="md:col-span-2 bg-surface-container-low p-space-md rounded">
+                  <label class="font-label-md text-label-md text-on-surface font-semibold block mb-1" for="annual-income">
+                    Annual Family Income (सकल वार्षिक पारिवारिक आय) <span class="text-error font-bold">*</span>
+                  </label>
+                  <div class="relative">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 font-headline-sm text-headline-sm text-primary font-bold">₹</span>
+                    <input class="w-full h-11 pl-9 pr-space-md bg-surface-container-lowest rounded font-headline-sm text-headline-sm font-bold text-primary focus:outline-none" id="annual-income" type="text" value="4,50,000"/>
+                  </div>
+                  <div class="mt-space-sm flex flex-wrap items-center justify-between gap-space-xs">
+                    <div class="flex items-center gap-1 text-tertiary-container font-label-sm text-label-sm font-semibold">
+                      <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                      Within permissible ceiling limit of ≤ ₹6,00,000 per annum for NOS Category-I
+                    </div>
+                    <span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Four Lakh Fifty Thousand Only</span>
+                  </div>
+                  <div class="w-full bg-surface-container-highest h-1.5 rounded-full mt-2 overflow-hidden">
+                    <div class="bg-tertiary-container h-full" style="width: 75%;"></div>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="font-label-md text-label-md text-on-surface font-semibold block mb-1" for="income-cert-no">
+                    Income Certificate Number (प्रमाण पत्र संख्या) <span class="text-error font-bold">*</span>
+                  </label>
+                  <input class="w-full h-11 px-space-md bg-surface-container-low text-on-surface font-label-md text-label-md font-semibold rounded focus:bg-surface-container-lowest focus:outline-none" id="income-cert-no" type="text" value="JH/INC/2024/761298"/>
+                  <span class="font-label-sm text-label-sm text-on-surface-variant mt-1 block">As verified with JharSewa State Portal</span>
+                </div>
+                <div>
+                  <label class="font-label-md text-label-md text-on-surface font-semibold block mb-1" for="issuing-authority">
+                    Issuing Competent Authority (जारीकर्ता प्राधिकारी) <span class="text-error font-bold">*</span>
+                  </label>
+                  <select class="w-full h-11 px-space-md bg-surface-container-low text-on-surface font-label-md text-label-md font-semibold rounded focus:bg-surface-container-lowest focus:outline-none" id="issuing-authority">
+                    <option selected value="tehsildar-khunti">Tehsildar, Khunti (खूंटी तहसील)</option>
+                    <option value="sdo">Sub-Divisional Officer (SDO)</option>
+                    <option value="circle-officer">Circle Officer (CO)</option>
+                    <option value="dm">District Magistrate / Collector</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="font-label-md text-label-md text-on-surface font-semibold block mb-1" for="issue-date">
+                    Date of Issuance (जारी करने की तिथि) <span class="text-error font-bold">*</span>
+                  </label>
+                  <div class="relative">
+                    <input class="w-full h-11 px-space-md bg-surface-container-low text-on-surface font-label-md text-label-md rounded focus:bg-surface-container-lowest focus:outline-none" id="issue-date" type="text" value="12/05/2024"/>
+                    <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">calendar_today</span>
+                  </div>
+                  <span class="font-label-sm text-label-sm text-tertiary-container font-semibold mt-1 block">Valid for FY 2024–25 / AY 2026–27</span>
+                </div>
+                <div>
+                  <label class="font-label-md text-label-md text-on-surface font-semibold block mb-1" for="cert-holder-name">
+                    Certificate Issued In Name Of (प्रमाणित व्यक्ति)
+                  </label>
+                  <input class="w-full h-11 px-space-md bg-surface-container-highest text-on-surface-variant font-label-md text-label-md rounded cursor-not-allowed" id="cert-holder-name" readonly type="text" value="Shri Birsa Munda (Father / Legal Guardian)"/>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section B: Bank Details -->
+            <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm relative overflow-hidden border border-outline-variant/30">
+              <div class="absolute top-0 left-0 w-1.5 h-full bg-primary"></div>
+              <div class="flex flex-wrap items-center justify-between pb-space-md gap-space-xs">
+                <div class="flex items-center gap-space-sm">
+                  <span class="w-8 h-8 rounded bg-primary/10 text-primary flex items-center justify-center font-bold">
+                    <span class="material-symbols-outlined text-[20px]">account_balance</span>
+                  </span>
+                  <div>
+                    <h3 class="font-title-md text-title-md text-primary font-bold">Section B: Bank Account Details for PFMS Direct Benefit Transfer</h3>
+                    <p class="font-label-sm text-label-sm text-on-surface-variant">प्रत्यक्ष लाभ अंतरण (DBT) हेतु आधार-सीडेड सक्रिय बैंक खाता</p>
+                  </div>
+                </div>
+                <div class="inline-flex items-center gap-1.5 px-space-md py-1 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm font-bold shadow-sm">
+                  <span class="material-symbols-outlined text-[16px] text-tertiary-container">verified_user</span>
+                  ✓ NPCI Aadhaar Mapper Linked &amp; Active
+                </div>
+              </div>
+
+              <div class="bg-primary/5 p-space-md rounded mb-space-md flex flex-wrap items-center justify-between gap-space-sm">
+                <div class="flex items-center gap-space-sm">
+                  <span class="material-symbols-outlined text-primary text-[24px]">lock</span>
+                  <div>
+                    <p class="font-label-md text-label-md text-primary font-bold">RBI &amp; UIDAI Data Protection Protocol</p>
+                    <p class="font-label-sm text-label-sm text-on-surface-variant">Core account digits masked. Account verified through real-time NPCI PFMS Penny-Drop query.</p>
+                  </div>
+                </div>
+                <span class="font-label-sm text-label-sm text-primary font-semibold bg-surface-container-lowest px-space-sm py-1 rounded shadow-sm">
+                  Penny-Drop Auth: <span class="text-tertiary-container font-bold">SUCCESS (INR 1.00)</span>
+                </span>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+                <div class="md:col-span-2">
+                  <label class="font-label-md text-label-md text-on-surface font-semibold block mb-1" for="bank-name">
+                    Bank Name (बैंक का नाम) <span class="text-error font-bold">*</span>
+                  </label>
+                  <select class="w-full h-11 px-space-md bg-surface-container-low text-on-surface font-label-md text-label-md font-semibold rounded focus:bg-surface-container-lowest focus:outline-none" id="bank-name">
+                    <option selected value="SBI">State Bank of India (SBI) - सार्वजनिक क्षेत्र का बैंक</option>
+                    <option value="PNB">Punjab National Bank (PNB)</option>
+                    <option value="BOB">Bank of Baroda</option>
+                    <option value="CANARA">Canara Bank</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="font-label-md text-label-md text-on-surface font-semibold block mb-1" for="account-holder">
+                    Primary Account Holder Name (खाताधारक का नाम) <span class="text-error font-bold">*</span>
+                  </label>
+                  <input class="w-full h-11 px-space-md bg-surface-container-highest text-on-surface font-label-md text-label-md font-bold rounded cursor-not-allowed" id="account-holder" readonly type="text" value="Priya Munda"/>
+                  <span class="font-label-sm text-label-sm text-tertiary-container font-medium mt-1 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[14px]">check</span> Matches OTR Applicant Profile (Anti-Proxy Diversion Locked)
+                  </span>
+                </div>
+                <div>
+                  <label class="font-label-md text-label-md text-on-surface font-semibold block mb-1" for="ifsc-code">
+                    IFSC Code (आईएफएससी कोड) <span class="text-error font-bold">*</span>
+                  </label>
+                  <div class="flex gap-space-xs">
+                    <input class="w-full h-11 px-space-md bg-surface-container-low text-on-surface font-label-md text-label-md font-bold uppercase rounded focus:bg-surface-container-lowest focus:outline-none" id="ifsc-code" type="text" value="SBIN0001234"/>
+                    <button class="px-space-md h-11 bg-primary text-on-primary rounded font-label-sm text-label-sm font-semibold hover:bg-primary-container transition-colors" type="button" onclick="showToast('IFSC SBIN0001234 verified: SBI Main Branch, Khunti', 'success')">
+                      Re-Verify
+                    </button>
+                  </div>
+                  <span class="font-label-sm text-label-sm text-on-surface-variant mt-1 block">
+                    Branch: <strong>SBI Main Branch, Main Road, Khunti, Jharkhand</strong>
+                  </span>
+                </div>
+                <div>
+                  <label class="font-label-md text-label-md text-on-surface font-semibold block mb-1" for="account-num">
+                    Account Number (बैंक खाता संख्या) <span class="text-error font-bold">*</span>
+                  </label>
+                  <div class="relative">
+                    <input class="w-full h-11 px-space-md tracking-wider bg-surface-container-low text-on-surface font-label-md text-label-md font-bold rounded focus:outline-none" id="account-num" readonly type="text" value="XXXX XXXX 4521"/>
+                    <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">visibility_off</span>
+                  </div>
+                  <div class="flex items-center gap-1 mt-1 text-[11px] text-on-surface-variant">
+                    <span class="material-symbols-outlined text-[14px] text-outline">security</span> Masked for security per RBI &amp; Aadhaar guidelines
+                  </div>
+                </div>
+                <div>
+                  <label class="font-label-md text-label-md text-on-surface font-semibold block mb-1" for="confirm-account-num">
+                    Confirm Account Number (खाता संख्या की पुष्टि करें) <span class="text-error font-bold">*</span>
+                  </label>
+                  <div class="relative">
+                    <input class="w-full h-11 px-space-md tracking-widest bg-surface-container-low text-on-surface font-label-md text-label-md font-bold rounded focus:outline-none" id="confirm-account-num" readonly type="text" value="•••• •••• 4521"/>
+                    <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-tertiary-container text-[18px]">check_circle</span>
+                  </div>
+                  <span class="font-label-sm text-label-sm text-tertiary-container font-semibold mt-1 block">Values matched and authenticated with Core Banking</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bottom Actions -->
+            <div class="flex justify-between gap-space-md">
+              <button onclick="goToStep(3)" class="h-11 px-space-md rounded font-label-md text-label-md text-primary bg-surface-container hover:bg-surface-container-high transition-colors flex items-center gap-space-xs">
+                <span class="material-symbols-outlined text-[18px]">arrow_back</span> Previous (3. Academic)
+              </button>
+              <button onclick="saveStepAndContinue(4, 5)" class="h-11 px-space-lg rounded font-label-md text-label-md text-white bg-secondary hover:bg-secondary/90 transition-all flex items-center gap-space-xs shadow-md font-bold">
+                Save &amp; Continue (5. Documents)
+                <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Right Sidebar for Step 4 -->
+          <div class="lg:col-span-4 flex flex-col gap-space-md">
+            <div class="bg-primary text-on-primary p-space-lg rounded-xl shadow-md relative overflow-hidden">
+              <div class="flex items-center gap-space-sm pb-space-sm">
+                <span class="material-symbols-outlined text-secondary-fixed text-[26px]">help_center</span>
+                <h3 class="font-title-md text-title-md text-surface-container-lowest font-bold">Why Aadhaar Seeding?</h3>
+              </div>
+              <p class="font-body-md text-body-md text-primary-fixed leading-relaxed pt-space-xs">
+                <strong>DBT Mandate:</strong> Living allowances, tuition grants and airfare are directly credited via <strong>PFMS</strong> into the scholar's bank account linked with Aadhaar.
+              </p>
+              <div class="mt-space-md p-space-sm rounded bg-primary-container/60 text-surface-container-lowest text-label-sm font-label-sm space-y-1">
+                <div class="flex items-start gap-1.5">
+                  <span class="material-symbols-outlined text-error-container text-[16px] mt-0.5">warning</span>
+                  <span>Accounts in dormant state fail electronic transfers automatically.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- STEP 5 CONTAINER: DOCUMENT UPLOADS -->
+      <!-- ========================================== -->
+      <div id="step-container-5" class="step-content hidden max-w-7xl mx-auto px-margin py-space-xl w-full">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-xl">
+          <div class="lg:col-span-8 flex flex-col gap-space-lg">
+            <div class="bg-surface-container-lowest rounded-xl shadow-md p-space-lg border border-outline-variant/30">
+              <div class="flex items-center justify-between pb-space-sm border-b border-surface-variant mb-space-md">
+                <h2 class="font-title-md text-title-md text-primary font-bold flex items-center gap-2">
+                  <span class="material-symbols-outlined text-secondary">verified_user</span>
+                  Mandatory Document Uploads &amp; DigiLocker Sync (दस्तावेज़ सत्यापन)
+                </h2>
+                <span class="px-2 py-0.5 bg-tertiary-container text-white rounded text-label-sm font-semibold">
+                  5 Files Verified
+                </span>
+              </div>
+
+              <div class="space-y-space-md" id="doc-upload-list">
+                <!-- Doc 1 -->
+                <div class="flex items-center justify-between p-space-md rounded-lg bg-surface-container-low border border-outline-variant/40">
+                  <div class="flex items-center gap-space-md">
+                    <div class="w-10 h-10 rounded bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center">
+                      <span class="material-symbols-outlined text-[24px]">picture_as_pdf</span>
+                    </div>
+                    <div>
+                      <p class="font-label-md text-label-md text-primary font-bold">ST_Certificate.pdf</p>
+                      <p class="font-label-sm text-label-sm text-outline">Caste Certificate • State Competent Authority Verified • 1.4 MB</p>
+                    </div>
+                  </div>
+                  <span class="inline-flex items-center gap-1 bg-tertiary-fixed text-on-tertiary-fixed px-3 py-1 rounded text-label-sm font-semibold">
+                    <span class="material-symbols-outlined text-[16px]">check_circle</span> DigiLocker Verified
+                  </span>
+                </div>
+
+                <!-- Doc 2 -->
+                <div class="flex items-center justify-between p-space-md rounded-lg bg-surface-container-low border border-outline-variant/40">
+                  <div class="flex items-center gap-space-md">
+                    <div class="w-10 h-10 rounded bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center">
+                      <span class="material-symbols-outlined text-[24px]">picture_as_pdf</span>
+                    </div>
+                    <div>
+                      <p class="font-label-md text-label-md text-primary font-bold">Income_Cert_2024.pdf</p>
+                      <p class="font-label-sm text-label-sm text-outline">Family Income Proof • JharSewa QR Verified • 890 KB</p>
+                    </div>
+                  </div>
+                  <span class="inline-flex items-center gap-1 bg-tertiary-fixed text-on-tertiary-fixed px-3 py-1 rounded text-label-sm font-semibold">
+                    <span class="material-symbols-outlined text-[16px]">check_circle</span> DigiLocker Verified
+                  </span>
+                </div>
+
+                <!-- Doc 3 -->
+                <div class="flex items-center justify-between p-space-md rounded-lg bg-surface-container-low border border-outline-variant/40">
+                  <div class="flex items-center gap-space-md">
+                    <div class="w-10 h-10 rounded bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center">
+                      <span class="material-symbols-outlined text-[24px]">picture_as_pdf</span>
+                    </div>
+                    <div>
+                      <p class="font-label-md text-label-md text-primary font-bold">Oxford_Offer_Letter_Unconditional.pdf</p>
+                      <p class="font-label-sm text-label-sm text-outline">University Admission Registry Verified • 2.1 MB</p>
+                    </div>
+                  </div>
+                  <span class="inline-flex items-center gap-1 bg-tertiary-fixed text-on-tertiary-fixed px-3 py-1 rounded text-label-sm font-semibold">
+                    <span class="material-symbols-outlined text-[16px]">check_circle</span> Verified
+                  </span>
+                </div>
+
+                <!-- Doc 4 -->
+                <div class="flex items-center justify-between p-space-md rounded-lg bg-surface-container-low border border-outline-variant/40">
+                  <div class="flex items-center gap-space-md">
+                    <div class="w-10 h-10 rounded bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center">
+                      <span class="material-symbols-outlined text-[24px]">picture_as_pdf</span>
+                    </div>
+                    <div>
+                      <p class="font-label-md text-label-md text-primary font-bold">Passport_Bio_Pages.pdf</p>
+                      <p class="font-label-sm text-label-sm text-outline">Ministry of External Affairs Passport Linked • 1.1 MB</p>
+                    </div>
+                  </div>
+                  <span class="inline-flex items-center gap-1 bg-tertiary-fixed text-on-tertiary-fixed px-3 py-1 rounded text-label-sm font-semibold">
+                    <span class="material-symbols-outlined text-[16px]">check_circle</span> Verified
+                  </span>
+                </div>
+
+                <!-- Doc 5 -->
+                <div class="flex items-center justify-between p-space-md rounded-lg bg-surface-container-low border border-outline-variant/40">
+                  <div class="flex items-center gap-space-md">
+                    <div class="w-10 h-10 rounded bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center">
+                      <span class="material-symbols-outlined text-[24px]">picture_as_pdf</span>
+                    </div>
+                    <div>
+                      <p class="font-label-md text-label-md text-primary font-bold">Masters_Degree_Marksheets.pdf</p>
+                      <p class="font-label-sm text-label-sm text-outline">Academic Transcripts (Ranchi Univ) • 3.4 MB</p>
+                    </div>
+                  </div>
+                  <span class="inline-flex items-center gap-1 bg-tertiary-fixed text-on-tertiary-fixed px-3 py-1 rounded text-label-sm font-semibold">
+                    <span class="material-symbols-outlined text-[16px]">check_circle</span> Verified
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bottom Navigation Bar for Step 5 -->
+            <div class="flex justify-between gap-space-md">
+              <button onclick="goToStep(4)" class="h-11 px-space-md rounded font-label-md text-label-md text-primary bg-surface-container hover:bg-surface-container-high transition-colors flex items-center gap-space-xs">
+                <span class="material-symbols-outlined text-[18px]">arrow_back</span> Previous (4. Financial)
+              </button>
+              <button onclick="saveStepAndContinue(5, 6)" class="h-11 px-space-lg rounded font-label-md text-label-md text-white bg-secondary hover:bg-secondary/90 transition-all flex items-center gap-space-xs shadow-md font-bold">
+                Save &amp; Continue (6. Final Review)
+                <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="lg:col-span-4 flex flex-col gap-space-md">
+            <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30">
+              <h3 class="font-title-md text-title-md text-primary font-bold mb-2 flex items-center gap-2">
+                <span class="material-symbols-outlined text-secondary">cloud_done</span> DigiLocker Security
+              </h3>
+              <p class="font-body-md text-body-md text-on-surface-variant">
+                Documents pulled via DigiLocker are legally recognized at par with original physical documents under Rule 9A of the IT Rules 2016.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- STEP 6 CONTAINER: REVIEW AND SUBMIT (SCREEN 14) -->
+      <!-- ========================================== -->
+      <div id="step-container-6" class="step-content hidden max-w-7xl mx-auto px-margin py-space-xl w-full flex flex-col gap-space-lg">
+        <!-- Important Notice Card -->
+        <div class="bg-secondary-fixed text-on-secondary-fixed p-space-md rounded-xl shadow-sm flex items-start gap-space-md">
+          <div class="w-10 h-10 rounded-full bg-secondary text-on-secondary flex items-center justify-center shrink-0 shadow-sm mt-0.5">
+            <span class="material-symbols-outlined text-[24px]">warning</span>
+          </div>
+          <div class="flex-1">
+            <h2 class="font-title-md text-title-md text-on-secondary-fixed font-bold leading-snug">Important Final Notice / महत्वपूर्ण अंतिम सूचना</h2>
+            <p class="font-body-md text-body-md text-on-secondary-fixed-variant font-medium mt-0.5">
+              Please verify all details before final submission. Changes may not be allowed after submission.
+            </p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg">
+          <!-- Left Details (8 Cols) -->
+          <div class="lg:col-span-8 flex flex-col gap-space-lg">
+            <!-- Review Block 1: Personal Details -->
+            <div class="bg-surface-container-lowest rounded-xl shadow-md overflow-hidden transition-all duration-200 hover:shadow-lg border border-outline-variant/30">
+              <div class="bg-surface-container-low px-space-lg py-space-md flex items-center justify-between">
+                <div class="flex items-center gap-space-sm">
+                  <div class="w-8 h-8 rounded bg-primary-container text-surface-container-lowest flex items-center justify-center">
+                    <span class="material-symbols-outlined text-[18px]">badge</span>
+                  </div>
+                  <h3 class="font-title-md text-title-md text-primary font-bold">Personal Details</h3>
+                </div>
+                <button class="bg-surface-container-lowest text-primary hover:bg-surface-container-highest px-space-md py-space-xs rounded font-label-md text-label-md flex items-center gap-1 shadow-sm transition-colors" onclick="goToStep(1)" type="button">
+                  <span class="material-symbols-outlined text-[16px]">edit</span> [Edit]
+                </button>
+              </div>
+              <div class="p-space-lg">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-space-lg gap-y-space-md">
+                  <div class="bg-surface-container-low/50 p-space-sm rounded">
+                    <span class="font-label-sm text-label-sm text-outline block">Full Name</span>
+                    <span class="font-body-lg text-body-lg font-bold text-on-surface" id="rev-name">Priya Munda</span>
+                  </div>
+                  <div class="bg-surface-container-low/50 p-space-sm rounded">
+                    <span class="font-label-sm text-label-sm text-outline block">Date of Birth (DOB)</span>
+                    <span class="font-body-lg text-body-lg font-semibold text-on-surface" id="rev-dob">14/08/1998</span>
+                  </div>
+                  <div class="bg-surface-container-low/50 p-space-sm rounded">
+                    <span class="font-label-sm text-label-sm text-outline block">Gender</span>
+                    <span class="font-body-lg text-body-lg font-semibold text-on-surface" id="rev-gender">Female</span>
+                  </div>
+                  <div class="bg-surface-container-low/50 p-space-sm rounded">
+                    <span class="font-label-sm text-label-sm text-outline block">Mobile Number</span>
+                    <span class="font-body-lg text-body-lg font-semibold text-on-surface" id="rev-mobile">+91 98765 43210</span>
+                  </div>
+                  <div class="bg-surface-container-low/50 p-space-sm rounded">
+                    <span class="font-label-sm text-label-sm text-outline block">Email Address</span>
+                    <span class="font-body-lg text-body-lg font-semibold text-on-surface break-all" id="rev-email">priya.munda@email.com</span>
+                  </div>
+                  <div class="bg-surface-container-low/50 p-space-sm rounded md:col-span-2">
+                    <span class="font-label-sm text-label-sm text-outline block">Permanent Address</span>
+                    <span class="font-body-lg text-body-lg font-semibold text-on-surface" id="rev-address">Village Torpa, Khunti, Jharkhand - 835227</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Review Block 2: Category Details -->
+            <div class="bg-surface-container-lowest rounded-xl shadow-md overflow-hidden transition-all duration-200 hover:shadow-lg border border-outline-variant/30">
+              <div class="bg-surface-container-low px-space-lg py-space-md flex items-center justify-between">
+                <div class="flex items-center gap-space-sm">
+                  <div class="w-8 h-8 rounded bg-primary-container text-surface-container-lowest flex items-center justify-center">
+                    <span class="material-symbols-outlined text-[18px]">diversity_3</span>
+                  </div>
+                  <h3 class="font-title-md text-title-md text-primary font-bold">Category Details</h3>
+                </div>
+                <button class="bg-surface-container-lowest text-primary hover:bg-surface-container-highest px-space-md py-space-xs rounded font-label-md text-label-md flex items-center gap-1 shadow-sm transition-colors" onclick="goToStep(2)" type="button">
+                  <span class="material-symbols-outlined text-[16px]">edit</span> [Edit]
+                </button>
+              </div>
+              <div class="p-space-lg">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-space-lg gap-y-space-md">
+                  <div class="bg-surface-container-low/50 p-space-sm rounded">
+                    <span class="font-label-sm text-label-sm text-outline block">Scheduled Tribe Name</span>
+                    <div class="flex items-center gap-space-xs mt-0.5">
+                      <span class="font-body-lg text-body-lg font-bold text-on-surface" id="rev-tribe">Munda (ST)</span>
+                      <span class="px-2 py-0.5 bg-tertiary-container text-surface-container-lowest rounded font-label-sm text-label-sm font-semibold">Verified</span>
+                    </div>
+                  </div>
+                  <div class="bg-surface-container-low/50 p-space-sm rounded">
+                    <span class="font-label-sm text-label-sm text-outline block">Certificate Number</span>
+                    <span class="font-body-lg text-body-lg font-semibold text-on-surface font-mono" id="rev-cert-no">JH/REV/ST/2022/984321</span>
+                  </div>
+                  <div class="bg-surface-container-low/50 p-space-sm rounded">
+                    <span class="font-label-sm text-label-sm text-outline block">Issuing Authority</span>
+                    <span class="font-body-lg text-body-lg font-semibold text-on-surface" id="rev-cert-auth">SDM/Tehsildar, Khunti</span>
+                  </div>
+                  <div class="bg-surface-container-low/50 p-space-sm rounded">
+                    <span class="font-label-sm text-label-sm text-outline block">Issue Date</span>
+                    <span class="font-body-lg text-body-lg font-semibold text-on-surface" id="rev-cert-date">18/06/2022</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Review Block 3: Academic Details -->
+            <div class="bg-surface-container-lowest rounded-xl shadow-md overflow-hidden transition-all duration-200 hover:shadow-lg border border-outline-variant/30">
+              <div class="bg-surface-container-low px-space-lg py-space-md flex items-center justify-between">
+                <div class="flex items-center gap-space-sm">
+                  <div class="w-8 h-8 rounded bg-primary-container text-surface-container-lowest flex items-center justify-center">
+                    <span class="material-symbols-outlined text-[18px]">school</span>
+                  </div>
+                  <h3 class="font-title-md text-title-md text-primary font-bold">Academic Details</h3>
+                </div>
+                <button class="bg-surface-container-lowest text-primary hover:bg-surface-container-highest px-space-md py-space-xs rounded font-label-md text-label-md flex items-center gap-1 shadow-sm transition-colors" onclick="goToStep(3)" type="button">
+                  <span class="material-symbols-outlined text-[16px]">edit</span> [Edit]
+                </button>
+              </div>
+              <div class="p-space-lg">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-space-lg gap-y-space-md">
+                  <div class="bg-surface-container-low/50 p-space-sm rounded md:col-span-2">
+                    <span class="font-label-sm text-label-sm text-outline block">Enrolled / Proposed Course</span>
+                    <span class="font-body-lg text-body-lg font-bold text-primary" id="rev-course">DPhil / Ph.D. in Plant Sciences</span>
+                  </div>
+                  <div class="bg-surface-container-low/50 p-space-sm rounded">
+                    <span class="font-label-sm text-label-sm text-outline block">University / Institution</span>
+                    <span class="font-body-lg text-body-lg font-semibold text-on-surface" id="rev-univ">University of Oxford, UK (QS #3)</span>
+                  </div>
+                  <div class="bg-surface-container-low/50 p-space-sm rounded">
+                    <span class="font-label-sm text-label-sm text-outline block">Commencement Session</span>
+                    <span class="font-body-lg text-body-lg font-semibold text-on-surface" id="rev-session">Oct 2026</span>
+                  </div>
+                  <div class="bg-surface-container-low/50 p-space-sm rounded">
+                    <span class="font-label-sm text-label-sm text-outline block">Admission Status</span>
+                    <div class="flex items-center gap-space-xs mt-0.5">
+                      <span class="material-symbols-outlined text-on-tertiary-container text-[18px]">check_circle</span>
+                      <span class="font-body-lg text-body-lg font-bold text-on-surface" id="rev-offer-type">Unconditional Offer Letter</span>
+                    </div>
+                  </div>
+                  <div class="bg-surface-container-low/50 p-space-sm rounded">
+                    <span class="font-label-sm text-label-sm text-outline block">University Offer Reference</span>
+                    <span class="font-body-lg text-body-lg font-semibold text-on-surface font-mono" id="rev-offer-ref">OX-INTL-2026-90412</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Review Block 4: Financial Details -->
+            <div class="bg-surface-container-lowest rounded-xl shadow-md overflow-hidden transition-all duration-200 hover:shadow-lg border border-outline-variant/30">
+              <div class="bg-surface-container-low px-space-lg py-space-md flex items-center justify-between">
+                <div class="flex items-center gap-space-sm">
+                  <div class="w-8 h-8 rounded bg-primary-container text-surface-container-lowest flex items-center justify-center">
+                    <span class="material-symbols-outlined text-[18px]">account_balance</span>
+                  </div>
+                  <h3 class="font-title-md text-title-md text-primary font-bold">Financial Details</h3>
+                </div>
+                <button class="bg-surface-container-lowest text-primary hover:bg-surface-container-highest px-space-md py-space-xs rounded font-label-md text-label-md flex items-center gap-1 shadow-sm transition-colors" onclick="goToStep(4)" type="button">
+                  <span class="material-symbols-outlined text-[16px]">edit</span> [Edit]
+                </button>
+              </div>
+              <div class="p-space-lg">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-space-lg gap-y-space-md">
+                  <div class="bg-surface-container-low/50 p-space-sm rounded">
+                    <span class="font-label-sm text-label-sm text-outline block">Annual Family Income</span>
+                    <span class="font-body-lg text-body-lg font-bold text-secondary" id="rev-income">₹4,50,000</span>
+                    <span class="font-label-sm text-label-sm text-outline block">Within ₹6,00,000 Scheme Ceiling</span>
+                  </div>
+                  <div class="bg-surface-container-low/50 p-space-sm rounded">
+                    <span class="font-label-sm text-label-sm text-outline block">Income Certificate No.</span>
+                    <span class="font-body-lg text-body-lg font-semibold text-on-surface font-mono" id="rev-inc-cert">JH/INC/2024/761298</span>
+                  </div>
+                  <div class="bg-surface-container-low/50 p-space-sm rounded">
+                    <span class="font-label-sm text-label-sm text-outline block">Disbursement Bank Name</span>
+                    <span class="font-body-lg text-body-lg font-semibold text-on-surface" id="rev-bank">State Bank of India</span>
+                  </div>
+                  <div class="bg-surface-container-low/50 p-space-sm rounded">
+                    <span class="font-label-sm text-label-sm text-outline block">Account Holder Name</span>
+                    <span class="font-body-lg text-body-lg font-semibold text-on-surface">Priya Munda</span>
+                  </div>
+                  <div class="bg-surface-container-low/50 p-space-sm rounded">
+                    <span class="font-label-sm text-label-sm text-outline block">Aadhaar Seeded Account No.</span>
+                    <span class="font-body-lg text-body-lg font-semibold text-on-surface font-mono">XXXX XXXX 4521</span>
+                  </div>
+                  <div class="bg-surface-container-low/50 p-space-sm rounded">
+                    <span class="font-label-sm text-label-sm text-outline block">IFSC Code</span>
+                    <span class="font-body-lg text-body-lg font-semibold text-on-surface font-mono">SBIN0001234</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Review Block 5: Documents -->
+            <div class="bg-surface-container-lowest rounded-xl shadow-md overflow-hidden transition-all duration-200 hover:shadow-lg border border-outline-variant/30">
+              <div class="bg-surface-container-low px-space-lg py-space-md flex items-center justify-between">
+                <div class="flex items-center gap-space-sm">
+                  <div class="w-8 h-8 rounded bg-primary-container text-surface-container-lowest flex items-center justify-center">
+                    <span class="material-symbols-outlined text-[18px]">verified_user</span>
+                  </div>
+                  <div>
+                    <h3 class="font-title-md text-title-md text-primary font-bold">Uploaded Documents</h3>
+                    <span class="font-label-sm text-label-sm text-on-surface-variant">5 files verified via DigiLocker &amp; MoTA Vault</span>
+                  </div>
+                </div>
+                <button class="bg-surface-container-lowest text-primary hover:bg-surface-container-highest px-space-md py-space-xs rounded font-label-md text-label-md flex items-center gap-1 shadow-sm transition-colors" onclick="goToStep(5)" type="button">
+                  <span class="material-symbols-outlined text-[16px]">edit</span> [Edit]
+                </button>
+              </div>
+              <div class="p-space-lg">
+                <div class="flex flex-col gap-space-sm">
+                  <div class="flex items-center justify-between p-space-sm rounded bg-surface-container-low/60">
+                    <div class="flex items-center gap-space-md min-w-0">
+                      <div class="w-8 h-8 rounded bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+                      </div>
+                      <div class="truncate">
+                        <p class="font-label-md text-label-md text-primary font-semibold truncate">ST_Certificate.pdf</p>
+                        <p class="font-label-sm text-label-sm text-outline">State Competent Authority Verified • 1.4 MB</p>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-space-xs shrink-0 bg-tertiary-fixed text-on-tertiary-fixed px-space-sm py-1 rounded">
+                      <span class="material-symbols-outlined text-[16px]">check_circle</span>
+                      <span class="font-label-sm text-label-sm font-semibold">Verified</span>
+                    </div>
+                  </div>
+                  <div class="flex items-center justify-between p-space-sm rounded bg-surface-container-low/60">
+                    <div class="flex items-center gap-space-md min-w-0">
+                      <div class="w-8 h-8 rounded bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+                      </div>
+                      <div class="truncate">
+                        <p class="font-label-md text-label-md text-primary font-semibold truncate">Income_Cert_2024.pdf</p>
+                        <p class="font-label-sm text-label-sm text-outline">e-District Portal QR Verified • 890 KB</p>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-space-xs shrink-0 bg-tertiary-fixed text-on-tertiary-fixed px-space-sm py-1 rounded">
+                      <span class="material-symbols-outlined text-[16px]">check_circle</span>
+                      <span class="font-label-sm text-label-sm font-semibold">Verified</span>
+                    </div>
+                  </div>
+                  <div class="flex items-center justify-between p-space-sm rounded bg-surface-container-low/60">
+                    <div class="flex items-center gap-space-md min-w-0">
+                      <div class="w-8 h-8 rounded bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+                      </div>
+                      <div class="truncate">
+                        <p class="font-label-md text-label-md text-primary font-semibold truncate">Oxford_Offer_Letter_Unconditional.pdf</p>
+                        <p class="font-label-sm text-label-sm text-outline">University Registry Direct Verification • 2.1 MB</p>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-space-xs shrink-0 bg-tertiary-fixed text-on-tertiary-fixed px-space-sm py-1 rounded">
+                      <span class="material-symbols-outlined text-[16px]">check_circle</span>
+                      <span class="font-label-sm text-label-sm font-semibold">Verified</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Legal Declaration & Final Submit Box -->
+            <div class="bg-surface-container-lowest rounded-xl shadow-lg p-space-xl flex flex-col gap-space-lg border border-outline-variant/30">
+              <div class="bg-surface-container-low p-space-lg rounded-xl">
+                <label class="flex items-start gap-space-md cursor-pointer select-none">
+                  <input class="mt-1 w-5 h-5 rounded text-secondary focus:ring-secondary cursor-pointer" id="legal-declaration-checkbox" type="checkbox"/>
+                  <div class="flex-1 font-body-md text-body-md text-on-surface leading-relaxed">
+                    <span class="font-bold text-error mr-1">*</span>
+                    <strong>✓ I hereby declare that all information furnished in this application is true, complete, and correct to the best of my knowledge. I understand that furnishing false or forged documents is a non-bailable offense under the Indian Penal Code and will result in immediate disqualification and recovery of disbursed funds.</strong>
+                    <p class="font-label-sm text-label-sm text-on-surface-variant mt-space-xs">
+                      मैं प्रमाणित करता/करती हूँ कि इस आवेदन में प्रस्तुत समस्त विवरण मेरे पूर्ण ज्ञान में सत्य, पूर्ण और सही हैं। किसी भी असत्य अभिलेख की स्थिति में विधि अनुसार उत्तरदायित्व मेरा होगा।
+                    </p>
+                  </div>
+                </label>
+              </div>
+
+              <div class="flex flex-col sm:flex-row items-center justify-between gap-space-md pt-space-xs">
+                <button class="w-full sm:w-auto bg-surface-container-high hover:bg-surface-container-highest text-primary font-label-lg text-label-lg px-space-lg py-space-md rounded shadow-sm flex items-center justify-center gap-space-sm font-bold transition-all" onclick="openPrintModal()" type="button">
+                  <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+                  Preview Application PDF
+                </button>
+                <div class="flex flex-col sm:flex-row items-center gap-space-md w-full sm:w-auto">
+                  <span class="font-label-sm text-label-sm text-error hidden items-center gap-1" id="checkbox-hint">
+                    <span class="material-symbols-outlined text-[16px]">info</span> Please accept the declaration above
+                  </span>
+                  <button class="w-full sm:w-auto bg-secondary hover:bg-on-secondary-container text-on-secondary font-label-lg text-label-lg px-space-xl py-space-md rounded shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-space-sm font-bold" id="final-submit-btn" onclick="executeFinalSubmission()" type="button">
+                    <span class="material-symbols-outlined text-[20px]">lock</span>
+                    Submit Application (आवेदन प्रस्तुत करें)
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column Summary (4 Cols) -->
+          <div class="lg:col-span-4 flex flex-col gap-space-lg">
+            <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md flex flex-col gap-space-md border border-outline-variant/30">
+              <div class="flex items-center gap-space-sm">
+                <span class="material-symbols-outlined text-secondary text-[24px]">contact_support</span>
+                <h3 class="font-title-md text-title-md text-primary font-bold">Applicant Summary</h3>
+              </div>
+              <div class="flex items-center gap-space-md p-space-sm rounded bg-surface-container-low">
+                <img class="w-16 h-16 rounded-lg object-cover shadow-sm shrink-0" alt="Priya Munda" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDMxV5zeOvKHYS1TpAobirMrFNKLHLY84a8IYtYlv14ZXHL-PWX_J5lrpC9LvrFXGiv9pw4H5SF6f5quEQs6Ww7S4hU7xmDECBlpLQnXl6jVCCNep2C-TVKT3RQrTRy7R9zRKiDn4aYWRsQFEFuhoygcL8BAP5lLllg4XFKMgw7xQyoGCiMsl7r6leFTEa6ia0QMdWFlelRzJfkE35owZKkevyeB0fZR8PuMrIFDG9w10028BikCtHebQ"/>
+                <div class="min-w-0">
+                  <span class="font-label-md text-label-md text-primary font-bold block truncate">Priya Munda</span>
+                  <span class="font-label-sm text-label-sm text-outline block">OTR-2025-ST-884129</span>
+                  <span class="inline-block mt-1 font-label-sm text-label-sm text-tertiary-container font-semibold bg-tertiary-fixed/60 px-2 py-0.5 rounded">e-KYC Complete</span>
+                </div>
+              </div>
+              <div class="space-y-space-xs font-label-sm text-label-sm pt-space-xs">
+                <div class="flex justify-between py-1 bg-surface-container-low/40 px-space-xs rounded">
+                  <span class="text-on-surface-variant">Host Institution:</span>
+                  <span class="text-primary font-bold text-right">Univ. of Oxford (UK)</span>
+                </div>
+                <div class="flex justify-between py-1 bg-surface-container-low/40 px-space-xs rounded">
+                  <span class="text-on-surface-variant">Degree Level:</span>
+                  <span class="text-primary font-bold">Ph.D. / Doctoral</span>
+                </div>
+                <div class="flex justify-between py-1 bg-surface-container-low/40 px-space-xs rounded">
+                  <span class="text-on-surface-variant">Course Duration:</span>
+                  <span class="text-primary font-bold">36 Months</span>
+                </div>
+                <div class="flex justify-between py-1 bg-surface-container-low/40 px-space-xs rounded">
+                  <span class="text-on-surface-variant">Disbursement Mode:</span>
+                  <span class="text-primary font-bold">DBT Direct Sovereign PFMS</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Next Stages -->
+            <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md flex flex-col gap-space-md border border-outline-variant/30">
+              <div class="flex items-center gap-space-sm">
+                <span class="material-symbols-outlined text-primary text-[24px]">flag</span>
+                <h3 class="font-title-md text-title-md text-primary font-bold">Next Stages</h3>
+              </div>
+              <ol class="relative ml-2 space-y-space-md font-body-md text-body-md">
+                <li class="relative pl-space-lg">
+                  <span class="absolute -left-1.5 top-1.5 w-3 h-3 rounded-full bg-secondary"></span>
+                  <p class="font-label-md text-label-md font-bold text-primary">1. Scrutiny by Ministry Cell</p>
+                  <p class="font-label-sm text-label-sm text-on-surface-variant">Screening committee verifies caste &amp; academic admissibility.</p>
+                </li>
+                <li class="relative pl-space-lg">
+                  <span class="absolute -left-1.5 top-1.5 w-3 h-3 rounded-full bg-outline-variant"></span>
+                  <p class="font-label-md text-label-md font-bold text-outline">2. National Steering Committee</p>
+                  <p class="font-label-sm text-label-sm text-on-surface-variant">Evaluation and ranking per NOS merit guidelines.</p>
+                </li>
+                <li class="relative pl-space-lg">
+                  <span class="absolute -left-1.5 top-1.5 w-3 h-3 rounded-full bg-outline-variant"></span>
+                  <p class="font-label-md text-label-md font-bold text-outline">3. Provisional Award Letter</p>
+                  <p class="font-label-sm text-label-sm text-on-surface-variant">Issued digitally with visa assurance credentials.</p>
+                </li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Print Application Modal (Pre-Submission PDF Preview) -->
+  <div class="fixed inset-0 z-50 bg-inverse-surface/60 backdrop-blur-sm hidden items-center justify-center p-space-md" id="print-modal">
+    <div class="bg-surface-container-lowest rounded-xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-outline-variant/40">
+      <div class="bg-primary text-on-primary px-space-lg py-space-md flex items-center justify-between">
+        <div class="flex items-center gap-space-sm">
+          <span class="material-symbols-outlined text-[24px]">visibility</span>
+          <h4 class="font-title-md text-title-md font-bold">Official Application Summary Sheet (Pre-Submission PDF Preview)</h4>
+        </div>
+        <button class="text-surface-container-lowest hover:text-secondary-fixed transition-colors" onclick="closePrintModal()">
+          <span class="material-symbols-outlined text-[24px]">close</span>
+        </button>
+      </div>
+
+      <div class="p-space-lg overflow-y-auto space-y-space-md bg-surface">
+        <div class="bg-surface-container-lowest p-space-lg rounded shadow-sm text-center border border-outline-variant/20">
+          <p class="font-label-sm text-label-sm text-on-surface-variant font-bold">GOVERNMENT OF INDIA • MINISTRY OF TRIBAL AFFAIRS</p>
+          <h2 class="font-headline-sm text-headline-sm text-primary font-bold mt-1">NATIONAL OVERSEAS SCHOLARSHIP (NOS) FOR ST STUDENTS</h2>
+          <p class="font-label-sm text-label-sm text-secondary font-mono mt-1">Draft Application: MOTA-NOS-2026-DRAFT-0492 | Generated: 2026-03-31</p>
+        </div>
+
+        <div class="bg-surface-container-lowest p-space-md rounded shadow-sm border border-outline-variant/20">
+          <h5 class="font-label-lg text-label-lg text-primary font-bold mb-2">Applicant Snapshot</h5>
+          <div class="grid grid-cols-2 gap-space-sm font-label-md text-label-md">
+            <div><span class="text-outline">Full Name:</span> <strong class="text-on-surface">Priya Munda</strong></div>
+            <div><span class="text-outline">Community:</span> <strong class="text-on-surface">Munda (Scheduled Tribe)</strong></div>
+            <div><span class="text-outline">Proposed Degree:</span> <strong class="text-on-surface">DPhil / Ph.D. in Plant Sciences</strong></div>
+            <div><span class="text-outline">Foreign University:</span> <strong class="text-on-surface">University of Oxford, United Kingdom (QS #3)</strong></div>
+            <div><span class="text-outline">Annual Income:</span> <strong class="text-on-surface">₹4,50,000</strong></div>
+            <div><span class="text-outline">Aadhaar Linked Account:</span> <strong class="text-on-surface">SBI (Ending in 4521)</strong></div>
+          </div>
+        </div>
+
+        <div class="bg-surface-container-lowest p-space-md rounded shadow-sm border border-outline-variant/20">
+          <h5 class="font-label-lg text-label-lg text-primary font-bold mb-2">Mandatory Certificates Attached</h5>
+          <ul class="font-label-sm text-label-sm space-y-1 text-on-surface-variant list-disc pl-5">
+            <li>ST Certificate: JH/REV/ST/2022/984321 (Tehsildar Khunti)</li>
+            <li>Income Certificate: JH/INC/2024/761298 (Jharkhand e-District)</li>
+            <li>Unconditional Offer Letter: Ref #OX-INTL-2026-90412</li>
+            <li>Valid Indian Passport &amp; Educational Credentials Verified via DigiLocker</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="bg-surface-container-low px-space-lg py-space-md flex items-center justify-end gap-space-md">
+        <button class="bg-surface-container-lowest text-primary px-space-md py-space-sm rounded font-label-md text-label-md shadow-sm hover:bg-surface-container-high transition-colors flex items-center gap-1 font-bold" onclick="window.print()">
+          <span class="material-symbols-outlined text-[18px]">print</span> Print Preview
+        </button>
+        <button class="bg-primary text-on-primary px-space-lg py-space-sm rounded font-label-md text-label-md shadow-sm hover:bg-primary-container transition-colors font-bold" onclick="closePrintModal()">
+          Close Preview
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Modal on Final Submission -->
+  <div class="fixed inset-0 z-50 bg-inverse-surface/80 backdrop-blur-sm hidden items-center justify-center p-space-md" id="success-modal">
+    <div class="bg-surface-container-lowest rounded-xl max-w-lg w-full p-space-xl flex flex-col items-center text-center shadow-2xl border border-outline-variant/30">
+      <div class="w-20 h-20 rounded-full bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center mb-space-md shadow-lg">
+        <span class="material-symbols-outlined text-[48px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+      </div>
+      <h3 class="font-headline-md text-headline-md text-primary font-bold text-2xl">Application Successfully Submitted!</h3>
+      <p class="font-label-lg text-label-lg text-secondary font-bold mt-1">आवेदन सफलतापूर्वक प्रस्तुत किया गया</p>
+      
+      <div class="bg-surface-container-low p-space-md rounded-xl my-space-md w-full text-left border border-outline-variant/30">
+        <div class="flex justify-between font-label-sm text-label-sm py-1">
+          <span class="text-outline">Permanent Ref No:</span>
+          <span class="font-mono font-bold text-primary">MOTA/NOS/2026/884129</span>
+        </div>
+        <div class="flex justify-between font-label-sm text-label-sm py-1">
+          <span class="text-outline">Submission Timestamp:</span>
+          <span class="font-semibold text-on-surface">31-Mar-2026 14:42 IST</span>
+        </div>
+        <div class="flex justify-between font-label-sm text-label-sm py-1">
+          <span class="text-outline">Portal Status:</span>
+          <span class="font-bold text-on-tertiary-container">Locked for Verification</span>
+        </div>
+      </div>
+
+      <p class="font-body-md text-body-md text-on-surface-variant mb-space-lg text-sm">
+        An official acknowledgment receipt has been dispatched via SMS to <strong>+91 98765 43210</strong> and emailed to <strong>priya.munda@email.com</strong>.
+      </p>
+
+      <div class="w-full flex flex-col sm:flex-row gap-space-sm">
+        <a href="track.html" class="flex-1 bg-secondary hover:bg-secondary/90 text-white font-label-md text-label-md py-3 rounded shadow-md transition-colors text-center font-bold">
+          Track Application
+        </a>
+        <a href="index.html" class="flex-1 bg-surface-container hover:bg-surface-container-high text-primary font-label-md text-label-md py-3 rounded shadow-sm transition-colors text-center font-bold">
+          Portal Dashboard
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <footer class="w-full bg-surface-container-high text-on-surface mt-space-xl border-t border-outline-variant">
+    <div class="w-full h-1 bg-secondary"></div>
+    <div class="max-w-7xl mx-auto px-margin py-space-lg flex flex-col sm:flex-row items-center justify-between text-label-sm text-label-sm text-on-surface-variant">
+      <div>Ministry of Tribal Affairs, Government of India • GIGW 3.0 Certified</div>
+      <div>Need assistance? Toll-Free: 1800-11-7777</div>
+    </div>
+  </footer>
+
+  <script src="shared.js"></script>
+  <script>
+    let currentStep = 3; // Default starting on Academic Details per user's prompt sequence
+
+    function updateStepUI(step) {
+      currentStep = step;
+      // Hide all step containers
+      for (let i = 1; i <= 6; i++) {
+        const el = document.getElementById(`step-container-${i}`);
+        if (el) el.classList.add('hidden');
+
+        const navBtn = document.getElementById(`step-nav-${i}`);
+        if (navBtn) {
+          navBtn.classList.remove('bg-secondary', 'text-on-secondary', 'shadow-lg', 'ring-2', 'ring-secondary-fixed');
+          navBtn.classList.add('bg-surface-container-lowest/15', 'text-surface-container-highest');
+          const title = navBtn.querySelector('span:first-child');
+          const status = navBtn.querySelector('span:last-child');
+          const line = navBtn.querySelector('div:last-of-type');
+
+          if (i < step) {
+            status.textContent = 'Completed';
+            status.className = 'font-label-sm text-label-sm text-surface-container-highest truncate';
+            line.className = 'w-full bg-tertiary-fixed h-1 rounded-full';
+            navBtn.querySelector('.step-icon').textContent = 'check_circle';
+          } else if (i === step) {
+            navBtn.classList.remove('bg-surface-container-lowest/15', 'text-surface-container-highest');
+            navBtn.classList.add('bg-secondary', 'text-on-secondary', 'shadow-lg', 'ring-2', 'ring-secondary-fixed');
+            status.textContent = 'Active Track';
+            status.className = 'font-label-sm text-label-sm text-secondary-fixed truncate font-bold';
+            line.className = 'w-full bg-surface-container-lowest h-1 rounded-full';
+            navBtn.querySelector('.step-icon').textContent = 'pending';
+          } else {
+            status.textContent = 'Pending';
+            status.className = 'font-label-sm text-label-sm text-surface-container-highest truncate';
+            line.className = 'w-full bg-surface-container-highest/40 h-1 rounded-full';
+            navBtn.querySelector('.step-icon').textContent = 'radio_button_unchecked';
+          }
+        }
+      }
+
+      // Show current step container
+      const currentContainer = document.getElementById(`step-container-${step}`);
+      if (currentContainer) currentContainer.classList.remove('hidden');
+
+      // Update titles and progress
+      const titles = [
+        "Personal Information & OTR Profile",
+        "Category & Scheduled Tribe Verification",
+        "Academic Qualifications & Research Track",
+        "Financial & Direct Benefit Transfer (DBT) Details",
+        "Mandatory Document Uploads & DigiLocker Sync",
+        "Review and Submit (समीक्षा एवं अंतिम प्रस्तुति)"
+      ];
+
+      const percentages = [16, 33, 50, 66, 83, 100];
+      const percent = percentages[step - 1];
+
+      document.getElementById('wizard-step-indicator').textContent = `Scholarship Application Wizard • Step ${step} of 6`;
+      document.getElementById('wizard-step-title').textContent = titles[step - 1];
+      document.getElementById('wizard-percent-label').textContent = `${percent}% Completed`;
+      document.getElementById('progress-circle-svg').setAttribute('stroke-dasharray', `${percent}, 100`);
+
+      window.scrollTo({ top: 120, behavior: 'smooth' });
+    }
+
+    function goToStep(step) {
+      updateStepUI(step);
+    }
+
+    function saveStepAndContinue(fromStep, toStep) {
+      showToast(`Step ${fromStep} saved successfully!`, 'success');
+      updateStepUI(toStep);
+    }
+
+    function switchScheme(scheme) {
+      const tabNos = document.getElementById('tab-nos');
+      const tabNfst = document.getElementById('tab-nfst');
+      const panelNos = document.getElementById('panel-nos');
+      const panelNfst = document.getElementById('panel-nfst');
+      const bannerSchemeName = document.getElementById('banner-scheme-name');
+
+      if (scheme === 'NOS') {
+        tabNos.classList.add('ring-2', 'ring-primary', 'bg-surface-container-low');
+        tabNos.classList.remove('bg-surface-container-lowest');
+        tabNfst.classList.remove('ring-2', 'ring-primary', 'bg-surface-container-low');
+        tabNfst.classList.add('bg-surface-container-lowest');
+        panelNfst.classList.add('hidden');
+        bannerSchemeName.textContent = "National Overseas Scholarship (NOS) 2026–27";
+        showToast("Switched to National Overseas Scholarship (NOS) Track", "info");
+      } else {
+        tabNfst.classList.add('ring-2', 'ring-primary', 'bg-surface-container-low');
+        tabNfst.classList.remove('bg-surface-container-lowest');
+        tabNos.classList.remove('ring-2', 'ring-primary', 'bg-surface-container-low');
+        tabNos.classList.add('bg-surface-container-lowest');
+        panelNfst.classList.remove('hidden');
+        bannerSchemeName.textContent = "National Fellowship for ST Students (NFST) 2026–27";
+        showToast("Switched to National Fellowship (NFST) Domestic Track", "info");
+      }
+    }
+
+    function openPrintModal() {
+      const modal = document.getElementById('print-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closePrintModal() {
+      const modal = document.getElementById('print-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function executeFinalSubmission() {
+      const checkbox = document.getElementById('legal-declaration-checkbox');
+      const hint = document.getElementById('checkbox-hint');
+
+      if (!checkbox.checked) {
+        hint.classList.remove('hidden');
+        hint.classList.add('inline-flex');
+        checkbox.focus();
+        showToast('Please check the mandatory legal declaration before submitting.', 'error');
+        return;
+      }
+
+      hint.classList.add('hidden');
+      hint.classList.remove('inline-flex');
+
+      const submitBtn = document.getElementById('final-submit-btn');
+      submitBtn.innerHTML = '<span class="material-symbols-outlined animate-spin text-[20px]">sync</span> Submitting to MoTA Gateway...';
+      submitBtn.disabled = true;
+
+      setTimeout(() => {
+        const successModal = document.getElementById('success-modal');
+        successModal.classList.remove('hidden');
+        successModal.classList.add('flex');
+        showToast('Application successfully transmitted to Ministry!', 'success');
+      }, 1200);
+    }
+
+    // Check URL parameters on load
+    document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const stepParam = parseInt(params.get('step'));
+      const trackParam = params.get('track');
+
+      if (stepParam >= 1 && stepParam <= 6) {
+        updateStepUI(stepParam);
+      } else {
+        updateStepUI(3); // Start on step 3 per user sample
+      }
+
+      if (trackParam === 'nfst') {
+        switchScheme('NFST');
+      }
+    });
+  </script>
+</body>
+</html>
