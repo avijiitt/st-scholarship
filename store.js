@@ -160,15 +160,6 @@ class AppStore {
     if (!localStorage.getItem("NTSP_ADMIN_QUEUE")) {
       localStorage.setItem("NTSP_ADMIN_QUEUE", JSON.stringify(INITIAL_ADMIN_APPLICATIONS));
     }
-    if (!localStorage.getItem("NTSP_AUTH_USER")) {
-      // Default to guest or pre-logged applicant for easy test flow
-      localStorage.setItem("NTSP_AUTH_USER", JSON.stringify({
-        role: "applicant",
-        email: "student@demo.com",
-        name: "Priya Munda",
-        otrId: "OTR-2025-ST-884129"
-      }));
-    }
   }
 
   getApplication() {
@@ -179,16 +170,64 @@ class AppStore {
     }
   }
 
+  getApplicationById(id) {
+    const mainApp = this.getApplication();
+    if (mainApp.id === id) return mainApp;
+    const queue = this.getAdminQueue();
+    const found = queue.find(q => q.id === id);
+    if (found) {
+      return {
+        ...mainApp,
+        id: found.id,
+        scheme: found.scheme,
+        schemeCode: found.schemeCode,
+        status: found.status,
+        submissionDate: found.submissionDate,
+        personal: {
+          ...mainApp.personal,
+          fullName: found.applicantName,
+          state: found.state
+        },
+        academic: {
+          ...mainApp.academic,
+          university: found.university,
+          courseTitle: found.degree
+        },
+        financial: {
+          ...mainApp.financial,
+          annualIncome: found.income.replace(/[^\d]/g, "") || mainApp.financial.annualIncome
+        }
+      };
+    }
+    return mainApp;
+  }
+
   saveApplication(appData) {
     appData.lastUpdated = new Date().toISOString();
     localStorage.setItem("NTSP_APPLICATION", JSON.stringify(appData));
     
-    // Also sync to admin queue if this application exists there
+    // Also sync to admin queue if this application exists there, or add if newly submitted
     const queue = this.getAdminQueue();
     const idx = queue.findIndex(q => q.id === appData.id);
     if (idx !== -1) {
       queue[idx].status = appData.status;
       queue[idx].submissionDate = appData.submissionDate || queue[idx].submissionDate;
+      this.saveAdminQueue(queue);
+    } else if (appData.status !== "Draft") {
+      queue.unshift({
+        id: appData.id,
+        applicantName: appData.personal.fullName,
+        otrId: appData.otrId || "OTR-2025-ST-884129",
+        scheme: appData.scheme,
+        schemeCode: appData.schemeCode || "NOS",
+        university: appData.academic.university,
+        degree: appData.academic.courseTitle,
+        income: `₹${appData.financial.annualIncome}`,
+        state: appData.personal.state,
+        status: appData.status,
+        submissionDate: appData.submissionDate || new Date().toLocaleString("en-IN"),
+        riskScore: "Low (Verified via DigiLocker)"
+      });
       this.saveAdminQueue(queue);
     }
   }

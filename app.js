@@ -661,8 +661,23 @@ router.register("/application/new", () => {
 }, { layout: "applicant", authRole: "applicant" });
 
 // 10. Step 1: Personal Details (/application/personal)
-router.register("/application/personal", () => {
+router.register("/application/personal", (params = {}) => {
   const app = window.appStore.getApplication();
+  
+  // Set scheme if passed via URL query parameter (e.g. ?scheme=NOS or ?scheme=NFST)
+  if (params && params.scheme) {
+    const code = params.scheme.toUpperCase();
+    if (code === "NOS") {
+      app.scheme = "National Overseas Scholarship (NOS)";
+      app.schemeCode = "NOS";
+      window.appStore.saveApplication(app);
+    } else if (code === "NFST") {
+      app.scheme = "National Fellowship for ST Students (NFST)";
+      app.schemeCode = "NFST";
+      window.appStore.saveApplication(app);
+    }
+  }
+
   const container = document.getElementById("main-view-container");
 
   container.innerHTML = `
@@ -671,6 +686,7 @@ router.register("/application/personal", () => {
     <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30">
       <div class="flex justify-between items-center pb-3 border-b border-outline-variant/20 mb-4">
         <div>
+          <span class="text-xs font-bold text-secondary uppercase tracking-wider block">${app.scheme}</span>
           <h2 class="text-lg font-bold text-primary">Step 1: Personal Information</h2>
           <p class="text-xs text-on-surface-variant">Verify basic applicant credentials.</p>
         </div>
@@ -794,6 +810,7 @@ router.register("/application/academic", () => {
     <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30">
       <div class="flex justify-between items-center pb-3 border-b border-outline-variant/20 mb-4">
         <div>
+          <span class="text-xs font-bold text-secondary uppercase tracking-wider block">${app.scheme}</span>
           <h2 class="text-lg font-bold text-primary">Step 2: Academic Qualifications &amp; Research Track</h2>
           <p class="text-xs text-on-surface-variant">Validated against QS World Rankings for NOS track.</p>
         </div>
@@ -835,7 +852,7 @@ router.register("/application/academic", () => {
         </div>
 
         <div class="flex justify-between items-center pt-4 border-t border-outline-variant/20">
-          <button type="button" onclick="router.navigate('/application/personal')" class="px-4 py-2 bg-surface-container text-primary font-bold rounded text-xs flex items-center gap-1">
+          <button type="button" onclick="handleAcademicBack()" class="px-4 py-2 bg-surface-container text-primary font-bold rounded text-xs flex items-center gap-1">
             ← [Back]
           </button>
           <div class="flex gap-2">
@@ -851,6 +868,11 @@ router.register("/application/academic", () => {
     </div>
   `;
 }, { layout: "applicant", authRole: "applicant" });
+
+function handleAcademicBack() {
+  saveAcademicDraft();
+  router.navigate("/application/personal");
+}
 
 function saveAcademicDraft() {
   window.appStore.updateSection("academic", {
@@ -922,7 +944,7 @@ router.register("/application/financial", () => {
         </div>
 
         <div class="flex justify-between items-center pt-4 border-t border-outline-variant/20">
-          <button type="button" onclick="router.navigate('/application/academic')" class="px-4 py-2 bg-surface-container text-primary font-bold rounded text-xs flex items-center gap-1">
+          <button type="button" onclick="handleFinancialBack()" class="px-4 py-2 bg-surface-container text-primary font-bold rounded text-xs flex items-center gap-1">
             ← [Back]
           </button>
           <div class="flex gap-2">
@@ -938,6 +960,11 @@ router.register("/application/financial", () => {
     </div>
   `;
 }, { layout: "applicant", authRole: "applicant" });
+
+function handleFinancialBack() {
+  saveFinancialDraft();
+  router.navigate("/application/academic");
+}
 
 function saveFinancialDraft() {
   window.appStore.updateSection("financial", {
@@ -1034,6 +1061,17 @@ router.register("/application/review", () => {
     ${renderWizardStepper(4)}
 
     <div class="space-y-space-md">
+      <!-- Target Scheme Banner -->
+      <div class="p-4 bg-primary text-white rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 shadow-sm">
+        <div>
+          <span class="text-xs font-mono text-secondary-fixed uppercase">Target Scheme Track</span>
+          <h2 class="text-lg font-bold">${app.scheme}</h2>
+        </div>
+        <span class="px-3 py-1 bg-surface-container-lowest text-primary font-bold text-xs rounded-full">
+          Draft Review
+        </span>
+      </div>
+
       <!-- Warning Note -->
       <div class="p-3 bg-secondary-fixed text-on-secondary-fixed rounded-xl flex items-center gap-3 text-xs font-medium">
         <span class="material-symbols-outlined text-secondary text-xl">warning</span>
@@ -1042,7 +1080,7 @@ router.register("/application/review", () => {
 
       <!-- Section Reviews with [Edit] Buttons -->
       <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30 space-y-4 text-sm">
-        <!-- Personal Review -->
+        <!-- 1. Personal Review -->
         <div class="p-3 bg-surface-container-low rounded-lg">
           <div class="flex justify-between items-center mb-2">
             <h3 class="font-bold text-primary flex items-center gap-1">
@@ -1051,42 +1089,87 @@ router.register("/application/review", () => {
             <button onclick="router.navigate('/application/personal')" class="text-xs text-secondary font-bold hover:underline">[Edit]</button>
           </div>
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
-            <div><span class="text-outline block">Name:</span> <strong>${app.personal.fullName}</strong></div>
-            <div><span class="text-outline block">DOB:</span> <strong>${app.personal.dob}</strong></div>
+            <div><span class="text-outline block">Full Name:</span> <strong>${app.personal.fullName}</strong></div>
+            <div><span class="text-outline block">Date of Birth:</span> <strong>${app.personal.dob}</strong></div>
             <div><span class="text-outline block">Mobile:</span> <strong>${app.personal.mobile}</strong></div>
             <div><span class="text-outline block">Email:</span> <strong>${app.personal.email}</strong></div>
-            <div class="sm:col-span-2"><span class="text-outline block">Address:</span> <strong>${app.personal.address}</strong></div>
+            <div><span class="text-outline block">State / District:</span> <strong>${app.personal.state}, ${app.personal.district}</strong></div>
+            <div class="sm:col-span-3"><span class="text-outline block">Permanent Address:</span> <strong>${app.personal.address}</strong></div>
           </div>
         </div>
 
-        <!-- Academic Review -->
+        <!-- 2. ST Category Details -->
         <div class="p-3 bg-surface-container-low rounded-lg">
           <div class="flex justify-between items-center mb-2">
             <h3 class="font-bold text-primary flex items-center gap-1">
-              <span class="material-symbols-outlined text-[18px]">school</span> 2. Academic Details
+              <span class="material-symbols-outlined text-[18px]">verified_user</span> 2. ST Category &amp; Tribe Details
+            </h3>
+            <button onclick="router.navigate('/application/personal')" class="text-xs text-secondary font-bold hover:underline">[Edit]</button>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+            <div><span class="text-outline block">Tribe Community:</span> <strong>${app.category.tribeName}</strong></div>
+            <div><span class="text-outline block">ST Certificate No:</span> <strong class="font-mono">${app.category.certNo}</strong></div>
+            <div><span class="text-outline block">Issuing Authority:</span> <strong>${app.category.issuingAuthority}</strong></div>
+            <div><span class="text-outline block">Issue Date:</span> <strong>${app.category.issueDate}</strong></div>
+            <div><span class="text-outline block">PVTG Beneficiary:</span> <strong>${app.category.pvtg}</strong></div>
+            <div><span class="text-outline block">DigiLocker Status:</span> <strong class="text-tertiary-container">✓ e-KYC Certified</strong></div>
+          </div>
+        </div>
+
+        <!-- 3. Academic Review -->
+        <div class="p-3 bg-surface-container-low rounded-lg">
+          <div class="flex justify-between items-center mb-2">
+            <h3 class="font-bold text-primary flex items-center gap-1">
+              <span class="material-symbols-outlined text-[18px]">school</span> 3. Academic Details &amp; Research Track
             </h3>
             <button onclick="router.navigate('/application/academic')" class="text-xs text-secondary font-bold hover:underline">[Edit]</button>
           </div>
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
-            <div class="sm:col-span-2"><span class="text-outline block">University:</span> <strong>${app.academic.university}</strong></div>
-            <div><span class="text-outline block">QS Rank:</span> <strong>#${app.academic.qsRank}</strong></div>
-            <div class="sm:col-span-2"><span class="text-outline block">Course:</span> <strong>${app.academic.courseTitle}</strong></div>
-            <div><span class="text-outline block">Offer:</span> <strong>${app.academic.offerType}</strong></div>
+            <div class="sm:col-span-2"><span class="text-outline block">Target / Enrolled University:</span> <strong>${app.academic.university}</strong></div>
+            <div><span class="text-outline block">QS Global Rank:</span> <strong class="text-tertiary-container">#${app.academic.qsRank}</strong></div>
+            <div class="sm:col-span-2"><span class="text-outline block">Degree / Course Title:</span> <strong>${app.academic.courseTitle}</strong></div>
+            <div><span class="text-outline block">Admission Offer Type:</span> <strong class="capitalize">${app.academic.offerType}</strong></div>
+            <div><span class="text-outline block">Qualifying Score:</span> <strong class="text-secondary">${app.academic.percentage}%</strong></div>
           </div>
         </div>
 
-        <!-- Financial Review -->
+        <!-- 4. Financial Review -->
         <div class="p-3 bg-surface-container-low rounded-lg">
           <div class="flex justify-between items-center mb-2">
             <h3 class="font-bold text-primary flex items-center gap-1">
-              <span class="material-symbols-outlined text-[18px]">payments</span> 3. Financial Details
+              <span class="material-symbols-outlined text-[18px]">payments</span> 4. Financial &amp; DBT Details
             </h3>
             <button onclick="router.navigate('/application/financial')" class="text-xs text-secondary font-bold hover:underline">[Edit]</button>
           </div>
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
-            <div><span class="text-outline block">Annual Income:</span> <strong class="text-secondary">₹${app.financial.annualIncome}</strong></div>
-            <div><span class="text-outline block">Bank:</span> <strong>${app.financial.bankName}</strong></div>
-            <div><span class="text-outline block">IFSC:</span> <strong>${app.financial.ifsc}</strong></div>
+            <div><span class="text-outline block">Annual Family Income:</span> <strong class="text-secondary text-sm">₹${app.financial.annualIncome}</strong></div>
+            <div><span class="text-outline block">Disbursement Bank:</span> <strong>${app.financial.bankName}</strong></div>
+            <div><span class="text-outline block">Bank IFSC Code:</span> <strong class="font-mono">${app.financial.ifsc}</strong></div>
+            <div><span class="text-outline block">NPCI Aadhaar Bridge:</span> <strong class="text-tertiary-container">✓ Active &amp; Seeded</strong></div>
+            <div><span class="text-outline block">Income Certificate:</span> <strong class="font-mono text-[11px]">${app.financial.incomeCertNo}</strong></div>
+          </div>
+        </div>
+
+        <!-- 5. Documents Checklist Review -->
+        <div class="p-3 bg-surface-container-low rounded-lg">
+          <div class="flex justify-between items-center mb-2">
+            <h3 class="font-bold text-primary flex items-center gap-1">
+              <span class="material-symbols-outlined text-[18px]">folder</span> 5. Verified Uploaded Documents (${app.documents.length})
+            </h3>
+            <button onclick="router.navigate('/application/documents')" class="text-xs text-secondary font-bold hover:underline">[Edit]</button>
+          </div>
+          <div class="space-y-1.5 text-xs">
+            ${app.documents.map(d => `
+              <div class="flex justify-between items-center p-1.5 bg-white rounded border border-outline-variant/30">
+                <span class="flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-secondary text-[16px]">description</span>
+                  <strong>${d.name}</strong> <span class="text-outline">(${d.type} • ${d.size})</span>
+                </span>
+                <span class="text-tertiary-container font-bold flex items-center gap-0.5 text-[11px]">
+                  <span class="material-symbols-outlined text-[14px]">check_circle</span> DigiLocker Verified
+                </span>
+              </div>
+            `).join("")}
           </div>
         </div>
       </div>
@@ -1127,18 +1210,20 @@ function executeFinalSubmit() {
   err.classList.add("hidden");
 
   const app = window.appStore.getApplication();
-  app.id = "MOTA-NOS-2026-000124";
+  const code = app.schemeCode || "NOS";
+  const randomSerial = Math.floor(100000 + Math.random() * 900000);
+  app.id = `MOTA-${code}-2026-${randomSerial}`;
   app.status = "Under Document Scrutiny";
   app.submissionDate = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
   app.history.push({
     title: "Application Submitted to Ministry",
     time: app.submissionDate,
     officer: "Portal Gateway",
-    remark: "Direct electronic submission received under National Overseas Scholarship Scheme."
+    remark: `Direct electronic submission received under ${app.scheme}.`
   });
 
   window.appStore.saveApplication(app);
-  showToast("Application submitted successfully!", "success");
+  showToast(`Application submitted! Ref: ${app.id}`, "success");
   router.navigate("/application/success");
 }
 
@@ -1561,7 +1646,7 @@ router.register("/admin/applications", () => {
 // 21. Admin Application Review (/admin/applications/:id)
 router.register("/admin/applications/:id", (params) => {
   const appId = params.id;
-  const app = window.appStore.getApplication();
+  const app = window.appStore.getApplicationById(appId);
   const container = document.getElementById("main-view-container");
 
   container.innerHTML = `
@@ -1634,21 +1719,31 @@ function handleAdminAction(appId, newStatus, defaultRemark) {
   const remark = document.getElementById("admin-remark").value.trim() || defaultRemark;
   const app = window.appStore.getApplication();
 
-  app.status = newStatus;
-  if (newStatus === "Deficiency Raised") {
-    app.deficiency = { remark, date: new Date().toLocaleString("en-IN") };
+  if (app.id === appId) {
+    app.status = newStatus;
+    if (newStatus === "Deficiency Raised") {
+      app.deficiency = { remark, date: new Date().toLocaleString("en-IN") };
+    } else {
+      app.deficiency = null;
+    }
+
+    app.history.push({
+      title: `Status Changed to ${newStatus}`,
+      time: new Date().toLocaleString("en-IN"),
+      officer: "Shri K. S. Verma (Officer)",
+      remark: remark
+    });
+
+    window.appStore.saveApplication(app);
   } else {
-    app.deficiency = null;
+    const queue = window.appStore.getAdminQueue();
+    const item = queue.find(q => q.id === appId);
+    if (item) {
+      item.status = newStatus;
+      window.appStore.saveAdminQueue(queue);
+    }
   }
 
-  app.history.push({
-    title: `Status Changed to ${newStatus}`,
-    time: new Date().toLocaleString("en-IN"),
-    officer: "Shri K. S. Verma (Officer)",
-    remark: remark
-  });
-
-  window.appStore.saveApplication(app);
   showToast(`Application ${appId} updated to: ${newStatus}`, "success");
   router.navigate("/admin/applications");
 }

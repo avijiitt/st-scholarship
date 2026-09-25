@@ -45,6 +45,7 @@ class Router {
   }
 
   navigate(path) {
+    if (path.startsWith("#")) path = path.substring(1);
     if (!path.startsWith("/")) path = "/" + path;
     window.location.hash = "#" + path;
   }
@@ -79,7 +80,16 @@ class Router {
 
   handleRouting() {
     const rawPath = this.getCurrentPath();
-    const matched = this.matchRoute(rawPath);
+    const [pathOnly, queryString] = rawPath.split("?");
+    const queryParams = {};
+    if (queryString) {
+      const searchParams = new URLSearchParams(queryString);
+      searchParams.forEach((val, key) => {
+        queryParams[key] = val;
+      });
+    }
+
+    const matched = this.matchRoute(pathOnly);
 
     if (!matched) {
       this.render404(rawPath);
@@ -87,8 +97,9 @@ class Router {
     }
 
     const { config, pattern, params } = matched;
+    const combinedParams = { ...queryParams, ...params };
     this.currentRoute = pattern;
-    this.currentParams = params;
+    this.currentParams = combinedParams;
 
     // Role-based protection check
     const authUser = window.appStore.getAuthUser();
@@ -108,7 +119,7 @@ class Router {
 
     // Render with specified layout
     this.renderLayout(config.layout, () => {
-      config.handler(params);
+      config.handler(combinedParams);
     });
 
     // Update active nav highlights
@@ -214,6 +225,10 @@ class Router {
               <button data-font-action="reset" class="font-bold hover:text-secondary-fixed">A</button>
               <button data-font-action="increase" class="hover:text-secondary-fixed">A+</button>
               <button data-contrast-toggle title="High Contrast Mode"><span class="material-symbols-outlined text-[15px]">contrast</span></button>
+              <span class="text-outline">|</span>
+              <a href="#/login" class="text-secondary-fixed hover:underline flex items-center gap-1 font-semibold">
+                <span class="material-symbols-outlined text-[14px]">school</span> Scholar Login
+              </a>
               <span class="text-outline">|</span>
               <a href="#/admin/login" class="text-secondary-fixed hover:underline flex items-center gap-1 font-semibold">
                 <span class="material-symbols-outlined text-[14px]">admin_panel_settings</span> Official Portal
