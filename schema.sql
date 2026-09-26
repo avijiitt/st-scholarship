@@ -150,6 +150,7 @@ CREATE TABLE IF NOT EXISTS public.applications (
         'deficiency_raised',
         'resubmitted',
         'provisionally_eligible',
+        'committee_screening',
         'rejected',
         'selected'
     )),
@@ -163,6 +164,19 @@ CREATE TABLE IF NOT EXISTS public.applications (
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
+
+ALTER TABLE public.applications DROP CONSTRAINT IF EXISTS applications_status_check;
+ALTER TABLE public.applications ADD CONSTRAINT applications_status_check CHECK (status IN (
+    'draft',
+    'submitted',
+    'under_scrutiny',
+    'deficiency_raised',
+    'resubmitted',
+    'provisionally_eligible',
+    'committee_screening',
+    'rejected',
+    'selected'
+));
 
 ALTER TABLE public.applications ADD COLUMN IF NOT EXISTS officer_remarks TEXT;
 

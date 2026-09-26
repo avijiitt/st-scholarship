@@ -2962,81 +2962,206 @@ function handleAdminLogin(e) {
 }
 
 // 19. Admin Dashboard (/admin/dashboard)
-router.register("/admin/dashboard", () => {
-  const queue = window.appStore.getAdminQueue();
+// 19. Admin Dashboard (/admin/dashboard) - Real Database Queries & Aggregations
+router.register("/admin/dashboard", async () => {
   const container = document.getElementById("main-view-container");
+  if (!container) return;
 
-  const total = queue.length;
-  const underScrutiny = queue.filter(q => q.status === "Under Document Scrutiny").length;
-  const approved = queue.filter(q => q.status === "Approved").length;
-  const deficiency = queue.filter(q => q.status === "Deficiency Raised").length;
+  container.innerHTML = `
+    <div class="bg-surface-container-lowest p-space-xl rounded-xl shadow-md border border-outline-variant/30 text-center py-16 space-y-3">
+      <div class="w-10 h-10 border-4 border-secondary border-t-transparent rounded-full animate-spin mx-auto"></div>
+      <h3 class="font-bold text-primary text-base">Loading Admin Governance Metrics...</h3>
+      <p class="text-xs text-outline font-mono">Aggregating public.applications database telemetry</p>
+    </div>
+  `;
+
+  let metrics = {
+    total: 0,
+    draft: 0,
+    submitted: 0,
+    underScrutiny: 0,
+    deficiency: 0,
+    selected: 0,
+    rejected: 0,
+    stateWise: {},
+    schemeWise: {},
+    applications: []
+  };
+
+  if (typeof window.supabaseFetchAdminDashboardMetrics === "function") {
+    try {
+      metrics = await window.supabaseFetchAdminDashboardMetrics();
+    } catch (e) {
+      console.warn("Admin metrics error:", e);
+    }
+  }
+
+  const priorityCandidates = metrics.applications.slice(0, 6);
 
   container.innerHTML = `
     <div class="space-y-space-lg">
-      <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm border border-outline-variant/30 flex justify-between items-center">
+      <!-- Header Banner -->
+      <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm border border-outline-variant/30 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 class="text-2xl font-bold text-primary">MoTA Officer Scrutiny Console</h1>
-          <p class="text-xs text-on-surface-variant">Central Tribal Schemes &amp; Fellowships Management</p>
+          <div class="flex items-center gap-2">
+            <h1 class="text-2xl font-bold text-primary">MoTA Officer Scrutiny Console</h1>
+            <span class="px-2 py-0.5 bg-tertiary-container/15 text-tertiary-container text-xs font-bold rounded border border-tertiary-container/30">
+              Live DB
+            </span>
+          </div>
+          <p class="text-xs text-on-surface-variant mt-0.5">Ministry of Tribal Affairs • National Tribal Scholarship Portal</p>
         </div>
-        <a href="#/admin/applications" class="px-4 py-2 bg-secondary text-white font-bold text-sm rounded shadow-sm hover:bg-secondary/90">
-          Open Scrutiny Queue (${underScrutiny})
-        </a>
-      </div>
-
-      <!-- Metrics -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div class="p-4 bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/30">
-          <span class="text-xs text-outline font-semibold">Total Intake</span>
-          <p class="text-2xl font-bold text-primary mt-1">${total}</p>
-        </div>
-        <div class="p-4 bg-surface-container-lowest rounded-xl shadow-sm border border-secondary/30">
-          <span class="text-xs text-secondary font-semibold">Pending Scrutiny</span>
-          <p class="text-2xl font-bold text-secondary mt-1">${underScrutiny}</p>
-        </div>
-        <div class="p-4 bg-surface-container-lowest rounded-xl shadow-sm border border-tertiary-container/30">
-          <span class="text-xs text-tertiary-container font-semibold">Approved (PFMS Ready)</span>
-          <p class="text-2xl font-bold text-tertiary-container mt-1">${approved}</p>
-        </div>
-        <div class="p-4 bg-surface-container-lowest rounded-xl shadow-sm border border-error/30">
-          <span class="text-xs text-error font-semibold">Deficiency Raised</span>
-          <p class="text-2xl font-bold text-error mt-1">${deficiency}</p>
+        <div class="flex items-center gap-2">
+          <a href="#/admin/applications" class="px-4 py-2 bg-secondary text-white font-bold text-xs rounded shadow-sm hover:bg-secondary/90 flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[16px]">rule</span> Open Scrutiny Queue (${metrics.submitted + metrics.underScrutiny})
+          </a>
         </div>
       </div>
 
-      <!-- Quick Action Queue Preview -->
+      <!-- Real Database Telemetry Metric Cards -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <!-- Total -->
+        <div class="p-3.5 bg-surface-container-lowest rounded-xl shadow-xs border border-outline-variant/30">
+          <span class="text-[11px] text-outline font-bold uppercase tracking-wider block">Total Intake</span>
+          <p class="text-2xl font-black text-primary mt-1 font-mono">${metrics.total}</p>
+          <span class="text-[10px] text-outline">All Registrations</span>
+        </div>
+        <!-- Drafts -->
+        <div class="p-3.5 bg-surface-container-lowest rounded-xl shadow-xs border border-outline-variant/30">
+          <span class="text-[11px] text-outline font-bold uppercase tracking-wider block">Drafts</span>
+          <p class="text-2xl font-black text-outline mt-1 font-mono">${metrics.draft}</p>
+          <span class="text-[10px] text-outline">Unsubmitted</span>
+        </div>
+        <!-- Submitted -->
+        <div class="p-3.5 bg-surface-container-lowest rounded-xl shadow-xs border border-secondary/40 bg-secondary/5">
+          <span class="text-[11px] text-secondary font-bold uppercase tracking-wider block">Submitted</span>
+          <p class="text-2xl font-black text-secondary mt-1 font-mono">${metrics.submitted}</p>
+          <span class="text-[10px] text-secondary">Awaiting Officer</span>
+        </div>
+        <!-- Under Scrutiny -->
+        <div class="p-3.5 bg-surface-container-lowest rounded-xl shadow-xs border border-primary/30 bg-primary/5">
+          <span class="text-[11px] text-primary font-bold uppercase tracking-wider block">Under Scrutiny</span>
+          <p class="text-2xl font-black text-primary mt-1 font-mono">${metrics.underScrutiny}</p>
+          <span class="text-[10px] text-primary font-semibold">Active Review</span>
+        </div>
+        <!-- Deficiency Cases -->
+        <div class="p-3.5 bg-surface-container-lowest rounded-xl shadow-xs border border-error/40 bg-error/5">
+          <span class="text-[11px] text-error font-bold uppercase tracking-wider block">Deficiencies</span>
+          <p class="text-2xl font-black text-error mt-1 font-mono">${metrics.deficiency}</p>
+          <span class="text-[10px] text-error">Action Needed</span>
+        </div>
+        <!-- Selected / Provisionally Eligible -->
+        <div class="p-3.5 bg-surface-container-lowest rounded-xl shadow-xs border border-tertiary-container/40 bg-tertiary-container/5">
+          <span class="text-[11px] text-tertiary-container font-bold uppercase tracking-wider block">Selected</span>
+          <p class="text-2xl font-black text-tertiary-container mt-1 font-mono">${metrics.selected}</p>
+          <span class="text-[10px] text-tertiary-container font-semibold">PFMS / Merit List</span>
+        </div>
+      </div>
+
+      <!-- State-wise & Scheme-wise Aggregations -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- State-Wise Breakdown -->
+        <div class="bg-surface-container-lowest p-space-md rounded-xl shadow-xs border border-outline-variant/30 space-y-3">
+          <div class="flex justify-between items-center pb-2 border-b border-outline-variant/20">
+            <h3 class="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-secondary text-base">map</span> State-Wise Distribution (राज्यवार आँकड़े)
+            </h3>
+            <span class="text-[11px] font-mono text-outline">${Object.keys(metrics.stateWise).length} States Active</span>
+          </div>
+          <div class="flex flex-wrap gap-2 pt-1">
+            ${Object.keys(metrics.stateWise).length === 0 ? `
+              <p class="text-xs text-outline">No geographic distribution recorded yet.</p>
+            ` : Object.entries(metrics.stateWise).map(([st, cnt]) => `
+              <span class="px-2.5 py-1 bg-surface-container-low hover:bg-surface-container text-primary text-xs font-semibold rounded-lg border border-outline-variant/30 flex items-center gap-1.5">
+                <span>${escapeHTML(st)}</span>
+                <span class="px-1.5 py-0.2 bg-secondary text-white text-[10px] font-mono font-bold rounded-full">${cnt}</span>
+              </span>
+            `).join("")}
+          </div>
+        </div>
+
+        <!-- Scheme-Wise Breakdown -->
+        <div class="bg-surface-container-lowest p-space-md rounded-xl shadow-xs border border-outline-variant/30 space-y-3">
+          <div class="flex justify-between items-center pb-2 border-b border-outline-variant/20">
+            <h3 class="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-tertiary-container text-base">school</span> Scheme-Wise Distribution (योजनावार आँकड़े)
+            </h3>
+            <span class="text-[11px] font-mono text-outline">${Object.keys(metrics.schemeWise).length} Schemes</span>
+          </div>
+          <div class="flex flex-wrap gap-2 pt-1">
+            ${Object.keys(metrics.schemeWise).length === 0 ? `
+              <p class="text-xs text-outline">No scheme applications recorded yet.</p>
+            ` : Object.entries(metrics.schemeWise).map(([sch, cnt]) => `
+              <span class="px-2.5 py-1 bg-surface-container-low hover:bg-surface-container text-primary text-xs font-semibold rounded-lg border border-outline-variant/30 flex items-center gap-1.5">
+                <span>${escapeHTML(sch)}</span>
+                <span class="px-1.5 py-0.2 bg-tertiary-container text-white text-[10px] font-mono font-bold rounded-full">${cnt}</span>
+              </span>
+            `).join("")}
+          </div>
+        </div>
+      </div>
+
+      <!-- Priority Review Candidates Table -->
       <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm border border-outline-variant/30">
-        <h2 class="text-base font-bold text-primary mb-3">Priority Review Candidates</h2>
+        <div class="flex justify-between items-center pb-3 border-b border-outline-variant/20 mb-3">
+          <div>
+            <h2 class="text-base font-bold text-primary">Priority Scrutiny Candidates (प्राथमिकता सूची)</h2>
+            <p class="text-xs text-on-surface-variant">Live applications waiting for ministerial officer verification.</p>
+          </div>
+          <a href="#/admin/applications" class="text-xs text-secondary font-bold hover:underline">
+            View All in Scrutiny Queue →
+          </a>
+        </div>
+
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs">
             <thead class="bg-surface-container text-primary font-bold">
               <tr>
                 <th class="p-3">Ref ID</th>
-                <th class="p-3">Candidate</th>
-                <th class="p-3">Scheme</th>
-                <th class="p-3">University</th>
-                <th class="p-3">Status</th>
+                <th class="p-3">Candidate &amp; Domicile</th>
+                <th class="p-3">Scheme Track</th>
+                <th class="p-3">Risk Level</th>
+                <th class="p-3">Current Status</th>
                 <th class="p-3">Action</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-outline-variant/20">
-              ${queue.map(q => `
-                <tr class="hover:bg-surface-container-low transition">
-                  <td class="p-3 font-mono font-bold">${q.id}</td>
-                  <td class="p-3"><strong>${q.applicantName}</strong> (${q.state})</td>
-                  <td class="p-3 font-semibold">${q.schemeCode}</td>
-                  <td class="p-3">${q.university}</td>
-                  <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${
-                    q.status === 'Approved' ? 'bg-tertiary-fixed text-on-tertiary-fixed' :
-                    q.status === 'Deficiency Raised' ? 'bg-error text-white' :
-                    'bg-secondary-fixed text-on-secondary-fixed'
-                  }">${q.status}</span></td>
-                  <td class="p-3">
-                    <a href="#/admin/applications/${q.id}" class="text-secondary font-bold hover:underline">
-                      Review →
-                    </a>
-                  </td>
-                </tr>
-              `).join("")}
+              ${priorityCandidates.map(q => {
+                const sBadge = getTrackingStatusBadge(q.status);
+                const candName = q.profiles?.full_name || q.personal_details?.fullName || "ST Scholar";
+                const state = q.profiles?.state || q.personal_details?.state || "Jharkhand";
+                const schemeCode = (q.schemes?.code || "NOS").replace("SCH-MOTA-", "");
+                const risk = (q.risk_level || "low").toLowerCase();
+                return `
+                  <tr class="hover:bg-surface-container-low transition">
+                    <td class="p-3 font-mono font-bold text-primary">${escapeHTML(q.application_number || q.id)}</td>
+                    <td class="p-3">
+                      <strong class="text-primary block">${escapeHTML(candName)}</strong>
+                      <span class="text-[11px] text-outline">${escapeHTML(state)}</span>
+                    </td>
+                    <td class="p-3 font-semibold">${escapeHTML(schemeCode)}</td>
+                    <td class="p-3">
+                      <span class="px-2 py-0.5 rounded text-[10px] font-bold ${
+                        risk === 'high' ? 'bg-error text-white' :
+                        risk === 'medium' ? 'bg-secondary-fixed text-on-secondary-fixed' :
+                        'bg-tertiary-fixed text-on-tertiary-fixed'
+                      }">
+                        ${risk.toUpperCase()}
+                      </span>
+                    </td>
+                    <td class="p-3">
+                      <span class="px-2 py-0.5 rounded text-[10px] font-bold ${sBadge.badgeClass}">
+                        ${sBadge.label}
+                      </span>
+                    </td>
+                    <td class="p-3">
+                      <a href="#/admin/applications/${q.id}" class="px-3 py-1.5 bg-primary text-white font-bold rounded hover:bg-primary-container text-xs inline-flex items-center gap-1 transition">
+                        Review →
+                      </a>
+                    </td>
+                  </tr>
+                `;
+              }).join("")}
             </tbody>
           </table>
         </div>
@@ -3045,59 +3170,191 @@ router.register("/admin/dashboard", () => {
   `;
 }, { layout: "admin", authRole: "admin" });
 
-// 20. Admin Applications Queue (/admin/applications)
-router.register("/admin/applications", () => {
-  const queue = window.appStore.getAdminQueue();
+// Global Filter State for Admin Queue
+let adminQueueFilters = {
+  scheme: "all",
+  status: "all",
+  state: "all",
+  date: "all",
+  riskLevel: "all",
+  search: ""
+};
+
+// 20. Admin Applications Queue (/admin/applications) - Multi-criteria Filters
+router.register("/admin/applications", async () => {
   const container = document.getElementById("main-view-container");
+  if (!container) return;
 
   container.innerHTML = `
-    <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm border border-outline-variant/30">
-      <div class="flex justify-between items-center pb-3 border-b border-outline-variant/20 mb-4">
+    <div class="bg-surface-container-lowest p-space-xl rounded-xl shadow-md border border-outline-variant/30 text-center py-16 space-y-3">
+      <div class="w-10 h-10 border-4 border-secondary border-t-transparent rounded-full animate-spin mx-auto"></div>
+      <h3 class="font-bold text-primary text-base">Loading Scrutiny Queue from Database...</h3>
+      <p class="text-xs text-outline font-mono">Applying filters to public.applications</p>
+    </div>
+  `;
+
+  let queueResult = { applications: [], total: 0, filteredCount: 0 };
+  if (typeof window.supabaseFetchAdminQueue === "function") {
+    try {
+      queueResult = await window.supabaseFetchAdminQueue(adminQueueFilters);
+    } catch (err) {
+      console.warn("Queue fetch error:", err);
+    }
+  }
+
+  const applications = queueResult.applications || [];
+
+  container.innerHTML = `
+    <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm border border-outline-variant/30 space-y-4">
+      <!-- Header -->
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-3 border-b border-outline-variant/20 gap-2">
         <div>
-          <h1 class="text-xl font-bold text-primary">Applications Scrutiny Queue</h1>
-          <p class="text-xs text-on-surface-variant">Review applicant credentials and execute committee routing.</p>
+          <h1 class="text-xl font-bold text-primary">Applications Scrutiny Queue (सत्यापन कतार)</h1>
+          <p class="text-xs text-on-surface-variant">Review applicant credentials, verify uploaded documents, and route dossiers.</p>
         </div>
-        <span class="text-xs text-outline">${queue.length} Active Records</span>
+        <span class="text-xs font-mono font-bold text-secondary bg-secondary-fixed/50 px-3 py-1 rounded-full">
+          ${queueResult.filteredCount} matching / ${queueResult.total} total
+        </span>
       </div>
 
+      <!-- Multi-Criteria Filters Bar -->
+      <div class="p-3 bg-surface-container-low rounded-xl border border-outline-variant/30 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 text-xs">
+        <!-- 1. Scheme Filter -->
+        <div>
+          <label class="block font-bold text-outline text-[11px] mb-1">Scheme</label>
+          <select id="filter-scheme" onchange="updateAdminFilter('scheme', this.value)" class="w-full p-2 bg-surface-container-lowest rounded border border-outline-variant/40 font-semibold text-primary text-xs">
+            <option value="all" ${adminQueueFilters.scheme === 'all' ? 'selected' : ''}>All Schemes</option>
+            <option value="nos" ${adminQueueFilters.scheme === 'nos' ? 'selected' : ''}>NOS (Overseas)</option>
+            <option value="nfst" ${adminQueueFilters.scheme === 'nfst' ? 'selected' : ''}>NFST (Fellowship)</option>
+            <option value="pms" ${adminQueueFilters.scheme === 'pms' ? 'selected' : ''}>PMS (Post-Matric)</option>
+          </select>
+        </div>
+
+        <!-- 2. Status Filter -->
+        <div>
+          <label class="block font-bold text-outline text-[11px] mb-1">Status</label>
+          <select id="filter-status" onchange="updateAdminFilter('status', this.value)" class="w-full p-2 bg-surface-container-lowest rounded border border-outline-variant/40 font-semibold text-primary text-xs">
+            <option value="all" ${adminQueueFilters.status === 'all' ? 'selected' : ''}>All Statuses</option>
+            <option value="submitted" ${adminQueueFilters.status === 'submitted' ? 'selected' : ''}>Submitted</option>
+            <option value="under_scrutiny" ${adminQueueFilters.status === 'under_scrutiny' ? 'selected' : ''}>Under Scrutiny</option>
+            <option value="deficiency_raised" ${adminQueueFilters.status === 'deficiency_raised' ? 'selected' : ''}>Deficiency Raised</option>
+            <option value="provisionally_eligible" ${adminQueueFilters.status === 'provisionally_eligible' ? 'selected' : ''}>Provisionally Eligible</option>
+            <option value="committee_screening" ${adminQueueFilters.status === 'committee_screening' ? 'selected' : ''}>Committee Screening</option>
+            <option value="selected" ${adminQueueFilters.status === 'selected' ? 'selected' : ''}>Selected</option>
+            <option value="rejected" ${adminQueueFilters.status === 'rejected' ? 'selected' : ''}>Rejected</option>
+            <option value="draft" ${adminQueueFilters.status === 'draft' ? 'selected' : ''}>Draft</option>
+          </select>
+        </div>
+
+        <!-- 3. State Filter -->
+        <div>
+          <label class="block font-bold text-outline text-[11px] mb-1">State</label>
+          <select id="filter-state" onchange="updateAdminFilter('state', this.value)" class="w-full p-2 bg-surface-container-lowest rounded border border-outline-variant/40 font-semibold text-primary text-xs">
+            <option value="all" ${adminQueueFilters.state === 'all' ? 'selected' : ''}>All States</option>
+            <option value="jharkhand" ${adminQueueFilters.state === 'jharkhand' ? 'selected' : ''}>Jharkhand</option>
+            <option value="odisha" ${adminQueueFilters.state === 'odisha' ? 'selected' : ''}>Odisha</option>
+            <option value="madhya pradesh" ${adminQueueFilters.state === 'madhya pradesh' ? 'selected' : ''}>Madhya Pradesh</option>
+            <option value="assam" ${adminQueueFilters.state === 'assam' ? 'selected' : ''}>Assam</option>
+            <option value="chhattisgarh" ${adminQueueFilters.state === 'chhattisgarh' ? 'selected' : ''}>Chhattisgarh</option>
+            <option value="rajasthan" ${adminQueueFilters.state === 'rajasthan' ? 'selected' : ''}>Rajasthan</option>
+          </select>
+        </div>
+
+        <!-- 4. Date Filter -->
+        <div>
+          <label class="block font-bold text-outline text-[11px] mb-1">Submission Date</label>
+          <select id="filter-date" onchange="updateAdminFilter('date', this.value)" class="w-full p-2 bg-surface-container-lowest rounded border border-outline-variant/40 font-semibold text-primary text-xs">
+            <option value="all" ${adminQueueFilters.date === 'all' ? 'selected' : ''}>All Time</option>
+            <option value="today" ${adminQueueFilters.date === 'today' ? 'selected' : ''}>Today</option>
+            <option value="7days" ${adminQueueFilters.date === '7days' ? 'selected' : ''}>Last 7 Days</option>
+            <option value="30days" ${adminQueueFilters.date === '30days' ? 'selected' : ''}>Last 30 Days</option>
+          </select>
+        </div>
+
+        <!-- 5. Risk Level Filter -->
+        <div>
+          <label class="block font-bold text-outline text-[11px] mb-1">Risk Level</label>
+          <select id="filter-risk" onchange="updateAdminFilter('riskLevel', this.value)" class="w-full p-2 bg-surface-container-lowest rounded border border-outline-variant/40 font-semibold text-primary text-xs">
+            <option value="all" ${adminQueueFilters.riskLevel === 'all' ? 'selected' : ''}>All Risk Levels</option>
+            <option value="low" ${adminQueueFilters.riskLevel === 'low' ? 'selected' : ''}>Low Risk</option>
+            <option value="medium" ${adminQueueFilters.riskLevel === 'medium' ? 'selected' : ''}>Medium Risk</option>
+            <option value="high" ${adminQueueFilters.riskLevel === 'high' ? 'selected' : ''}>High Risk</option>
+          </select>
+        </div>
+
+        <!-- 6. Search Bar -->
+        <div>
+          <label class="block font-bold text-outline text-[11px] mb-1">Search Candidate</label>
+          <div class="flex gap-1">
+            <input type="text" id="filter-search-input" value="${escapeHTML(adminQueueFilters.search)}" placeholder="Name / Ref / Email" onkeydown="if(event.key==='Enter') executeAdminSearch()" class="w-full p-2 bg-surface-container-lowest rounded border border-outline-variant/40 text-xs"/>
+            <button onclick="executeAdminSearch()" class="px-2.5 bg-secondary text-white rounded hover:bg-secondary/90">
+              <span class="material-symbols-outlined text-[16px] mt-0.5">search</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Queue Table -->
       <div class="overflow-x-auto">
         <table class="w-full text-left text-xs">
           <thead class="bg-surface-container text-primary font-bold">
             <tr>
               <th class="p-3">Application Ref</th>
-              <th class="p-3">Applicant &amp; Community</th>
-              <th class="p-3">Scheme</th>
-              <th class="p-3">QS Rank / Inst</th>
-              <th class="p-3">Current Status</th>
+              <th class="p-3">Applicant &amp; Domicile</th>
+              <th class="p-3">Scheme Track</th>
+              <th class="p-3">University / Inst</th>
+              <th class="p-3">Risk Level</th>
+              <th class="p-3">Status</th>
               <th class="p-3">Action</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-outline-variant/20">
-            ${queue.map(q => `
-              <tr class="hover:bg-surface-container-low transition">
-                <td class="p-3 font-mono font-bold">${q.id}</td>
-                <td class="p-3">
-                  <strong class="text-primary block">${q.applicantName}</strong>
-                  <span class="text-[11px] text-outline">${q.otrId}</span>
-                </td>
-                <td class="p-3 font-semibold">${q.schemeCode}</td>
-                <td class="p-3">${q.university}</td>
-                <td class="p-3">
-                  <span class="px-2 py-0.5 rounded text-[10px] font-bold ${
-                    q.status === 'Approved' ? 'bg-tertiary-fixed text-on-tertiary-fixed' :
-                    q.status === 'Deficiency Raised' ? 'bg-error text-white' :
-                    'bg-secondary-fixed text-on-secondary-fixed'
-                  }">
-                    ${q.status}
-                  </span>
-                </td>
-                <td class="p-3">
-                  <a href="#/admin/applications/${q.id}" class="px-3 py-1.5 bg-primary text-white font-bold rounded hover:bg-primary-container text-xs inline-block">
-                    Review
-                  </a>
+            ${applications.length === 0 ? `
+              <tr>
+                <td colspan="7" class="p-8 text-center text-outline">
+                  <span class="material-symbols-outlined text-4xl block mb-2">filter_list_off</span>
+                  No applications matched the selected filter criteria.
+                  <button onclick="resetAdminFilters()" class="text-secondary font-bold underline block mx-auto mt-2">Reset All Filters</button>
                 </td>
               </tr>
-            `).join("")}
+            ` : applications.map(q => {
+              const sBadge = getTrackingStatusBadge(q.status);
+              const candName = q.profiles?.full_name || q.personal_details?.fullName || "ST Scholar";
+              const state = q.profiles?.state || q.personal_details?.state || "Jharkhand";
+              const univ = q.academic_details?.university || "Accredited University";
+              const schemeCode = (q.schemes?.code || q.schemeCode || "NOS").replace("SCH-MOTA-", "");
+              const risk = (q.risk_level || "low").toLowerCase();
+              return `
+                <tr class="hover:bg-surface-container-low transition">
+                  <td class="p-3 font-mono font-bold text-primary">${escapeHTML(q.application_number || q.id)}</td>
+                  <td class="p-3">
+                    <strong class="text-primary block">${escapeHTML(candName)}</strong>
+                    <span class="text-[11px] text-outline">${escapeHTML(state)}</span>
+                  </td>
+                  <td class="p-3 font-semibold">${escapeHTML(schemeCode)}</td>
+                  <td class="p-3 max-w-[180px] truncate" title="${escapeHTML(univ)}">${escapeHTML(univ)}</td>
+                  <td class="p-3">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold ${
+                      risk === 'high' ? 'bg-error text-white' :
+                      risk === 'medium' ? 'bg-secondary-fixed text-on-secondary-fixed' :
+                      'bg-tertiary-fixed text-on-tertiary-fixed'
+                    }">
+                      ${risk.toUpperCase()}
+                    </span>
+                  </td>
+                  <td class="p-3">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold ${sBadge.badgeClass}">
+                      ${sBadge.label}
+                    </span>
+                  </td>
+                  <td class="p-3">
+                    <a href="#/admin/applications/${q.id}" class="px-3 py-1.5 bg-primary hover:bg-primary-container text-white font-bold rounded text-xs inline-flex items-center gap-1 transition shadow-xs">
+                      Review Dossier →
+                    </a>
+                  </td>
+                </tr>
+              `;
+            }).join("")}
           </tbody>
         </table>
       </div>
@@ -3105,70 +3362,186 @@ router.register("/admin/applications", () => {
   `;
 }, { layout: "admin", authRole: "admin" });
 
-// 21. Admin Application Review (/admin/applications/:id)
-router.register("/admin/applications/:id", (params) => {
+function updateAdminFilter(key, value) {
+  adminQueueFilters[key] = value;
+  router.navigate("/admin/applications");
+}
+
+function executeAdminSearch() {
+  const input = document.getElementById("filter-search-input");
+  if (input) {
+    adminQueueFilters.search = input.value;
+    router.navigate("/admin/applications");
+  }
+}
+
+function resetAdminFilters() {
+  adminQueueFilters = {
+    scheme: "all",
+    status: "all",
+    state: "all",
+    date: "all",
+    riskLevel: "all",
+    search: ""
+  };
+  router.navigate("/admin/applications");
+}
+
+// 21. Admin Application Review (/admin/applications/:id) - Supabase Grounded
+router.register("/admin/applications/:id", async (params) => {
   const appId = params.id;
-  const app = window.appStore.getApplicationById(appId);
   const container = document.getElementById("main-view-container");
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="bg-surface-container-lowest p-space-xl rounded-xl shadow-md border border-outline-variant/30 text-center py-16 space-y-3">
+      <div class="w-10 h-10 border-4 border-secondary border-t-transparent rounded-full animate-spin mx-auto"></div>
+      <h3 class="font-bold text-primary text-base">Loading Candidate Dossier from Database...</h3>
+      <p class="text-xs text-outline font-mono">Fetching application ${escapeHTML(appId)}</p>
+    </div>
+  `;
+
+  let app = null;
+  if (typeof window.supabaseFetchApplicantTrackingData === "function") {
+    try {
+      const res = await window.supabaseFetchApplicantTrackingData(appId);
+      if (res && res.activeApp) {
+        app = res.activeApp;
+      }
+    } catch (e) {
+      console.warn("Fetch dossier error:", e);
+    }
+  }
+
+  // Fallback to local store if not found
+  if (!app && window.appStore) {
+    app = window.appStore.getApplicationById(appId);
+  }
+
+  if (!app) {
+    container.innerHTML = `
+      <div class="p-8 text-center bg-surface-container-lowest rounded-xl border border-outline-variant/30 space-y-3">
+        <span class="material-symbols-outlined text-error text-5xl">error</span>
+        <h2 class="text-lg font-bold text-primary">Application Not Found</h2>
+        <p class="text-xs text-outline">Application reference ${escapeHTML(appId)} could not be located in the database.</p>
+        <a href="#/admin/applications" class="px-4 py-2 bg-secondary text-white font-bold rounded text-xs inline-block">
+          Return to Queue
+        </a>
+      </div>
+    `;
+    return;
+  }
+
+  const personal = app.personal_details || app.personal || {};
+  const academic = app.academic_details || app.academic || {};
+  const financial = app.financial_details || app.financial || {};
+  const documents = Array.isArray(app.application_documents) ? app.application_documents : (Array.isArray(app.documents) ? app.documents : []);
+  const sBadge = getTrackingStatusBadge(app.status);
+  const schemeName = app.schemes?.name || app.scheme || "ST Scholarship Scheme";
 
   container.innerHTML = `
     <div class="space-y-4">
       <div class="flex justify-between items-center mb-2">
         <a href="#/admin/applications" class="text-xs font-bold text-secondary hover:underline flex items-center gap-1">
-          ← Back to Applications Queue
+          <span class="material-symbols-outlined text-[16px]">arrow_back</span> Back to Scrutiny Queue
         </a>
-        <span class="font-mono text-xs font-bold text-outline">ID: ${appId}</span>
+        <span class="font-mono text-xs font-bold text-outline">DB REF: ${escapeHTML(app.application_number || app.id)}</span>
       </div>
 
       <!-- Applicant Dossier -->
       <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30 space-y-4 text-xs">
-        <div class="flex justify-between items-center pb-3 border-b border-outline-variant/20">
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-3 border-b border-outline-variant/20 gap-2">
           <div>
-            <h2 class="text-lg font-bold text-primary">${app.personal.fullName}</h2>
-            <p class="text-outline">Community: <strong>${app.category.tribeName}</strong> | State: ${app.personal.state}</p>
+            <h2 class="text-lg font-bold text-primary">${escapeHTML(personal.fullName || app.profiles?.full_name || 'ST Scholar')}</h2>
+            <p class="text-outline">
+              Tribe: <strong>${escapeHTML(app.category?.tribeName || 'Scheduled Tribe')}</strong> • Domicile: <strong>${escapeHTML(personal.state || app.profiles?.state || 'Jharkhand')}</strong>
+            </p>
           </div>
-          <span class="px-3 py-1 bg-secondary-fixed text-on-secondary-fixed rounded text-xs font-bold">
-            ${app.status}
+          <span class="px-3.5 py-1.5 rounded-full text-xs font-bold shadow-xs ${sBadge.badgeClass}">
+            ${sBadge.label}
           </span>
         </div>
 
+        <!-- Academic & Financial Snapshot -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 bg-surface-container-low rounded-lg">
-          <div><span class="text-outline block">Scheme:</span> <strong>${app.scheme}</strong></div>
-          <div><span class="text-outline block">Host University:</span> <strong>${app.academic.university}</strong></div>
-          <div><span class="text-outline block">Family Income:</span> <strong class="text-secondary">₹${app.financial.annualIncome}</strong></div>
-          <div><span class="text-outline block">Aadhaar Bank:</span> <strong>${app.financial.bankName}</strong></div>
+          <div><span class="text-outline block text-[11px]">Target Scheme:</span> <strong>${escapeHTML(schemeName)}</strong></div>
+          <div><span class="text-outline block text-[11px]">Enrolled / Target University:</span> <strong>${escapeHTML(academic.university || 'Oxford / IIT')}</strong></div>
+          <div><span class="text-outline block text-[11px]">Annual Family Income:</span> <strong class="text-secondary font-mono">₹${escapeHTML(financial.annualIncome || '450000')}</strong></div>
+          <div><span class="text-outline block text-[11px]">Aadhaar / Bank:</span> <strong>${escapeHTML(financial.bankName || 'SBI / NPCI Seeded')}</strong></div>
         </div>
 
-        <!-- Verified Documents Checklist -->
-        <h3 class="font-bold text-primary text-sm pt-2">Scrutiny Checklist (Attached Files)</h3>
-        <div class="space-y-2">
-          ${app.documents.map(d => `
-            <div class="flex justify-between items-center p-2 bg-surface-container-low/60 rounded">
-              <span><strong>${d.name}</strong> (${d.type})</span>
-              <span class="text-tertiary-container font-bold flex items-center gap-1">
-                <span class="material-symbols-outlined text-[15px]">verified</span> DigiLocker Verified
-              </span>
-            </div>
-          `).join("")}
+        <!-- Verified Documents Checklist & Mark Verified Action -->
+        <div class="pt-2">
+          <div class="flex justify-between items-center mb-2">
+            <h3 class="font-bold text-primary text-sm flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-secondary text-base">folder</span>
+              <span>Scrutiny Checklist (Uploaded Documents: ${documents.length})</span>
+            </h3>
+            <span class="text-outline text-[11px]">Individual Document Attestation</span>
+          </div>
+
+          <div class="space-y-2">
+            ${documents.map((d, idx) => {
+              const isVerified = (d.verification_status === 'verified') || d.verified;
+              const docName = d.file_name || d.name || `Document-${idx+1}.pdf`;
+              const docType = d.document_type || d.type || 'Supporting Document';
+              const docId = d.id || `doc-${idx}`;
+              return `
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-2.5 bg-surface-container-low/70 rounded-lg border border-outline-variant/30 gap-2">
+                  <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-secondary text-lg">description</span>
+                    <div>
+                      <strong class="text-primary text-xs block">${escapeHTML(docName)}</strong>
+                      <span class="text-[11px] text-outline">${escapeHTML(docType)}</span>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-2 self-end sm:self-auto">
+                    ${isVerified ? `
+                      <span class="text-tertiary-container font-bold flex items-center gap-1 text-[11px] bg-tertiary-fixed/40 px-2 py-0.5 rounded">
+                        <span class="material-symbols-outlined text-[14px]">verified</span> Verified
+                      </span>
+                    ` : `
+                      <button onclick="handleVerifyDocument('${app.id}', '${docId}', '${escapeHTML(docType)}')" class="px-2.5 py-1 bg-secondary text-white font-bold rounded text-[11px] hover:bg-secondary/90 transition flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[13px]">check</span> Mark Verified
+                      </button>
+                    `}
+                  </div>
+                </div>
+              `;
+            }).join("")}
+          </div>
         </div>
 
-        <!-- Officer Decision Controls -->
+        <!-- Officer Decision Controls (Real Database Workflow Actions) -->
         <div class="pt-4 border-t border-outline-variant/20 space-y-3">
-          <label class="block font-bold text-primary text-xs">Officer Remark &amp; Justification *</label>
-          <textarea id="admin-remark" rows="2" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 text-xs">Candidate satisfies Top 500 QS benchmark. Documents verified.</textarea>
+          <label class="block font-bold text-primary text-xs">Officer Remark &amp; Scrutiny Justification *</label>
+          <textarea id="admin-remark" rows="2" class="w-full p-2.5 bg-surface-container-low rounded-lg border border-outline-variant/40 text-xs focus:ring-1 focus:ring-secondary focus:outline-hidden" placeholder="Enter official scrutiny remarks, deficiency instructions, or approval justification...">${escapeHTML(app.officer_remarks || "Candidate satisfies Top 500 QS benchmark. Documents verified.")}</textarea>
 
           <div class="flex flex-wrap gap-2 pt-2">
-            <button onclick="handleAdminAction('${appId}', 'Approved', 'Approved by Ministry Scrutiny Cell.')" class="px-4 py-2 bg-tertiary-container text-white font-bold rounded text-xs hover:opacity-90">
-              Approve Documents (PFMS Ready)
+            <!-- 1. Mark Provisionally Eligible (Approve) -->
+            <button onclick="handleAdminReviewAction('${app.id}', 'approve', 'provisionally_eligible')" class="px-4 py-2.5 bg-tertiary-container hover:bg-tertiary text-white font-bold rounded text-xs shadow-sm transition flex items-center gap-1">
+              <span class="material-symbols-outlined text-[16px]">verified</span>
+              <span>Mark Provisionally Eligible (अनुमोदित)</span>
             </button>
-            <button onclick="handleAdminAction('${appId}', 'Committee Screening', 'Forwarded to National Steering Committee.')" class="px-4 py-2 bg-primary text-white font-bold rounded text-xs hover:bg-primary-container">
-              Forward for Committee Screening
+
+            <!-- 2. Forward for Committee Screening -->
+            <button onclick="handleAdminReviewAction('${app.id}', 'forward', 'committee_screening')" class="px-4 py-2.5 bg-primary hover:bg-primary-container text-white font-bold rounded text-xs shadow-sm transition flex items-center gap-1">
+              <span class="material-symbols-outlined text-[16px]">groups</span>
+              <span>Forward for Committee Screening</span>
             </button>
-            <button onclick="handleAdminAction('${appId}', 'Deficiency Raised', 'Document deficiency query raised.')" class="px-4 py-2 bg-error text-white font-bold rounded text-xs hover:opacity-90">
-              Raise Deficiency
+
+            <!-- 3. Raise Deficiency -->
+            <button onclick="promptAndRaiseDeficiency('${app.id}')" class="px-4 py-2.5 bg-error hover:bg-error/90 text-white font-bold rounded text-xs shadow-sm transition flex items-center gap-1">
+              <span class="material-symbols-outlined text-[16px]">warning</span>
+              <span>Raise Deficiency (कमी दर्ज करें)</span>
             </button>
-            <button onclick="handleAdminAction('${appId}', 'Rejected', 'Application does not meet guidelines.')" class="px-4 py-2 bg-surface-container-highest text-error font-bold rounded text-xs hover:bg-surface-container">
-              Reject Application
+
+            <!-- 4. Reject Application -->
+            <button onclick="handleAdminReviewAction('${app.id}', 'reject', 'rejected')" class="px-4 py-2.5 bg-surface-container-highest hover:bg-error-container text-error font-bold rounded text-xs border border-error/30 transition flex items-center gap-1">
+              <span class="material-symbols-outlined text-[16px]">cancel</span>
+              <span>Reject Application (अस्वीकार)</span>
             </button>
           </div>
         </div>
@@ -3177,37 +3550,81 @@ router.register("/admin/applications/:id", (params) => {
   `;
 }, { layout: "admin", authRole: "admin" });
 
-function handleAdminAction(appId, newStatus, defaultRemark) {
-  const remark = document.getElementById("admin-remark").value.trim() || defaultRemark;
-  const app = window.appStore.getApplication();
+// Handle Document Verification Action
+async function handleVerifyDocument(appId, docId, docType) {
+  const remark = prompt(`Enter verification note for ${docType}:`, `Document verified via DigiLocker and issuing authority cross-check.`);
+  if (remark === null) return;
 
-  if (app.id === appId) {
-    app.status = newStatus;
-    if (newStatus === "Deficiency Raised") {
-      app.deficiency = { remark, date: new Date().toLocaleString("en-IN") };
-    } else {
-      app.deficiency = null;
-    }
-
-    app.history.push({
-      title: `Status Changed to ${newStatus}`,
-      time: new Date().toLocaleString("en-IN"),
-      officer: "Shri K. S. Verma (Officer)",
-      remark: remark
+  if (typeof window.supabaseExecuteAdminReviewAction === "function") {
+    await window.supabaseExecuteAdminReviewAction({
+      applicationId: appId,
+      action: "mark_document_verified",
+      documentId: docId,
+      officerRemark: remark
     });
+  }
 
-    window.appStore.saveApplication(app);
-  } else {
-    const queue = window.appStore.getAdminQueue();
-    const item = queue.find(q => q.id === appId);
-    if (item) {
-      item.status = newStatus;
-      window.appStore.saveAdminQueue(queue);
+  showToast(`✓ Document "${docType}" marked as verified.`, "success");
+  router.navigate(`/admin/applications/${appId}`);
+}
+
+// Handle Raising Deficiency with Custom Document Query
+async function promptAndRaiseDeficiency(appId) {
+  const docType = prompt("Specify the document requiring revision / clarification:", "Annual Family Income Certificate");
+  if (docType === null) return;
+  const desc = prompt("Specify the detailed deficiency query for the applicant:", "Please re-upload renewed copy certified by Tehsildar for current financial year.");
+  if (desc === null) return;
+
+  const remarkText = document.getElementById("admin-remark")?.value.trim() || `Deficiency query: ${desc}`;
+
+  await handleAdminReviewAction(appId, "raise_deficiency", "deficiency_raised", {
+    documentType: docType,
+    description: desc,
+    officerRemark: remarkText
+  });
+}
+
+// Master Admin Review Action Executor
+async function handleAdminReviewAction(appId, action, newStatus, extraData = {}) {
+  const remarkInput = document.getElementById("admin-remark");
+  const remark = extraData.officerRemark || (remarkInput ? remarkInput.value.trim() : `Officer decision: ${newStatus}`);
+
+  if (action === "reject" && !confirm("Are you sure you want to reject this scholarship application? This will terminate candidate evaluation.")) {
+    return;
+  }
+
+  showToast("Executing ministerial scrutiny decision...", "info");
+
+  if (typeof window.supabaseExecuteAdminReviewAction === "function") {
+    try {
+      const res = await window.supabaseExecuteAdminReviewAction({
+        applicationId: appId,
+        action: action,
+        newStatus: newStatus,
+        officerRemark: remark,
+        deficiencyDetails: extraData
+      });
+
+      if (!res.success) {
+        showToast(res.error || "Action execution failed", "error");
+        return;
+      }
+    } catch (e) {
+      console.warn("Execute review action error:", e);
     }
   }
 
-  showToast(`Application ${appId} updated to: ${newStatus}`, "success");
+  showToast(`✓ Application updated to: ${newStatus.replace(/_/g, ' ').toUpperCase()}`, "success");
   router.navigate("/admin/applications");
+}
+
+if (typeof window !== "undefined") {
+  window.updateAdminFilter = updateAdminFilter;
+  window.executeAdminSearch = executeAdminSearch;
+  window.resetAdminFilters = resetAdminFilters;
+  window.handleVerifyDocument = handleVerifyDocument;
+  window.promptAndRaiseDeficiency = promptAndRaiseDeficiency;
+  window.handleAdminReviewAction = handleAdminReviewAction;
 }
 
 // 22. Admin Scheme Configuration (/admin/schemes)

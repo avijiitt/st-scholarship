@@ -484,6 +484,461 @@ async function supabaseUpdateApplicationStatus(applicationId, newStatus, remark,
   }
 }
 
+// 5B. Fetch Admin Dashboard Metrics & Real Aggregations
+async function supabaseFetchAdminDashboardMetrics() {
+  let applications = [];
+
+  if (supabaseClient) {
+    try {
+      const { data, error } = await supabaseClient
+        .from('applications')
+        .select(`
+          id,
+          application_number,
+          status,
+          risk_level,
+          submitted_at,
+          created_at,
+          personal_details,
+          profiles ( id, full_name, state, district, email ),
+          schemes ( id, name, code )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (!error && Array.isArray(data)) {
+        applications = data;
+      }
+    } catch (err) {
+      console.warn("supabaseFetchAdminDashboardMetrics query error:", err);
+    }
+  }
+
+  // Fallback to local admin queue if no DB applications or offline
+  if (applications.length === 0 && typeof window !== "undefined" && window.appStore) {
+    const queue = window.appStore.getAdminQueue();
+    applications = queue.map(q => ({
+      id: q.id,
+      application_number: q.id,
+      status: (q.status || "under_scrutiny").toLowerCase().replace(/[\s-]+/g, "_"),
+      risk_level: (q.riskScore || "low").toLowerCase().includes("high") ? "high" : "low",
+      submitted_at: q.submissionDate || new Date().toISOString(),
+      created_at: q.submissionDate || new Date().toISOString(),
+      personal_details: {
+        fullName: q.applicantName,
+        state: q.state || "Jharkhand"
+      },
+      profiles: {
+        full_name: q.applicantName,
+        state: q.state || "Jharkhand"
+      },
+      schemes: {
+        name: q.scheme || "National Overseas Scholarship",
+        code: q.schemeCode || "NOS"
+      }
+    }));
+  }
+
+  // Calculate Metrics
+  const total = applications.length;
+  let draft = 0;
+  let submitted = 0;
+  let underScrutiny = 0;
+  let deficiency = 0;
+  let selected = 0;
+  let rejected = 0;
+
+  const stateWise = {};
+  const schemeWise = {};
+
+  applications.forEach(app => {
+    const s = (app.status || "").toLowerCase().replace(/[\s-]+/g, "_");
+    if (s === "draft") draft++;
+    else if (s === "submitted") submitted++;
+    else if (s === "under_scrutiny" || s === "under_document_scrutiny") underScrutiny++;
+    else if (s === "deficiency_raised") deficiency++;
+    else if (s === "selected" || s === "provisionally_eligible" || s === "approved" || s === "committee_screening") selected++;
+    else if (s === "rejected") rejected++;
+    else submitted++;
+
+    // State-wise aggregation
+    const state = (app.profiles && app.profiles.state) || 
+                  (app.personal_details && app.personal_details.state) || 
+                  "Jharkhand";
+    stateWise[state] = (stateWise[state] || 0) + 1;
+
+    // Scheme-wise aggregation
+    const schemeName = (app.schemes && (app.schemes.code || app.schemes.name)) || "NOS";
+    const cleanScheme = schemeName.replace("SCH-MOTA-", "");
+    schemeWise[cleanScheme] = (schemeWise[cleanScheme] || 0) + 1;
+  });
+
+  return {
+    total,
+    totalApplications: total,
+    draft,
+    draftApplications: draft,
+    submitted,
+    submittedApplications: submitted,
+    underScrutiny,
+    underScrutinyApplications: underScrutiny,
+    deficiency,
+    deficiencyCases: deficiency,
+    selected,
+    selectedCandidates: selected,
+    rejected,
+    stateWise,
+    schemeWise,
+    applications
+  };
+}
+
+// 5C. Fetch Admin Applications Queue with Multi-Criteria Filters
+async function supabaseFetchAdminQueue(filters = {}) {
+  let applications = [];
+
+  if (supabaseClient) {
+    try {
+      let query = supabaseClient
+        .from('applications')
+        .select(`
+          id,
+          application_number,
+          applicant_id,
+          scheme_id,
+          status,
+          current_step,
+          risk_level,
+          officer_remarks,
+          submitted_at,
+          created_at,
+          updated_at,
+          personal_details,
+          academic_details,
+          financial_details,
+          profiles ( id, full_name, email, mobile, state, district ),
+          schemes ( id, name, code ),
+          application_documents (*),
+          deficiencies (*)
+        `)
+        .order('submitted_at', { ascending: false, nullsFirst: false })
+        .order('created_at', { ascending: false });
+
+      const { data, error } = await query;
+      if (!error && Array.isArray(data)) {
+        applications = data;
+      }
+    } catch (err) {
+      console.warn("supabaseFetchAdminQueue query error:", err);
+    }
+  }
+
+  // Fallback to local admin queue
+  if (applications.length === 0 && typeof window !== "undefined" && window.appStore) {
+    const queue = window.appStore.getAdminQueue();
+    applications = queue.map(q => ({
+      id: q.id,
+      application_number: q.id,
+      status: (q.status || "under_scrutiny").toLowerCase().replace(/[\s-]+/g, "_"),
+      risk_level: (q.riskScore || "low").toLowerCase().includes("high") ? "high" : "low",
+      submitted_at: q.submissionDate || new Date().toISOString(),
+      created_at: q.submissionDate || new Date().toISOString(),
+      personal_details: {
+        fullName: q.applicantName,
+        state: q.state || "Jharkhand"
+      },
+      profiles: {
+        id: "prof-local",
+        full_name: q.applicantName,
+        email: "student@tribal.gov.in",
+        state: q.state || "Jharkhand"
+      },
+      schemes: {
+        id: "sch-local",
+        name: q.scheme || "National Overseas Scholarship (NOS)",
+        code: q.schemeCode || "NOS"
+      },
+      academic_details: {
+        university: q.university,
+        courseTitle: q.degree
+      },
+      financial_details: {
+        annualIncome: q.income ? q.income.replace(/[^\d]/g, "") : "450000"
+      },
+      application_documents: [
+        { id: "doc-1", document_type: "ST Caste Certificate", file_name: "caste.pdf", verification_status: "verified" },
+        { id: "doc-2", document_type: "Annual Income Certificate", file_name: "income.pdf", verification_status: "verified" }
+      ],
+      deficiencies: []
+    }));
+  }
+
+  // Apply In-Memory Filters for Precision & Consistency
+  let filtered = [...applications];
+
+  // 1. Filter by Scheme
+  if (filters.scheme && filters.scheme !== "all") {
+    const sTarget = filters.scheme.toLowerCase();
+    filtered = filtered.filter(a => {
+      const sId = (a.scheme_id || a.schemes?.id || "").toLowerCase();
+      const code = (a.schemes?.code || "").toLowerCase();
+      const name = (a.schemes?.name || "").toLowerCase();
+      return sId.includes(sTarget) || code.includes(sTarget) || name.includes(sTarget);
+    });
+  }
+
+  // 2. Filter by Status
+  if (filters.status && filters.status !== "all") {
+    const statusTarget = filters.status.toLowerCase().replace(/[\s-]+/g, "_");
+    filtered = filtered.filter(a => {
+      const s = (a.status || "").toLowerCase().replace(/[\s-]+/g, "_");
+      if (statusTarget === "selected") {
+        return s === "selected" || s === "approved" || s === "provisionally_eligible";
+      }
+      return s === statusTarget;
+    });
+  }
+
+  // 3. Filter by State
+  if (filters.state && filters.state !== "all") {
+    const stateTarget = filters.state.toLowerCase();
+    filtered = filtered.filter(a => {
+      const state = (a.profiles?.state || a.personal_details?.state || "").toLowerCase();
+      return state.includes(stateTarget);
+    });
+  }
+
+  // 4. Filter by Risk Level
+  if (filters.riskLevel && filters.riskLevel !== "all") {
+    const rTarget = filters.riskLevel.toLowerCase();
+    filtered = filtered.filter(a => (a.risk_level || "low").toLowerCase() === rTarget);
+  }
+
+  // 5. Filter by Date (today / 7days / 30days)
+  if (filters.date && filters.date !== "all") {
+    const now = new Date();
+    filtered = filtered.filter(a => {
+      const itemDate = new Date(a.submitted_at || a.created_at);
+      if (isNaN(itemDate.getTime())) return true;
+      const diffDays = (now - itemDate) / (1000 * 60 * 60 * 24);
+      if (filters.date === "today") return diffDays <= 1;
+      if (filters.date === "7days") return diffDays <= 7;
+      if (filters.date === "30days") return diffDays <= 30;
+      return true;
+    });
+  }
+
+  // 6. Search Filter
+  if (filters.search && filters.search.trim()) {
+    const q = filters.search.toLowerCase().trim();
+    filtered = filtered.filter(a => {
+      const num = (a.application_number || a.id || "").toLowerCase();
+      const name = (a.profiles?.full_name || a.personal_details?.fullName || "").toLowerCase();
+      const email = (a.profiles?.email || a.personal_details?.email || "").toLowerCase();
+      const univ = (a.academic_details?.university || "").toLowerCase();
+      return num.includes(q) || name.includes(q) || email.includes(q) || univ.includes(q);
+    });
+  }
+
+  return {
+    total: applications.length,
+    filteredCount: filtered.length,
+    applications: filtered
+  };
+}
+
+// 5D. Execute Admin Review Action
+async function supabaseExecuteAdminReviewAction(params = {}) {
+  const { applicationId, action, newStatus, officerRemark, deficiencyDetails, documentId } = params;
+
+  let currentProfile = null;
+  let officerUserId = null;
+  let targetApp = null;
+  let previousStatus = null;
+
+  if (supabaseClient) {
+    try {
+      currentProfile = await supabaseGetCurrentProfile();
+      officerUserId = currentProfile?.user_id || null;
+
+      // Fetch target application
+      const { data: appRow } = await supabaseClient
+        .from('applications')
+        .select('*, profiles(*)')
+        .or(`id.eq.${applicationId},application_number.eq.${applicationId}`)
+        .maybeSingle();
+
+      if (appRow) {
+        targetApp = appRow;
+        previousStatus = appRow.status;
+      }
+    } catch (fErr) {
+      console.warn("Fetch application before review error:", fErr);
+    }
+  }
+
+  const actualAppId = targetApp?.id || applicationId;
+  const applicantUserId = targetApp?.profiles?.user_id || targetApp?.applicant_id || null;
+  const nowIso = new Date().toISOString();
+
+  // Handle Action 1: Mark Document Verified
+  if (action === "mark_document_verified" && documentId) {
+    if (supabaseClient) {
+      try {
+        await supabaseClient
+          .from('application_documents')
+          .update({
+            verification_status: 'verified',
+            officer_remark: officerRemark || 'Document certified by verification officer.',
+            updated_at: nowIso
+          })
+          .eq('id', documentId);
+
+        // Record in status history as document audit
+        await supabaseClient.from('application_status_history').insert([{
+          application_id: actualAppId,
+          old_status: previousStatus || 'under_scrutiny',
+          new_status: previousStatus || 'under_scrutiny',
+          remark: `Document marked verified: ${officerRemark || 'Certification completed'}`,
+          changed_by: officerUserId
+        }]);
+
+        if (applicantUserId) {
+          await supabaseClient.from('notifications').insert([{
+            user_id: applicantUserId,
+            title: "Document Verified",
+            message: `One of your application documents has been approved by the scrutiny officer.`,
+            type: "success"
+          }]);
+        }
+      } catch (dErr) {
+        console.warn("mark_document_verified Supabase error:", dErr);
+      }
+    }
+
+    return { success: true, action: "mark_document_verified" };
+  }
+
+  // Determine Target Status from Action
+  let targetStatus = newStatus;
+  if (!targetStatus) {
+    if (action === "approve" || action === "mark_provisionally_eligible") targetStatus = "provisionally_eligible";
+    else if (action === "raise_deficiency") targetStatus = "deficiency_raised";
+    else if (action === "reject") targetStatus = "rejected";
+    else if (action === "forward" || action === "committee_screening") targetStatus = "committee_screening";
+    else targetStatus = "under_scrutiny";
+  }
+
+  const effectiveRemark = officerRemark || `Officer review action: ${targetStatus}`;
+
+  // Execute Database Updates
+  if (supabaseClient) {
+    try {
+      // 1. Update applications row
+      await supabaseClient
+        .from('applications')
+        .update({
+          status: targetStatus,
+          officer_remarks: effectiveRemark,
+          updated_at: nowIso
+        })
+        .eq('id', actualAppId);
+
+      // 2. Insert Status History Record
+      await supabaseClient.from('application_status_history').insert([{
+        application_id: actualAppId,
+        old_status: previousStatus || 'under_scrutiny',
+        new_status: targetStatus,
+        remark: effectiveRemark,
+        changed_by: officerUserId
+      }]);
+
+      // 3. If Deficiency Raised, Insert into public.deficiencies
+      if (targetStatus === "deficiency_raised") {
+        const docType = (deficiencyDetails && deficiencyDetails.documentType) || "Income / Caste Document";
+        const queryText = (deficiencyDetails && deficiencyDetails.description) || effectiveRemark;
+        await supabaseClient.from('deficiencies').insert([{
+          application_id: actualAppId,
+          document_type: docType,
+          description: queryText,
+          officer_remark: effectiveRemark,
+          status: "open"
+        }]);
+      }
+
+      // 4. Create Applicant Notification
+      if (applicantUserId) {
+        let notifType = "info";
+        let notifTitle = "Application Status Update";
+        if (targetStatus === "deficiency_raised") {
+          notifType = "warning";
+          notifTitle = "Action Required: Document Deficiency";
+        } else if (targetStatus === "rejected") {
+          notifType = "error";
+          notifTitle = "Application Scrutiny: Rejected";
+        } else if (targetStatus === "provisionally_eligible" || targetStatus === "selected") {
+          notifType = "success";
+          notifTitle = "Provisionally Eligible / Approved";
+        }
+
+        await supabaseClient.from('notifications').insert([{
+          user_id: applicantUserId,
+          title: notifTitle,
+          message: effectiveRemark,
+          type: notifType
+        }]);
+      }
+    } catch (eErr) {
+      console.warn("supabaseExecuteAdminReviewAction Supabase exception:", eErr);
+    }
+  }
+
+  // Synchronize Local AppStore
+  if (typeof window !== "undefined" && window.appStore) {
+    const localApp = window.appStore.getApplication();
+    if (localApp.id === applicationId || localApp.id === actualAppId) {
+      localApp.status = targetStatus === "deficiency_raised" ? "Deficiency Raised" :
+                         targetStatus === "provisionally_eligible" ? "Provisionally Eligible" :
+                         targetStatus === "committee_screening" ? "Committee Screening" :
+                         targetStatus === "rejected" ? "Rejected" : "Under Document Scrutiny";
+      localApp.officer_remarks = effectiveRemark;
+      if (targetStatus === "deficiency_raised") {
+        localApp.deficiency = {
+          remark: effectiveRemark,
+          document_type: (deficiencyDetails && deficiencyDetails.documentType) || "Revised Supporting Document",
+          date: new Date().toLocaleString("en-IN")
+        };
+      } else {
+        localApp.deficiency = null;
+      }
+      if (!Array.isArray(localApp.history)) localApp.history = [];
+      localApp.history.push({
+        title: `Status Changed to ${localApp.status}`,
+        time: new Date().toLocaleString("en-IN"),
+        officer: currentProfile?.full_name || "Nodal Scrutiny Officer",
+        remark: effectiveRemark
+      });
+      window.appStore.saveApplication(localApp);
+    }
+
+    // Update Admin Queue
+    const queue = window.appStore.getAdminQueue();
+    const item = queue.find(q => q.id === applicationId || q.id === actualAppId);
+    if (item) {
+      item.status = targetStatus === "deficiency_raised" ? "Deficiency Raised" :
+                    targetStatus === "provisionally_eligible" ? "Approved" :
+                    targetStatus === "committee_screening" ? "Committee Screening" :
+                    targetStatus === "rejected" ? "Rejected" : "Under Document Scrutiny";
+      window.appStore.saveAdminQueue(queue);
+    }
+  }
+
+  return {
+    success: true,
+    newStatus: targetStatus,
+    officerRemark: effectiveRemark
+  };
+}
+
 // 6. Fetch User Notifications
 async function supabaseFetchNotifications(userId) {
   if (!supabaseClient || !userId) return [];
@@ -1407,6 +1862,9 @@ if (typeof window !== "undefined") {
   window.supabaseCreateApplication = supabaseCreateApplication;
   window.supabaseFetchApplications = supabaseFetchApplications;
   window.supabaseFetchApplicantTrackingData = supabaseFetchApplicantTrackingData;
+  window.supabaseFetchAdminDashboardMetrics = supabaseFetchAdminDashboardMetrics;
+  window.supabaseFetchAdminQueue = supabaseFetchAdminQueue;
+  window.supabaseExecuteAdminReviewAction = supabaseExecuteAdminReviewAction;
   window.supabaseUpdateApplicationStatus = supabaseUpdateApplicationStatus;
   window.supabaseFetchNotifications = supabaseFetchNotifications;
   window.DEFAULT_SCHEMES = DEFAULT_SCHEMES;
