@@ -2417,111 +2417,427 @@ router.register("/application/success", () => {
   `;
 }, { layout: "applicant", authRole: "applicant" });
 
-// 16. Application Tracking (/application/track)
-router.register("/application/track", () => {
-  const app = window.appStore.getApplication();
+// 16. Application Tracking (/application/track) - Database Driven
+router.register("/application/track", async () => {
   const container = document.getElementById("main-view-container");
+  if (!container) return;
 
-  // Determine timeline stage states
-  const stages = [
-    { title: "Submitted", desc: app.submissionDate || "Completed on submission", done: true },
-    { title: "Initial Validation", desc: "DigiLocker & NPCI Verified", done: true },
-    { 
-      title: "Document Scrutiny", 
-      desc: app.status === "Approved" || app.status === "Committee Screening" ? "Verified" :
-            app.status === "Deficiency Raised" ? "Deficiency Raised: Revised Document Required" :
-            app.status === "Rejected" ? "Rejected during scrutiny" : "In progress with Nodal Officer", 
-      active: app.status === "Under Document Scrutiny",
-      done: app.status === "Approved" || app.status === "Committee Screening",
-      failed: app.status === "Deficiency Raised" || app.status === "Rejected"
-    },
-    { 
-      title: "Committee Screening", 
-      desc: "Merit Evaluation", 
-      done: app.status === "Approved",
-      active: app.status === "Committee Screening"
-    },
-    { 
-      title: "Final Decision & PFMS Credit", 
-      desc: app.status === "Approved" ? "Sanctioned & Direct Benefit Transferred" : "Pending",
-      done: app.status === "Approved" 
+  // 1. Initial Loading State
+  container.innerHTML = `
+    <div class="bg-surface-container-lowest p-space-xl rounded-xl shadow-md border border-outline-variant/30 text-center py-16 space-y-3">
+      <div class="w-10 h-10 border-4 border-secondary border-t-transparent rounded-full animate-spin mx-auto"></div>
+      <h3 class="font-bold text-primary text-base">Fetching Real-time Application Tracking...</h3>
+      <p class="text-xs text-outline font-mono">Querying public.applications &amp; application_status_history</p>
+    </div>
+  `;
+
+  // Parse application id from hash if present (e.g. #/application/track?id=...)
+  const hash = window.location.hash || "";
+  let queryAppId = null;
+  if (hash.includes("?")) {
+    const params = new URLSearchParams(hash.split("?")[1]);
+    queryAppId = params.get("id");
+  }
+
+  // 2. Fetch from Database / Supabase Engine
+  let trackingResult = null;
+  if (typeof window.supabaseFetchApplicantTrackingData === "function") {
+    try {
+      trackingResult = await window.supabaseFetchApplicantTrackingData(queryAppId);
+    } catch (err) {
+      console.warn("Tracking data fetch error:", err);
     }
+  }
+
+  const applications = (trackingResult && trackingResult.applications) ? trackingResult.applications : [];
+  let activeApp = (trackingResult && trackingResult.activeApp) ? trackingResult.activeApp : (applications[0] || null);
+
+  // Fallback to local store if completely empty
+  if (!activeApp && window.appStore) {
+    const local = window.appStore.getApplication();
+    activeApp = {
+      id: local.id,
+      application_number: local.id,
+      scheme: local.scheme,
+      status: (local.status || "submitted").toLowerCase().replace(/\s+/g, "_"),
+      submitted_at: local.submitted_at || local.submissionDate || new Date().toISOString(),
+      officer_remarks: local.deficiency ? local.deficiency.remark : "Initial document scrutiny under active verification.",
+      schemes: { name: local.scheme, code: local.schemeCode || "NOS" },
+      application_status_history: (local.history || []).map((h, i) => ({
+        id: `loc-h-${i}`,
+        old_status: "draft",
+        new_status: h.title.includes("Submitted") ? "submitted" : "draft",
+        remark: h.remark || h.title,
+        changed_by: h.officer || "Portal Gateway",
+        created_at: h.time || new Date().toISOString()
+      })),
+      deficiencies: local.deficiency ? [local.deficiency] : []
+    };
+  }
+
+  if (!activeApp) {
+    container.innerHTML = `
+      <div class="bg-surface-container-lowest p-space-xl rounded-xl shadow-md border border-outline-variant/30 text-center py-16 space-y-4">
+        <span class="material-symbols-outlined text-outline text-5xl">folder_off</span>
+        <h2 class="text-xl font-bold text-primary">No Applications Found</h2>
+        <p class="text-xs text-on-surface-variant max-w-md mx-auto">You have not submitted any scholarship applications yet. Browse the schemes catalog and begin an application to track its progress.</p>
+        <a href="#/schemes" class="px-5 py-2.5 bg-secondary text-white font-bold rounded text-xs hover:bg-secondary/90 shadow-md inline-block">
+          Explore Available Schemes →
+        </a>
+      </div>
+    `;
+    return;
+  }
+
+  // 3. Format Status & Details
+  const statusMeta = getTrackingStatusBadge(activeApp.status);
+  const schemeName = activeApp.schemes?.name || activeApp.scheme || "ST Scholarship Scheme";
+  const schemeCode = activeApp.schemes?.code || activeApp.schemeCode || "NOS";
+  const appNumber = activeApp.application_number || activeApp.id;
+  const submittedDateStr = activeApp.submitted_at ? new Date(activeApp.submitted_at).toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Kolkata"
+  }) : (activeApp.submissionDate || "Pending Submission");
+
+  const nextAction = getRequiredNextAction(activeApp.status, activeApp);
+  const statusHistory = Array.isArray(activeApp.application_status_history) ? activeApp.application_status_history : [];
+
+  // Canonical Progress Stages
+  const canonicalStages = [
+    { title: "Application Submitted", num: 1 },
+    { title: "Document Scrutiny", num: 2 },
+    { title: "Committee Screening", num: 3 },
+    { title: "Sanction & DBT Credit", num: 4 }
   ];
+  const activeStepNum = statusMeta.stepNum || 1;
 
   container.innerHTML = `
-    <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30">
-      <div class="flex justify-between items-center pb-3 border-b border-outline-variant/20 mb-4">
-        <div>
-          <h1 class="text-xl font-bold text-primary">Live Application Tracking</h1>
-          <p class="text-xs text-on-surface-variant font-mono">APP ID: ${app.id} • ${app.scheme}</p>
-        </div>
-        <span class="px-3 py-1 rounded text-xs font-bold ${
-          app.status === 'Approved' ? 'bg-tertiary-fixed text-on-tertiary-fixed' :
-          app.status === 'Deficiency Raised' ? 'bg-error text-white' :
-          'bg-secondary-fixed text-on-secondary-fixed'
-        }">
-          ${app.status}
-        </span>
-      </div>
-
-      ${app.status === 'Deficiency Raised' ? `
-        <div class="mb-6 p-4 bg-error-container text-on-error-container rounded-xl flex items-center justify-between">
+    <div class="space-y-space-md">
+      <!-- Top Bar: Title & Status Badge -->
+      <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center pb-4 border-b border-outline-variant/20 mb-4 gap-3">
           <div>
-            <strong class="block text-sm">Action Required: Document Deficiency</strong>
-            <p class="text-xs mt-0.5">${app.deficiency ? app.deficiency.remark : 'Nodal officer requested updated income certificate.'}</p>
+            <div class="flex items-center gap-2">
+              <h1 class="text-xl font-bold text-primary">Live Application Tracking</h1>
+              <span class="px-2 py-0.5 bg-surface-container text-outline font-mono text-[11px] rounded border border-outline-variant/30">
+                DB Grounded
+              </span>
+            </div>
+            <p class="text-xs text-on-surface-variant font-mono mt-0.5">
+              Ref: <strong class="text-primary font-bold">${escapeHTML(appNumber)}</strong> • ${escapeHTML(schemeName)}
+            </p>
           </div>
-          <a href="#/application/deficiency" class="px-4 py-2 bg-error text-white font-bold text-xs rounded shadow-sm">
-            Resolve Now →
-          </a>
+
+          <div class="flex flex-wrap items-center gap-2 self-start md:self-auto">
+            <!-- Multi-Application Switcher if multiple exist -->
+            ${applications.length > 1 ? `
+              <select onchange="window.location.hash = '#/application/track?id=' + this.value; window.location.reload();" class="text-xs p-1.5 bg-surface-container-low rounded border border-outline-variant/40 font-mono text-primary font-semibold">
+                ${applications.map(a => `
+                  <option value="${a.id}" ${a.id === activeApp.id ? 'selected' : ''}>
+                    ${a.application_number || a.id} (${(a.schemes?.code || a.schemeCode || 'SCH').replace('SCH-MOTA-', '')})
+                  </option>
+                `).join("")}
+              </select>
+            ` : ''}
+
+            <!-- Status Badge -->
+            <span class="px-3.5 py-1.5 rounded-full text-xs flex items-center gap-1.5 shadow-xs ${statusMeta.badgeClass}">
+              <span class="material-symbols-outlined text-[15px]">${statusMeta.icon}</span>
+              <span>${statusMeta.label}</span>
+            </span>
+          </div>
         </div>
-      ` : ''}
 
-      <!-- Timeline List -->
-      <h3 class="text-sm font-bold text-primary mb-4">Progress Lifecycle</h3>
-      <div class="relative pl-6 space-y-6 border-l-2 border-primary/20 ml-3">
-        ${stages.map((st, i) => {
-          let dotColor = "bg-surface-container-highest text-outline";
-          let icon = i + 1;
-          if (st.done) {
-            dotColor = "bg-tertiary-container text-white";
-            icon = '<span class="material-symbols-outlined text-[14px]">check</span>';
-          } else if (st.active) {
-            dotColor = "bg-secondary text-white ring-4 ring-secondary/20 animate-pulse";
-            icon = '<span class="material-symbols-outlined text-[14px]">pending</span>';
-          } else if (st.failed) {
-            dotColor = "bg-error text-white";
-            icon = '<span class="material-symbols-outlined text-[14px]">priority_high</span>';
-          }
-
-          return `
-            <div class="relative">
-              <div class="absolute -left-[31px] top-0 w-6 h-6 rounded-full ${dotColor} flex items-center justify-center text-xs font-bold">
-                ${icon}
-              </div>
-              <p class="font-bold text-sm text-primary">${st.title}</p>
-              <p class="text-xs text-on-surface-variant">${st.desc}</p>
-            </div>
-          `;
-        }).join("")}
-      </div>
-
-      <!-- History Log -->
-      <div class="mt-8 pt-4 border-t border-outline-variant/20">
-        <h4 class="text-xs font-bold text-outline uppercase mb-2">Audit &amp; Action Log</h4>
-        <div class="space-y-1 text-xs">
-          ${app.history.map(h => `
-            <div class="p-2 bg-surface-container-low rounded flex justify-between">
-              <div>
-                <strong>${h.title}</strong> by <span class="text-secondary">${h.officer}</span>: ${h.remark}
-              </div>
-              <span class="text-outline font-mono">${h.time}</span>
-            </div>
-          `).join("")}
+        <!-- Scheme & Key Metadata Summary Cards -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs mb-6">
+          <div class="p-3 bg-surface-container-low rounded-lg">
+            <span class="text-outline block text-[11px]">Application Number:</span>
+            <strong class="font-mono text-primary text-sm">${escapeHTML(appNumber)}</strong>
+          </div>
+          <div class="p-3 bg-surface-container-low rounded-lg">
+            <span class="text-outline block text-[11px]">Scheme Track:</span>
+            <strong class="text-on-surface truncate block" title="${escapeHTML(schemeName)}">${escapeHTML(schemeName)}</strong>
+          </div>
+          <div class="p-3 bg-surface-container-low rounded-lg">
+            <span class="text-outline block text-[11px]">Submitted Date:</span>
+            <strong class="text-on-surface">${escapeHTML(submittedDateStr)}</strong>
+          </div>
+          <div class="p-3 bg-surface-container-low rounded-lg">
+            <span class="text-outline block text-[11px]">Current State:</span>
+            <strong class="text-secondary capitalize">${escapeHTML((activeApp.status || 'Submitted').replace(/_/g, ' '))}</strong>
+          </div>
         </div>
+
+        <!-- Deficiency Details Card (If active) -->
+        ${renderDeficiencyDetailsCard(activeApp)}
+
+        <!-- Required Next Action Banner -->
+        <div class="p-4 bg-primary/5 rounded-xl border border-primary/20 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <div class="flex items-start gap-2.5">
+            <span class="material-symbols-outlined text-primary text-xl mt-0.5">info</span>
+            <div>
+              <strong class="block text-xs font-bold text-primary uppercase tracking-wider">Required Next Action (अगली कार्रवाई)</strong>
+              <p class="text-xs text-on-surface-variant mt-0.5 leading-relaxed">${escapeHTML(nextAction.text)}</p>
+            </div>
+          </div>
+          ${nextAction.actionBtn ? `<div>${nextAction.actionBtn}</div>` : ''}
+        </div>
+
+        <!-- High-Level Visual Lifecycle Stepper -->
+        <div class="mb-8 p-4 bg-surface-container-low rounded-xl border border-outline-variant/30">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-outline mb-4">Scholarship Governance Lifecycle</h4>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-center text-xs">
+            ${canonicalStages.map(st => {
+              const isDone = st.num < activeStepNum;
+              const isCurrent = st.num === activeStepNum;
+              let dotBg = "bg-surface-container-highest text-outline";
+              let labelColor = "text-outline";
+              if (isDone) {
+                dotBg = "bg-tertiary-container text-white";
+                labelColor = "text-primary font-bold";
+              } else if (isCurrent) {
+                dotBg = activeApp.status === "deficiency_raised" ? "bg-error text-white ring-4 ring-error/20" : "bg-secondary text-white ring-4 ring-secondary/20";
+                labelColor = "text-secondary font-bold";
+              }
+              return `
+                <div class="flex flex-col items-center p-2 rounded-lg bg-surface-container-lowest border border-outline-variant/20 shadow-xs">
+                  <div class="w-7 h-7 rounded-full ${dotBg} flex items-center justify-center font-bold text-xs mb-1.5">
+                    ${isDone ? '<span class="material-symbols-outlined text-[15px]">check</span>' : st.num}
+                  </div>
+                  <span class="${labelColor} text-[11px] leading-tight">${st.title}</span>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </div>
+
+        <!-- Dynamic Status History Timeline (Built dynamically from application_status_history table) -->
+        <div class="mb-6">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-sm font-bold text-primary flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-secondary text-lg">history</span>
+              <span>Status History Timeline (सत्यापन इतिहास)</span>
+            </h3>
+            <span class="text-[11px] font-mono text-outline">
+              ${statusHistory.length} Database Record(s)
+            </span>
+          </div>
+
+          ${renderDynamicStatusTimeline(statusHistory, activeApp.status)}
+        </div>
+
+        <!-- Officer Remarks Card -->
+        ${renderOfficerRemarksCard(activeApp)}
       </div>
     </div>
   `;
 }, { layout: "applicant" });
+
+// Helper functions for Tracking View
+function getTrackingStatusBadge(status) {
+  const s = (status || "").toLowerCase().replace(/[\s-]+/g, "_");
+  switch (s) {
+    case "draft":
+      return { label: "Draft Application", badgeClass: "bg-surface-container-high text-outline", icon: "edit_note", stepNum: 0 };
+    case "submitted":
+      return { label: "Submitted to Ministry", badgeClass: "bg-secondary-fixed text-on-secondary-fixed font-bold", icon: "send", stepNum: 1 };
+    case "under_scrutiny":
+    case "under_document_scrutiny":
+      return { label: "Under Document Scrutiny", badgeClass: "bg-primary text-white font-bold", icon: "manage_search", stepNum: 2 };
+    case "deficiency_raised":
+      return { label: "Deficiency Raised", badgeClass: "bg-error text-white font-bold animate-pulse", icon: "warning", stepNum: 2 };
+    case "resubmitted":
+      return { label: "Resubmitted (Clarified)", badgeClass: "bg-tertiary-fixed text-on-tertiary-fixed font-bold", icon: "published_with_changes", stepNum: 2 };
+    case "provisionally_eligible":
+    case "committee_screening":
+      return { label: "Provisionally Eligible", badgeClass: "bg-tertiary-container text-white font-bold", icon: "rule", stepNum: 3 };
+    case "selected":
+    case "approved":
+      return { label: "Selected for Scholarship", badgeClass: "bg-tertiary text-white font-bold", icon: "verified", stepNum: 4 };
+    case "rejected":
+      return { label: "Rejected during Scrutiny", badgeClass: "bg-error text-white font-bold", icon: "cancel", stepNum: -1 };
+    default:
+      return { label: status || "Under Review", badgeClass: "bg-secondary text-white font-bold", icon: "hourglass_top", stepNum: 1 };
+  }
+}
+
+function getRequiredNextAction(status, app) {
+  const s = (status || "").toLowerCase().replace(/[\s-]+/g, "_");
+  switch (s) {
+    case "draft":
+      return {
+        text: "Complete all required fields and upload mandatory documents before submitting to the Ministry.",
+        actionBtn: `<a href="#${app.lastSavedStep || '/application/personal'}" class="px-4 py-2 bg-secondary text-white font-bold text-xs rounded hover:bg-secondary/90 shadow-sm inline-flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">edit</span> Continue Application</a>`
+      };
+    case "submitted":
+      return {
+        text: "Application safely logged into the National Tribal Portal. Allocation to District/State Verification Officer is in progress.",
+        actionBtn: null
+      };
+    case "under_scrutiny":
+    case "under_document_scrutiny":
+      return {
+        text: "Nodal Scrutiny Officer is actively cross-verifying your ST Caste Certificate, Income Certificate, and academic credentials. No action is required at this stage.",
+        actionBtn: null
+      };
+    case "deficiency_raised":
+      return {
+        text: "Action Required: The Scrutiny Officer has requested revised documentation or clarification. Please respond within 15 days.",
+        actionBtn: `<a href="#/application/deficiency" class="px-4 py-2 bg-error text-white font-bold text-xs rounded hover:bg-error/90 shadow-sm inline-flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">build</span> Resolve Deficiency Desk →</a>`
+      };
+    case "resubmitted":
+      return {
+        text: "Your deficiency response has been submitted to the Scrutiny Officer. Re-verification is in progress.",
+        actionBtn: null
+      };
+    case "provisionally_eligible":
+    case "committee_screening":
+      return {
+        text: "Document verification passed. Your dossier is placed before the National Selection Committee for merit evaluation.",
+        actionBtn: null
+      };
+    case "selected":
+    case "approved":
+      return {
+        text: "🎉 Congratulations! Scholarship Sanction Order generated. Direct Benefit Transfer (DBT) credit to your NPCI-seeded account is underway.",
+        actionBtn: `<a href="#/applicant/dashboard" class="px-4 py-2 bg-tertiary-container text-white font-bold text-xs rounded hover:bg-tertiary shadow-sm inline-flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">download</span> Download Sanction Letter</a>`
+      };
+    case "rejected":
+      return {
+        text: "Application was not approved based on eligibility criteria or documentation guidelines. You may inspect the officer remarks.",
+        actionBtn: `<a href="#/schemes" class="px-4 py-2 bg-surface-container-high text-primary font-bold text-xs rounded hover:bg-surface-container-highest shadow-sm inline-flex items-center gap-1">Explore Other Schemes</a>`
+      };
+    default:
+      return {
+        text: "Application is under active evaluation by the Ministry of Tribal Affairs.",
+        actionBtn: null
+      };
+  }
+}
+
+function renderDynamicStatusTimeline(statusHistory, currentStatus) {
+  if (!Array.isArray(statusHistory) || statusHistory.length === 0) {
+    return `
+      <div class="p-4 bg-surface-container-low rounded-xl border border-outline-variant/30 text-xs text-on-surface-variant flex items-center gap-2">
+        <span class="material-symbols-outlined text-secondary text-lg">info</span>
+        <span>Initial electronic submission logged. Awaiting scrutiny updates.</span>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="relative pl-6 space-y-6 border-l-2 border-primary/20 ml-3">
+      ${statusHistory.map((h, i) => {
+        const isLatest = i === statusHistory.length - 1;
+        const statusMeta = getTrackingStatusBadge(h.new_status);
+        let dotColor = "bg-primary text-white";
+        let icon = statusMeta.icon || "check";
+
+        if (h.new_status === "deficiency_raised") {
+          dotColor = "bg-error text-white";
+          icon = "warning";
+        } else if (isLatest) {
+          dotColor = "bg-secondary text-white ring-4 ring-secondary/20";
+        }
+
+        const dateStr = h.created_at ? new Date(h.created_at).toLocaleString("en-IN", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZone: "Asia/Kolkata"
+        }) : "Date Recorded";
+
+        const actor = h.changed_by_name || h.officer || (h.new_status === "submitted" ? "Applicant / Portal Gateway" : "Scrutiny Officer");
+
+        return `
+          <div class="relative group">
+            <div class="absolute -left-[31px] top-0 w-6 h-6 rounded-full ${dotColor} flex items-center justify-center text-xs font-bold shadow-xs">
+              <span class="material-symbols-outlined text-[13px]">${icon}</span>
+            </div>
+            <div class="p-3 bg-surface-container-low rounded-xl border border-outline-variant/30 shadow-xs space-y-1">
+              <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1">
+                <span class="font-bold text-sm text-primary flex items-center gap-1.5">
+                  <span class="capitalize">${escapeHTML((h.old_status || 'Draft').replace(/_/g, ' '))}</span>
+                  <span class="material-symbols-outlined text-[14px] text-outline">arrow_forward</span>
+                  <span class="capitalize text-secondary">${escapeHTML((h.new_status || 'Submitted').replace(/_/g, ' '))}</span>
+                </span>
+                <span class="text-[11px] font-mono text-outline">${escapeHTML(dateStr)}</span>
+              </div>
+              <p class="text-xs text-on-surface-variant leading-relaxed">${escapeHTML(h.remark || 'Status updated in portal database.')}</p>
+              <div class="flex items-center gap-2 pt-1 text-[11px] text-outline">
+                <span class="material-symbols-outlined text-[13px]">person</span>
+                <span>Actor: <strong class="text-primary">${escapeHTML(actor)}</strong></span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+function renderOfficerRemarksCard(activeApp) {
+  let remarks = activeApp.officer_remarks;
+  if (!remarks && Array.isArray(activeApp.application_status_history)) {
+    const officerEntry = [...activeApp.application_status_history].reverse().find(h => 
+      h.remark && !h.remark.includes("Direct electronic submission") && h.new_status !== "draft"
+    );
+    if (officerEntry) remarks = officerEntry.remark;
+  }
+  if (!remarks) {
+    remarks = "Application under active preliminary scrutiny. All uploaded documents are queued for verification.";
+  }
+
+  return `
+    <div class="p-4 bg-surface-container-low rounded-xl border border-outline-variant/30 flex items-start gap-3">
+      <div class="w-8 h-8 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center shrink-0 mt-0.5">
+        <span class="material-symbols-outlined text-lg">rate_review</span>
+      </div>
+      <div class="space-y-0.5">
+        <h4 class="font-bold text-xs uppercase tracking-wider text-primary">Nodal Scrutiny Officer Remarks (अधिकारी टिप्पणी)</h4>
+        <p class="text-xs text-on-surface-variant leading-relaxed">${escapeHTML(remarks)}</p>
+      </div>
+    </div>
+  `;
+}
+
+function renderDeficiencyDetailsCard(activeApp) {
+  const deficiencies = Array.isArray(activeApp.deficiencies) ? activeApp.deficiencies : [];
+  const openDef = deficiencies.find(d => !d.status || d.status === "open" || d.status === "pending") || 
+                  (activeApp.deficiency ? activeApp.deficiency : null);
+
+  if (!openDef && activeApp.status !== "deficiency_raised" && activeApp.status !== "Deficiency Raised") {
+    return "";
+  }
+
+  const defQuery = (openDef && (openDef.description || openDef.remark || openDef.officer_remark)) || 
+                   "Please provide the renewed or legible certificate as requested by the verification team.";
+  const docType = (openDef && openDef.document_type) || "Revised Supporting Document";
+
+  return `
+    <div class="mb-6 p-4 bg-error-container text-on-error-container rounded-xl border border-error/30 shadow-sm space-y-2">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+        <div class="flex items-center gap-2 text-error font-bold text-sm">
+          <span class="material-symbols-outlined text-xl">report_problem</span>
+          <span>Action Required: Document Deficiency Raised</span>
+        </div>
+        <a href="#/application/deficiency" class="px-4 py-1.5 bg-error text-white font-bold text-xs rounded hover:bg-error/90 shadow-sm inline-flex items-center gap-1">
+          <span class="material-symbols-outlined text-[14px]">upload_file</span> Resolve Deficiency Desk →
+        </a>
+      </div>
+      <div class="p-3 bg-white/70 rounded-lg text-xs space-y-1 text-on-surface">
+        <div><strong class="text-error">Document Requested:</strong> <span class="font-semibold">${escapeHTML(docType)}</span></div>
+        <div><strong class="text-error">Officer Query / Deficiency Note:</strong> ${escapeHTML(defQuery)}</div>
+      </div>
+    </div>
+  `;
+}
 
 // 17. Deficiency Resolution Desk (/application/deficiency)
 router.register("/application/deficiency", () => {

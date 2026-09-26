@@ -158,10 +158,13 @@ CREATE TABLE IF NOT EXISTS public.applications (
     academic_details JSONB DEFAULT '{}'::jsonb,
     financial_details JSONB DEFAULT '{}'::jsonb,
     risk_level TEXT NOT NULL DEFAULT 'low' CHECK (risk_level IN ('low', 'medium', 'high')),
+    officer_remarks TEXT,
     submitted_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
+
+ALTER TABLE public.applications ADD COLUMN IF NOT EXISTS officer_remarks TEXT;
 
 -- Enforce single active draft per applicant and scheme (prevent duplicate drafts)
 CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_active_draft_per_scheme 

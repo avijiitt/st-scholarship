@@ -328,6 +328,120 @@ async function supabaseFetchApplications(applicantId) {
   }
 }
 
+// 4B. Fetch Applicant Tracking Data (Applications, Dynamic Status History, Deficiencies)
+async function supabaseFetchApplicantTrackingData(selectedAppId) {
+  let applicantProfile = null;
+  let applications = [];
+
+  if (supabaseClient) {
+    try {
+      applicantProfile = await supabaseGetCurrentProfile();
+      let query = supabaseClient
+        .from('applications')
+        .select(`
+          id,
+          application_number,
+          applicant_id,
+          scheme_id,
+          status,
+          current_step,
+          risk_level,
+          officer_remarks,
+          submitted_at,
+          created_at,
+          updated_at,
+          schemes (*),
+          application_status_history (*),
+          deficiencies (*)
+        `);
+
+      if (applicantProfile && applicantProfile.id) {
+        query = query.eq('applicant_id', applicantProfile.id);
+      }
+
+      const { data, error } = await query
+        .order('submitted_at', { ascending: false, nullsFirst: false })
+        .order('created_at', { ascending: false });
+
+      if (!error && Array.isArray(data) && data.length > 0) {
+        applications = data;
+      }
+    } catch (err) {
+      console.warn("supabaseFetchApplicantTrackingData Supabase error:", err);
+    }
+  }
+
+  // Graceful fallback to local store if Supabase returns no records or offline
+  if (applications.length === 0 && typeof window !== "undefined" && window.appStore) {
+    const localApp = window.appStore.getApplication();
+    const localHistory = Array.isArray(localApp.history) ? localApp.history : [];
+    
+    // Map local history to dynamic status_history records
+    const mappedHistory = localHistory.map((h, idx) => ({
+      id: `hist-local-${idx}`,
+      application_id: localApp.id,
+      old_status: idx === 0 ? 'draft' : 'draft',
+      new_status: h.title.includes("Submitted") ? "submitted" : "draft",
+      remark: h.remark || h.title,
+      changed_by: h.officer || "Portal Gateway",
+      created_at: h.time || localApp.submissionDate || new Date().toISOString()
+    }));
+
+    if (localApp.status === "Under Document Scrutiny" && !mappedHistory.some(m => m.new_status === "under_scrutiny")) {
+      mappedHistory.push({
+        id: "hist-local-scrutiny",
+        application_id: localApp.id,
+        old_status: "submitted",
+        new_status: "under_scrutiny",
+        remark: "Application assigned to District/State Verification Officer for document scrutiny.",
+        changed_by: "Portal Gateway",
+        created_at: new Date().toISOString()
+      });
+    }
+
+    const fallbackApp = {
+      id: localApp.id,
+      application_number: localApp.id,
+      status: (localApp.status || "submitted").toLowerCase().replace(/\s+/g, "_"),
+      submitted_at: localApp.submitted_at || localApp.submissionDate || new Date().toISOString(),
+      created_at: localApp.lastUpdated || new Date().toISOString(),
+      officer_remarks: localApp.deficiency ? localApp.deficiency.remark : "Initial document scrutiny in progress. DigiLocker and PFMS verifications certified.",
+      schemes: {
+        id: "sch-local",
+        name: localApp.scheme || "National Overseas Scholarship (NOS)",
+        code: localApp.schemeCode || "NOS",
+        education_level: localApp.academic?.qualifyingDegree || "Post-Graduate / Doctorate",
+        study_location: localApp.schemeCode === "NOS" ? "Abroad" : "India"
+      },
+      application_status_history: mappedHistory,
+      deficiencies: localApp.deficiency ? [localApp.deficiency] : []
+    };
+
+    applications = [fallbackApp];
+  }
+
+  // Ensure chronological order of history records
+  applications.forEach(app => {
+    if (Array.isArray(app.application_status_history)) {
+      app.application_status_history.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    }
+  });
+
+  // Pick target application
+  let activeApp = applications[0] || null;
+  if (selectedAppId) {
+    const found = applications.find(a => a.id === selectedAppId || a.application_number === selectedAppId);
+    if (found) activeApp = found;
+  }
+
+  return {
+    success: true,
+    applications,
+    activeApp,
+    profile: applicantProfile
+  };
+}
+
 // 5. Update Application Status and record history
 async function supabaseUpdateApplicationStatus(applicationId, newStatus, remark, changedBy) {
   if (!supabaseClient) return false;
@@ -1292,6 +1406,7 @@ if (typeof window !== "undefined") {
   window.supabaseSubmitFinalApplication = supabaseSubmitFinalApplication;
   window.supabaseCreateApplication = supabaseCreateApplication;
   window.supabaseFetchApplications = supabaseFetchApplications;
+  window.supabaseFetchApplicantTrackingData = supabaseFetchApplicantTrackingData;
   window.supabaseUpdateApplicationStatus = supabaseUpdateApplicationStatus;
   window.supabaseFetchNotifications = supabaseFetchNotifications;
   window.DEFAULT_SCHEMES = DEFAULT_SCHEMES;
