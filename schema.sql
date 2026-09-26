@@ -1,10 +1,10 @@
 -- ==============================================================================
--- National Tribal Scholarship Portal (MoTA)
--- Supabase Core Schema Migration
+-- National Tribal Scholarship Portal (NTSP - MoTA)
+-- Supabase Row Level Security (RLS) & Database Schema
 -- Project: https://pnxgaiqdrpmqnahwopuq.supabase.co
 -- ==============================================================================
 
--- Enable UUID extension if not already enabled
+-- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- ------------------------------------------------------------------------------
@@ -22,26 +22,69 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
--- Enable RLS
+-- Enable RLS on Profiles
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
--- Profiles Policies
-DROP POLICY IF EXISTS "Users can view own profile" ON public.profiles;
-CREATE POLICY "Users can view own profile" 
-    ON public.profiles FOR SELECT 
-    USING (auth.uid() = user_id OR auth.uid() IN (SELECT user_id FROM public.profiles WHERE role IN ('admin', 'scrutiny_officer', 'committee_member')));
+-- ------------------------------------------------------------------------------
+-- SECURITY DEFINER HELPER FUNCTIONS (Prevent Infinite Recursion in RLS)
+-- ------------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.get_current_profile_id()
+RETURNS UUID AS $$
+    SELECT id FROM public.profiles WHERE user_id = auth.uid() LIMIT 1;
+$$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public;
 
-DROP POLICY IF EXISTS "Users can insert own profile" ON public.profiles;
-CREATE POLICY "Users can insert own profile" 
+CREATE OR REPLACE FUNCTION public.get_current_role()
+RETURNS TEXT AS $$
+    SELECT role FROM public.profiles WHERE user_id = auth.uid() LIMIT 1;
+$$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public;
+
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN AS $$
+    SELECT EXISTS (
+        SELECT 1 FROM public.profiles 
+        WHERE user_id = auth.uid() AND role = 'admin'
+    );
+$$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public;
+
+CREATE OR REPLACE FUNCTION public.is_scrutiny_officer()
+RETURNS BOOLEAN AS $$
+    SELECT EXISTS (
+        SELECT 1 FROM public.profiles 
+        WHERE user_id = auth.uid() AND role IN ('scrutiny_officer', 'admin', 'committee_member')
+    );
+$$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public;
+
+-- ------------------------------------------------------------------------------
+-- RULE 1: APPLICANTS CAN READ AND UPDATE ONLY THEIR OWN PROFILE
+-- ------------------------------------------------------------------------------
+DROP POLICY IF EXISTS "Profiles: View policy" ON public.profiles;
+CREATE POLICY "Profiles: View policy" 
+    ON public.profiles FOR SELECT 
+    USING (
+        auth.uid() = user_id 
+        OR public.is_admin() 
+        OR public.is_scrutiny_officer()
+    );
+
+DROP POLICY IF EXISTS "Profiles: Insert policy" ON public.profiles;
+CREATE POLICY "Profiles: Insert policy" 
     ON public.profiles FOR INSERT 
     WITH CHECK (auth.uid() = user_id);
 
-DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
-CREATE POLICY "Users can update own profile" 
+DROP POLICY IF EXISTS "Profiles: Update policy" ON public.profiles;
+CREATE POLICY "Profiles: Update policy" 
     ON public.profiles FOR UPDATE 
-    USING (auth.uid() = user_id);
+    USING (
+        auth.uid() = user_id 
+        OR public.is_admin()
+    )
+    WITH CHECK (
+        -- Applicants cannot self-promote their role to admin or officer
+        (auth.uid() = user_id AND role = public.get_current_role())
+        OR public.is_admin()
+    );
 
--- Trigger to auto-create profile on auth.users sign up
+-- Auto-create profile trigger on auth signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
@@ -56,7 +99,7 @@ BEGIN
     ON CONFLICT (user_id) DO NOTHING;
     RETURN new;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
@@ -79,20 +122,17 @@ CREATE TABLE IF NOT EXISTS public.schemes (
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
--- Enable RLS
 ALTER TABLE public.schemes ENABLE ROW LEVEL SECURITY;
 
--- Anyone can view schemes (public read)
-DROP POLICY IF EXISTS "Anyone can view schemes" ON public.schemes;
-CREATE POLICY "Anyone can view schemes" 
+DROP POLICY IF EXISTS "Schemes: Public read access" ON public.schemes;
+CREATE POLICY "Schemes: Public read access" 
     ON public.schemes FOR SELECT 
     USING (true);
 
--- Only admins can modify schemes
-DROP POLICY IF EXISTS "Admins can modify schemes" ON public.schemes;
-CREATE POLICY "Admins can modify schemes" 
+DROP POLICY IF EXISTS "Schemes: Admin write access" ON public.schemes;
+CREATE POLICY "Schemes: Admin write access" 
     ON public.schemes FOR ALL 
-    USING (EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND role = 'admin'));
+    USING (public.is_admin());
 
 -- ------------------------------------------------------------------------------
 -- 3. APPLICATIONS TABLE
@@ -100,8 +140,9 @@ CREATE POLICY "Admins can modify schemes"
 CREATE TABLE IF NOT EXISTS public.applications (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     application_number TEXT UNIQUE NOT NULL,
-    applicant_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    applicant_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
     scheme_id UUID REFERENCES public.schemes(id) ON DELETE SET NULL,
+    assigned_officer_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
     status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN (
         'draft',
         'submitted',
@@ -119,29 +160,86 @@ CREATE TABLE IF NOT EXISTS public.applications (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
--- Enable RLS
 ALTER TABLE public.applications ENABLE ROW LEVEL SECURITY;
 
--- Applications Policies
-DROP POLICY IF EXISTS "Applicants can view own applications" ON public.applications;
-CREATE POLICY "Applicants can view own applications" 
+-- ------------------------------------------------------------------------------
+-- RULE 2, 5 & 6: APPLICATION READ ACCESS
+-- - Applicants: read only their own
+-- - Admin: read all
+-- - Scrutiny Officers: read applications assigned to them (or unassigned queue)
+-- ------------------------------------------------------------------------------
+DROP POLICY IF EXISTS "Applications: Read access policy" ON public.applications;
+CREATE POLICY "Applications: Read access policy" 
     ON public.applications FOR SELECT 
     USING (
-        applicant_id IN (SELECT id FROM public.profiles WHERE user_id = auth.uid())
-        OR EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND role IN ('admin', 'scrutiny_officer', 'committee_member'))
+        -- Rule 2: Applicant can read only their own
+        applicant_id = public.get_current_profile_id()
+        -- Rule 5: Admin can read all
+        OR public.is_admin()
+        -- Rule 6: Officer can read assigned applications (or unassigned review queue)
+        OR (
+            public.is_scrutiny_officer() 
+            AND (assigned_officer_id = public.get_current_profile_id() OR assigned_officer_id IS NULL)
+        )
     );
 
-DROP POLICY IF EXISTS "Applicants can insert own applications" ON public.applications;
-CREATE POLICY "Applicants can insert own applications" 
+-- ------------------------------------------------------------------------------
+-- RULE 2: APPLICATION INSERT ACCESS
+-- - Applicants create only their own applications
+-- ------------------------------------------------------------------------------
+DROP POLICY IF EXISTS "Applications: Insert policy" ON public.applications;
+CREATE POLICY "Applications: Insert policy" 
     ON public.applications FOR INSERT 
-    WITH CHECK (applicant_id IN (SELECT id FROM public.profiles WHERE user_id = auth.uid()));
+    WITH CHECK (
+        applicant_id = public.get_current_profile_id()
+        AND status IN ('draft', 'submitted')
+    );
 
-DROP POLICY IF EXISTS "Applicants and officers can update applications" ON public.applications;
-CREATE POLICY "Applicants and officers can update applications" 
+-- ------------------------------------------------------------------------------
+-- RULE: APPLICANTS CANNOT DIRECTLY EDIT CORE DETAILS AFTER SUBMISSION
+-- - Draft or Deficiency: Applicant can update details / submit
+-- - Submitted / Under Scrutiny: Applicant cannot edit core details
+-- - Admin: Can update all applications
+-- - Officer: Can update applications assigned to them (status / risk level / remarks)
+-- ------------------------------------------------------------------------------
+DROP POLICY IF EXISTS "Applications: Update policy" ON public.applications;
+CREATE POLICY "Applications: Update policy" 
     ON public.applications FOR UPDATE 
     USING (
-        applicant_id IN (SELECT id FROM public.profiles WHERE user_id = auth.uid())
-        OR EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND role IN ('admin', 'scrutiny_officer', 'committee_member'))
+        -- Applicant can only update while in draft or responding to deficiency
+        (
+            applicant_id = public.get_current_profile_id() 
+            AND status IN ('draft', 'deficiency_raised')
+        )
+        -- Admin can update any
+        OR public.is_admin()
+        -- Officer can update assigned
+        OR (
+            public.is_scrutiny_officer() 
+            AND (assigned_officer_id = public.get_current_profile_id() OR assigned_officer_id IS NULL)
+        )
+    )
+    WITH CHECK (
+        -- Applicant cannot re-assign applicant_id or self-approve
+        (
+            applicant_id = public.get_current_profile_id()
+            AND status IN ('draft', 'submitted', 'resubmitted')
+        )
+        OR public.is_admin()
+        OR public.is_scrutiny_officer()
+    );
+
+-- ------------------------------------------------------------------------------
+-- RULE 4: APPLICANTS CANNOT DELETE SUBMITTED APPLICATIONS
+-- - Applicants can only delete DRAFT applications
+-- - Admin can delete for maintenance
+-- ------------------------------------------------------------------------------
+DROP POLICY IF EXISTS "Applications: Delete policy" ON public.applications;
+CREATE POLICY "Applications: Delete policy" 
+    ON public.applications FOR DELETE 
+    USING (
+        (applicant_id = public.get_current_profile_id() AND status = 'draft')
+        OR public.is_admin()
     );
 
 -- ------------------------------------------------------------------------------
@@ -160,30 +258,66 @@ CREATE TABLE IF NOT EXISTS public.application_documents (
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
--- Enable RLS
 ALTER TABLE public.application_documents ENABLE ROW LEVEL SECURITY;
 
--- Application Documents Policies
-DROP POLICY IF EXISTS "View application documents" ON public.application_documents;
-CREATE POLICY "View application documents" 
+-- ------------------------------------------------------------------------------
+-- RULE 3: APPLICANTS CAN READ AND MANAGE DOCUMENTS BELONGING TO THEIR OWN APPLICATIONS
+-- ------------------------------------------------------------------------------
+DROP POLICY IF EXISTS "Documents: Read policy" ON public.application_documents;
+CREATE POLICY "Documents: Read policy" 
     ON public.application_documents FOR SELECT 
     USING (
-        application_id IN (
-            SELECT id FROM public.applications 
-            WHERE applicant_id IN (SELECT id FROM public.profiles WHERE user_id = auth.uid())
+        EXISTS (
+            SELECT 1 FROM public.applications a
+            WHERE a.id = application_documents.application_id
+            AND (
+                a.applicant_id = public.get_current_profile_id()
+                OR public.is_admin()
+                OR (public.is_scrutiny_officer() AND (a.assigned_officer_id = public.get_current_profile_id() OR a.assigned_officer_id IS NULL))
+            )
         )
-        OR EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND role IN ('admin', 'scrutiny_officer', 'committee_member'))
     );
 
-DROP POLICY IF EXISTS "Manage application documents" ON public.application_documents;
-CREATE POLICY "Manage application documents" 
-    ON public.application_documents FOR ALL 
-    USING (
-        application_id IN (
-            SELECT id FROM public.applications 
-            WHERE applicant_id IN (SELECT id FROM public.profiles WHERE user_id = auth.uid())
+DROP POLICY IF EXISTS "Documents: Insert policy" ON public.application_documents;
+CREATE POLICY "Documents: Insert policy" 
+    ON public.application_documents FOR INSERT 
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.applications a
+            WHERE a.id = application_documents.application_id
+            AND a.applicant_id = public.get_current_profile_id()
+            AND a.status IN ('draft', 'deficiency_raised', 'submitted')
         )
-        OR EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND role IN ('admin', 'scrutiny_officer'))
+        OR public.is_admin()
+    );
+
+DROP POLICY IF EXISTS "Documents: Update policy" ON public.application_documents;
+CREATE POLICY "Documents: Update policy" 
+    ON public.application_documents FOR UPDATE 
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.applications a
+            WHERE a.id = application_documents.application_id
+            AND (
+                (a.applicant_id = public.get_current_profile_id() AND a.status IN ('draft', 'deficiency_raised'))
+                OR public.is_admin()
+                OR (public.is_scrutiny_officer() AND (a.assigned_officer_id = public.get_current_profile_id() OR a.assigned_officer_id IS NULL))
+            )
+        )
+    );
+
+DROP POLICY IF EXISTS "Documents: Delete policy" ON public.application_documents;
+CREATE POLICY "Documents: Delete policy" 
+    ON public.application_documents FOR DELETE 
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.applications a
+            WHERE a.id = application_documents.application_id
+            AND (
+                (a.applicant_id = public.get_current_profile_id() AND a.status IN ('draft', 'deficiency_raised'))
+                OR public.is_admin()
+            )
+        )
     );
 
 -- ------------------------------------------------------------------------------
@@ -199,24 +333,60 @@ CREATE TABLE IF NOT EXISTS public.application_status_history (
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
--- Enable RLS
 ALTER TABLE public.application_status_history ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "View application status history" ON public.application_status_history;
-CREATE POLICY "View application status history" 
+DROP POLICY IF EXISTS "Status History: Read policy" ON public.application_status_history;
+CREATE POLICY "Status History: Read policy" 
     ON public.application_status_history FOR SELECT 
     USING (
-        application_id IN (
-            SELECT id FROM public.applications 
-            WHERE applicant_id IN (SELECT id FROM public.profiles WHERE user_id = auth.uid())
+        EXISTS (
+            SELECT 1 FROM public.applications a
+            WHERE a.id = application_status_history.application_id
+            AND (
+                a.applicant_id = public.get_current_profile_id()
+                OR public.is_admin()
+                OR public.is_scrutiny_officer()
+            )
         )
-        OR EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND role IN ('admin', 'scrutiny_officer', 'committee_member'))
     );
 
-DROP POLICY IF EXISTS "Insert application status history" ON public.application_status_history;
-CREATE POLICY "Insert application status history" 
+DROP POLICY IF EXISTS "Status History: Insert policy" ON public.application_status_history;
+CREATE POLICY "Status History: Insert policy" 
     ON public.application_status_history FOR INSERT 
     WITH CHECK (auth.uid() IS NOT NULL);
+
+-- ------------------------------------------------------------------------------
+-- RULE 7: EVERY STATUS UPDATE MUST CREATE A STATUS HISTORY RECORD (DB TRIGGER)
+-- ------------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.record_status_history_trigger()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF (OLD.status IS DISTINCT FROM NEW.status) THEN
+        INSERT INTO public.application_status_history (
+            application_id,
+            old_status,
+            new_status,
+            remark,
+            changed_by
+        )
+        VALUES (
+            NEW.id,
+            OLD.status,
+            NEW.status,
+            'Application status transitioned from ' || COALESCE(OLD.status, 'none') || ' to ' || NEW.status,
+            auth.uid()
+        );
+        NEW.updated_at = timezone('utc'::text, now());
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+DROP TRIGGER IF EXISTS trg_record_status_history ON public.applications;
+CREATE TRIGGER trg_record_status_history
+    BEFORE UPDATE ON public.applications
+    FOR EACH ROW
+    EXECUTE FUNCTION public.record_status_history_trigger();
 
 -- ------------------------------------------------------------------------------
 -- 6. DEFICIENCIES TABLE
@@ -233,29 +403,36 @@ CREATE TABLE IF NOT EXISTS public.deficiencies (
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
--- Enable RLS
 ALTER TABLE public.deficiencies ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "View deficiencies" ON public.deficiencies;
-CREATE POLICY "View deficiencies" 
+DROP POLICY IF EXISTS "Deficiencies: Read policy" ON public.deficiencies;
+CREATE POLICY "Deficiencies: Read policy" 
     ON public.deficiencies FOR SELECT 
     USING (
-        application_id IN (
-            SELECT id FROM public.applications 
-            WHERE applicant_id IN (SELECT id FROM public.profiles WHERE user_id = auth.uid())
+        EXISTS (
+            SELECT 1 FROM public.applications a
+            WHERE a.id = deficiencies.application_id
+            AND (
+                a.applicant_id = public.get_current_profile_id()
+                OR public.is_admin()
+                OR public.is_scrutiny_officer()
+            )
         )
-        OR EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND role IN ('admin', 'scrutiny_officer', 'committee_member'))
     );
 
-DROP POLICY IF EXISTS "Modify deficiencies" ON public.deficiencies;
-CREATE POLICY "Modify deficiencies" 
+DROP POLICY IF EXISTS "Deficiencies: Write policy" ON public.deficiencies;
+CREATE POLICY "Deficiencies: Write policy" 
     ON public.deficiencies FOR ALL 
     USING (
-        application_id IN (
-            SELECT id FROM public.applications 
-            WHERE applicant_id IN (SELECT id FROM public.profiles WHERE user_id = auth.uid())
+        EXISTS (
+            SELECT 1 FROM public.applications a
+            WHERE a.id = deficiencies.application_id
+            AND (
+                a.applicant_id = public.get_current_profile_id()
+                OR public.is_admin()
+                OR public.is_scrutiny_officer()
+            )
         )
-        OR EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND role IN ('admin', 'scrutiny_officer'))
     );
 
 -- ------------------------------------------------------------------------------
@@ -271,21 +448,20 @@ CREATE TABLE IF NOT EXISTS public.notifications (
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
--- Enable RLS
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Users can view own notifications" ON public.notifications;
-CREATE POLICY "Users can view own notifications" 
+DROP POLICY IF EXISTS "Notifications: Read own" ON public.notifications;
+CREATE POLICY "Notifications: Read own" 
     ON public.notifications FOR SELECT 
     USING (user_id = auth.uid());
 
-DROP POLICY IF EXISTS "Users can update own notifications" ON public.notifications;
-CREATE POLICY "Users can update own notifications" 
+DROP POLICY IF EXISTS "Notifications: Update own" ON public.notifications;
+CREATE POLICY "Notifications: Update own" 
     ON public.notifications FOR UPDATE 
     USING (user_id = auth.uid());
 
 -- ------------------------------------------------------------------------------
--- 8. PRE-SEEDED CORE SCHEMES
+-- 8. PRE-SEEDED SCHEMES (NOS & NFST)
 -- ------------------------------------------------------------------------------
 INSERT INTO public.schemes (name, code, description, education_level, study_location, deadline, status, required_documents)
 VALUES 
@@ -317,6 +493,7 @@ ON CONFLICT (code) DO NOTHING;
 CREATE INDEX IF NOT EXISTS idx_profiles_user_id ON public.profiles(user_id);
 CREATE INDEX IF NOT EXISTS idx_profiles_role ON public.profiles(role);
 CREATE INDEX IF NOT EXISTS idx_applications_applicant ON public.applications(applicant_id);
+CREATE INDEX IF NOT EXISTS idx_applications_officer ON public.applications(assigned_officer_id);
 CREATE INDEX IF NOT EXISTS idx_applications_scheme ON public.applications(scheme_id);
 CREATE INDEX IF NOT EXISTS idx_applications_status ON public.applications(status);
 CREATE INDEX IF NOT EXISTS idx_documents_application ON public.application_documents(application_id);
