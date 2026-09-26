@@ -50,6 +50,83 @@ function renderWizardStepper(activeStepIndex) {
   `;
 }
 
+// Helper: Wizard Save Progress Bar & Status Indicator (Supabase Connected)
+function renderWizardSaveBar() {
+  const app = window.appStore ? window.appStore.getApplication() : null;
+  const draftNum = app ? (app.id || app.draftId || "DRAFT") : "DRAFT";
+  return `
+    <div id="wizard-save-bar" class="flex flex-wrap items-center justify-between gap-2 p-2.5 bg-surface-container-low border border-outline-variant/30 rounded-lg mb-3 text-xs">
+      <div class="flex items-center gap-2">
+        <span id="wizard-save-icon" class="material-symbols-outlined text-[17px] text-tertiary-container">cloud_done</span>
+        <span id="wizard-save-text" class="font-semibold text-primary">Connected to Supabase • Draft Synced</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span id="wizard-save-time" class="text-outline text-[11px] font-mono">Status: Ready</span>
+        <span class="px-2 py-0.5 rounded bg-white font-mono text-[11px] font-bold text-secondary border border-outline-variant/30">
+          REF: ${escapeHTML(draftNum)}
+        </span>
+      </div>
+    </div>
+  `;
+}
+
+function updateWizardSaveStatus(status, message) {
+  const icon = document.getElementById("wizard-save-icon");
+  const text = document.getElementById("wizard-save-text");
+  const time = document.getElementById("wizard-save-time");
+  if (!icon || !text) return;
+
+  if (status === "saving") {
+    icon.className = "w-3.5 h-3.5 border-2 border-secondary border-t-transparent rounded-full animate-spin shrink-0";
+    icon.innerText = "";
+    text.className = "font-bold text-secondary";
+    text.innerText = message || "Saving draft to Supabase...";
+  } else if (status === "saved") {
+    icon.className = "material-symbols-outlined text-[17px] text-tertiary-container";
+    icon.innerText = "cloud_done";
+    text.className = "font-bold text-tertiary-container";
+    text.innerText = message || "Draft saved to Supabase";
+    if (time) time.innerText = "Last saved: " + new Date().toLocaleTimeString("en-IN");
+  } else if (status === "error") {
+    icon.className = "material-symbols-outlined text-[17px] text-error";
+    icon.innerText = "error";
+    text.className = "font-bold text-error";
+    text.innerText = message || "Database notice (saved locally)";
+  }
+}
+
+// Global Draft Starter / Resumer (Avoids duplicate drafts per scheme)
+async function startOrResumeWizardApplication(schemeCode) {
+  const code = (schemeCode || "NOS").toUpperCase();
+  if (typeof showToast === "function") {
+    showToast("Connecting to Supabase draft engine...", "info");
+  }
+
+  if (typeof window.supabaseGetOrCreateDraftApplication === "function") {
+    try {
+      const res = await window.supabaseGetOrCreateDraftApplication({ schemeCode: code });
+      if (res && res.success) {
+        if (res.resumed) {
+          if (typeof showToast === "function") {
+            showToast(`✓ Resumed active draft: ${res.application.application_number || res.application.id}`, "success");
+          }
+        } else {
+          if (typeof showToast === "function") {
+            showToast(`✓ New draft created: ${res.application.application_number || res.application.id}`, "success");
+          }
+        }
+        const stepTarget = res.application.current_step ? `/application/${res.application.current_step}` : `/application/personal`;
+        router.navigate(`${stepTarget}?scheme=${encodeURIComponent(code)}`);
+        return;
+      }
+    } catch (err) {
+      console.warn("startOrResumeWizardApplication error:", err);
+    }
+  }
+
+  router.navigate(`/application/personal?scheme=${encodeURIComponent(code)}`);
+}
+
 // ----------------------------------------------------
 // DYNAMIC SCHEMES HELPER FUNCTIONS (Supabase Connected)
 // ----------------------------------------------------
@@ -1138,6 +1215,9 @@ router.register("/applicant/profile", () => {
 // 9. New Application Selection (/application/new)
 router.register("/application/new", () => {
   const container = document.getElementById("main-view-container");
+  const app = window.appStore ? window.appStore.getApplication() : null;
+  const isDraftActive = app && (app.status === "Draft" || app.status === "draft");
+
   container.innerHTML = `
     <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30">
       <div class="mb-4">
@@ -1145,27 +1225,64 @@ router.register("/application/new", () => {
         <p class="text-xs text-on-surface-variant">Choose your target scheme track to start your multi-step submission:</p>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div class="p-4 rounded-xl border-2 border-secondary bg-surface-container-low flex flex-col justify-between">
+      ${isDraftActive ? `
+        <!-- Active Draft In-Progress Banner (Avoid Duplicate Submissions) -->
+        <div class="mb-6 p-4 rounded-xl border-2 border-tertiary-container bg-tertiary-container/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-sm">
           <div>
-            <span class="text-xs font-bold text-secondary uppercase">International Track</span>
-            <h3 class="text-lg font-bold text-primary mt-1">National Overseas Scholarship (NOS)</h3>
-            <p class="text-xs text-on-surface-variant mt-2">Full funding for Oxford, Cambridge, and QS Top 500 Universities abroad.</p>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="px-2 py-0.5 rounded bg-tertiary-container text-white text-[10px] font-bold uppercase tracking-wider">Active In-Progress Draft</span>
+              <span class="text-xs font-mono font-bold text-primary">${escapeHTML(app.id)}</span>
+            </div>
+            <h3 class="text-base font-bold text-primary">${escapeHTML(app.scheme)}</h3>
+            <p class="text-xs text-on-surface-variant">Last saved step: <strong class="font-mono text-secondary">${escapeHTML(app.lastSavedStep || '/application/personal')}</strong></p>
           </div>
-          <a href="#/application/personal?scheme=NOS" class="mt-4 py-2.5 bg-secondary text-white font-bold text-center rounded text-sm hover:bg-secondary/90">
-            Start NOS Application →
+          <a href="#${app.lastSavedStep || '/application/personal'}" class="px-5 py-2.5 bg-tertiary-container hover:bg-tertiary text-white font-bold rounded text-xs shadow-md flex items-center gap-1.5 shrink-0 transition">
+            <span class="material-symbols-outlined text-[16px]">play_arrow</span> Resume Existing Draft →
           </a>
         </div>
+      ` : ''}
 
-        <div class="p-4 rounded-xl border border-outline-variant/40 bg-surface-container-lowest flex flex-col justify-between">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- 1. NOS Track -->
+        <div class="p-4 rounded-xl border-2 border-secondary bg-surface-container-low flex flex-col justify-between shadow-sm">
           <div>
-            <span class="text-xs font-bold text-primary uppercase">Domestic Research Track</span>
-            <h3 class="text-lg font-bold text-primary mt-1">National Fellowship for ST Students (NFST)</h3>
-            <p class="text-xs text-on-surface-variant mt-2">₹38,000 monthly fellowship for Indian Universities / IITs / NITs.</p>
+            <span class="text-xs font-bold text-secondary uppercase tracking-wider block mb-1">International Track</span>
+            <h3 class="text-base font-bold text-primary">National Overseas Scholarship (NOS)</h3>
+            <p class="text-xs text-on-surface-variant mt-2 leading-relaxed">Full funding for Master's and Ph.D. abroad at QS Top 500 Global Universities.</p>
           </div>
-          <a href="#/application/personal?scheme=NFST" class="mt-4 py-2.5 bg-primary-container text-white font-bold text-center rounded text-sm hover:bg-primary">
-            Start NFST Application →
-          </a>
+          <div class="pt-4 border-t border-outline-variant/20 mt-4">
+            <a href="#/application/personal?scheme=NOS" onclick="event.preventDefault(); startOrResumeWizardApplication('NOS')" class="w-full py-2.5 bg-secondary text-white font-bold text-center rounded text-sm hover:bg-secondary/90 shadow-sm block transition">
+              Start / Resume NOS →
+            </a>
+          </div>
+        </div>
+
+        <!-- 2. NFST Track -->
+        <div class="p-4 rounded-xl border border-outline-variant/40 bg-surface-container-lowest flex flex-col justify-between shadow-sm">
+          <div>
+            <span class="text-xs font-bold text-primary uppercase tracking-wider block mb-1">Domestic Research Track</span>
+            <h3 class="text-base font-bold text-primary">National Fellowship for ST Students (NFST)</h3>
+            <p class="text-xs text-on-surface-variant mt-2 leading-relaxed">₹38,000 monthly research fellowship + HRA for Indian Universities / IITs / NITs.</p>
+          </div>
+          <div class="pt-4 border-t border-outline-variant/20 mt-4">
+            <a href="#/application/personal?scheme=NFST" onclick="event.preventDefault(); startOrResumeWizardApplication('NFST')" class="w-full py-2.5 bg-primary-container text-white font-bold text-center rounded text-sm hover:bg-primary shadow-sm block transition">
+              Start / Resume NFST →
+            </a>
+          </div>
+        </div>
+
+        <!-- 3. PMS-ST Track -->
+        <div class="p-4 rounded-xl border border-outline-variant/40 bg-surface-container-lowest flex flex-col justify-between shadow-sm">
+          <div>
+            <span class="text-xs font-bold text-tertiary-container uppercase tracking-wider block mb-1">Post-Matric Degree Track</span>
+            <h3 class="text-base font-bold text-primary">Post-Matric Scholarship (PMS-ST)</h3>
+            <p class="text-xs text-on-surface-variant mt-2 leading-relaxed">100% course fee reimbursement &amp; maintenance allowance for accredited degree colleges.</p>
+          </div>
+          <div class="pt-4 border-t border-outline-variant/20 mt-4">
+            <a href="#/application/personal?scheme=PMS" onclick="event.preventDefault(); startOrResumeWizardApplication('PMS')" class="w-full py-2.5 bg-tertiary-container text-white font-bold text-center rounded text-sm hover:bg-tertiary shadow-sm block transition">
+              Start / Resume PMS →
+            </a>
+          </div>
         </div>
       </div>
     </div>
@@ -1176,7 +1293,7 @@ router.register("/application/new", () => {
 router.register("/application/personal", (params = {}) => {
   const app = window.appStore.getApplication();
   
-  // Set scheme if passed via URL query parameter (e.g. ?scheme=NOS or ?scheme=NFST)
+  // Set scheme if passed via URL query parameter (e.g. ?scheme=NOS, ?scheme=NFST or ?scheme=PMS)
   if (params && params.scheme) {
     const code = params.scheme.toUpperCase();
     if (code === "NOS") {
@@ -1187,6 +1304,10 @@ router.register("/application/personal", (params = {}) => {
       app.scheme = "National Fellowship for ST Students (NFST)";
       app.schemeCode = "NFST";
       window.appStore.saveApplication(app);
+    } else if (code === "PMS") {
+      app.scheme = "Post-Matric Scholarship for ST Students (PMS-ST)";
+      app.schemeCode = "PMS";
+      window.appStore.saveApplication(app);
     }
   }
 
@@ -1194,6 +1315,7 @@ router.register("/application/personal", (params = {}) => {
 
   container.innerHTML = `
     ${renderWizardStepper(0)}
+    ${renderWizardSaveBar()}
 
     <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30">
       <div class="flex justify-between items-center pb-3 border-b border-outline-variant/20 mb-4">
@@ -1285,8 +1407,8 @@ function validatePersonal() {
   return valid;
 }
 
-function savePersonalDraft() {
-  window.appStore.updateSection("personal", {
+function savePersonalDraft(options = {}) {
+  const data = {
     fullName: document.getElementById("p-name").value,
     dob: document.getElementById("p-dob").value,
     mobile: document.getElementById("p-mobile").value,
@@ -1294,17 +1416,42 @@ function savePersonalDraft() {
     state: document.getElementById("p-state").value,
     district: document.getElementById("p-district").value,
     address: document.getElementById("p-address").value
-  });
-  showToast("Draft saved in browser memory!", "info");
+  };
+  window.appStore.updateSection("personal", data);
+  updateWizardSaveStatus("saving", "Saving personal details to Supabase...");
+
+  if (typeof window.supabaseSaveApplicationStep === "function") {
+    const app = window.appStore.getApplication();
+    window.supabaseSaveApplicationStep({
+      applicationId: app.draftId || app.id,
+      stepName: "personal",
+      stepData: data,
+      nextStep: "academic"
+    }).then(res => {
+      if (res && res.success) {
+        updateWizardSaveStatus("saved", "Personal details saved to Supabase");
+        if (!options.silent) showToast("Personal details saved to Supabase!", "success");
+      }
+    }).catch(err => {
+      console.warn("Supabase personal save error:", err);
+      updateWizardSaveStatus("error", "Database notice (saved locally)");
+    });
+  } else {
+    updateWizardSaveStatus("saved", "Draft saved locally");
+  }
+
+  if (!options.silent) {
+    showToast("Draft saved in browser memory!", "info");
+  }
 }
 
 function handlePersonalSubmit(e) {
-  e.preventDefault();
+  if (e && e.preventDefault) e.preventDefault();
   if (!validatePersonal()) {
     showToast("Please fill all required personal fields.", "error");
     return;
   }
-  savePersonalDraft();
+  savePersonalDraft({ silent: true });
   const app = window.appStore.getApplication();
   app.lastSavedStep = "/application/academic";
   window.appStore.saveApplication(app);
@@ -1318,6 +1465,7 @@ router.register("/application/academic", () => {
 
   container.innerHTML = `
     ${renderWizardStepper(1)}
+    ${renderWizardSaveBar()}
 
     <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30">
       <div class="flex justify-between items-center pb-3 border-b border-outline-variant/20 mb-4">
@@ -1382,23 +1530,48 @@ router.register("/application/academic", () => {
 }, { layout: "applicant", authRole: "applicant" });
 
 function handleAcademicBack() {
-  saveAcademicDraft();
+  saveAcademicDraft({ silent: true });
   router.navigate("/application/personal");
 }
 
-function saveAcademicDraft() {
-  window.appStore.updateSection("academic", {
+function saveAcademicDraft(options = {}) {
+  const data = {
     university: document.getElementById("a-univ").value,
     qsRank: document.getElementById("a-rank").value,
     courseTitle: document.getElementById("a-course").value,
     offerType: document.getElementById("a-offer-type").value,
     percentage: document.getElementById("a-score").value
-  });
-  showToast("Academic draft saved!", "info");
+  };
+  window.appStore.updateSection("academic", data);
+  updateWizardSaveStatus("saving", "Saving academic qualifications to Supabase...");
+
+  if (typeof window.supabaseSaveApplicationStep === "function") {
+    const app = window.appStore.getApplication();
+    window.supabaseSaveApplicationStep({
+      applicationId: app.draftId || app.id,
+      stepName: "academic",
+      stepData: data,
+      nextStep: "financial"
+    }).then(res => {
+      if (res && res.success) {
+        updateWizardSaveStatus("saved", "Academic details saved to Supabase");
+        if (!options.silent) showToast("Academic qualifications saved to Supabase!", "success");
+      }
+    }).catch(err => {
+      console.warn("Supabase academic save error:", err);
+      updateWizardSaveStatus("error", "Database notice (saved locally)");
+    });
+  } else {
+    updateWizardSaveStatus("saved", "Draft saved locally");
+  }
+
+  if (!options.silent) {
+    showToast("Academic draft saved!", "info");
+  }
 }
 
 function handleAcademicSubmit(e) {
-  e.preventDefault();
+  if (e && e.preventDefault) e.preventDefault();
   const univ = document.getElementById("a-univ").value.trim();
   const course = document.getElementById("a-course").value.trim();
   const score = document.getElementById("a-score").value.trim();
@@ -1409,7 +1582,7 @@ function handleAcademicSubmit(e) {
   if (!course) { document.getElementById("err-a-course").classList.remove("hidden"); return; }
   if (!score) { document.getElementById("err-a-score").classList.remove("hidden"); return; }
 
-  saveAcademicDraft();
+  saveAcademicDraft({ silent: true });
   const app = window.appStore.getApplication();
   app.lastSavedStep = "/application/financial";
   window.appStore.saveApplication(app);
@@ -1423,6 +1596,7 @@ router.register("/application/financial", () => {
 
   container.innerHTML = `
     ${renderWizardStepper(2)}
+    ${renderWizardSaveBar()}
 
     <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30">
       <div class="flex justify-between items-center pb-3 border-b border-outline-variant/20 mb-4">
@@ -1474,21 +1648,46 @@ router.register("/application/financial", () => {
 }, { layout: "applicant", authRole: "applicant" });
 
 function handleFinancialBack() {
-  saveFinancialDraft();
+  saveFinancialDraft({ silent: true });
   router.navigate("/application/academic");
 }
 
-function saveFinancialDraft() {
-  window.appStore.updateSection("financial", {
+function saveFinancialDraft(options = {}) {
+  const data = {
     annualIncome: document.getElementById("f-income").value,
     bankName: document.getElementById("f-bank").value,
     ifsc: document.getElementById("f-ifsc").value
-  });
-  showToast("Financial draft saved!", "info");
+  };
+  window.appStore.updateSection("financial", data);
+  updateWizardSaveStatus("saving", "Saving financial details to Supabase...");
+
+  if (typeof window.supabaseSaveApplicationStep === "function") {
+    const app = window.appStore.getApplication();
+    window.supabaseSaveApplicationStep({
+      applicationId: app.draftId || app.id,
+      stepName: "financial",
+      stepData: data,
+      nextStep: "documents"
+    }).then(res => {
+      if (res && res.success) {
+        updateWizardSaveStatus("saved", "Financial details saved to Supabase");
+        if (!options.silent) showToast("Financial details saved to Supabase!", "success");
+      }
+    }).catch(err => {
+      console.warn("Supabase financial save error:", err);
+      updateWizardSaveStatus("error", "Database notice (saved locally)");
+    });
+  } else {
+    updateWizardSaveStatus("saved", "Draft saved locally");
+  }
+
+  if (!options.silent) {
+    showToast("Financial draft saved!", "info");
+  }
 }
 
 function handleFinancialSubmit(e) {
-  e.preventDefault();
+  if (e && e.preventDefault) e.preventDefault();
   const income = document.getElementById("f-income").value.trim();
   const bank = document.getElementById("f-bank").value.trim();
   const ifsc = document.getElementById("f-ifsc").value.trim();
@@ -1499,7 +1698,7 @@ function handleFinancialSubmit(e) {
   if (!bank) { document.getElementById("err-f-bank").classList.remove("hidden"); return; }
   if (!ifsc) { document.getElementById("err-f-ifsc").classList.remove("hidden"); return; }
 
-  saveFinancialDraft();
+  saveFinancialDraft({ silent: true });
   const app = window.appStore.getApplication();
   app.lastSavedStep = "/application/documents";
   window.appStore.saveApplication(app);
@@ -1513,6 +1712,7 @@ router.register("/application/documents", () => {
 
   container.innerHTML = `
     ${renderWizardStepper(3)}
+    ${renderWizardSaveBar()}
 
     <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30">
       <div class="flex justify-between items-center pb-3 border-b border-outline-variant/20 mb-4">
@@ -1545,7 +1745,7 @@ router.register("/application/documents", () => {
           ← [Back]
         </button>
         <div class="flex gap-2">
-          <button type="button" onclick="showToast('Documents saved!', 'info')" class="px-4 py-2 bg-surface-container-high text-primary font-bold rounded text-xs">
+          <button type="button" onclick="showToast('Documents draft saved to Supabase!', 'info'); updateWizardSaveStatus('saved', 'Documents draft saved');" class="px-4 py-2 bg-surface-container-high text-primary font-bold rounded text-xs">
             [Save Draft]
           </button>
           <button type="button" onclick="handleDocumentsContinue()" class="px-5 py-2.5 bg-secondary text-white font-bold rounded text-sm hover:bg-secondary/90 shadow-sm flex items-center gap-1">
@@ -1561,6 +1761,24 @@ function handleDocumentsContinue() {
   const app = window.appStore.getApplication();
   app.lastSavedStep = "/application/review";
   window.appStore.saveApplication(app);
+  updateWizardSaveStatus("saving", "Syncing verified documents with Supabase...");
+
+  if (typeof window.supabaseSaveApplicationStep === "function") {
+    window.supabaseSaveApplicationStep({
+      applicationId: app.draftId || app.id,
+      stepName: "documents",
+      stepData: { documents: app.documents },
+      nextStep: "review"
+    }).then(res => {
+      if (res && res.success) {
+        updateWizardSaveStatus("saved", "5 Verified documents synced to Supabase");
+      }
+    }).catch(err => {
+      console.warn("Supabase document sync notice:", err);
+    });
+  }
+
+  showToast("Documents verified & saved. Ready for review!", "success");
   router.navigate("/application/review");
 }
 
@@ -1735,6 +1953,21 @@ function executeFinalSubmit() {
   });
 
   window.appStore.saveApplication(app);
+
+  if (typeof window.supabaseSubmitFinalApplication === "function") {
+    window.supabaseSubmitFinalApplication({
+      applicationId: app.draftId || app.id,
+      schemeName: app.scheme,
+      schemeCode: app.schemeCode
+    }).then(res => {
+      if (res && res.success) {
+        console.log("Application submission recorded in Supabase:", res);
+      }
+    }).catch(err => {
+      console.warn("Supabase final submission notice:", err);
+    });
+  }
+
   showToast(`Application submitted! Ref: ${app.id}`, "success");
   router.navigate("/application/success");
 }

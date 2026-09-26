@@ -153,12 +153,20 @@ CREATE TABLE IF NOT EXISTS public.applications (
         'rejected',
         'selected'
     )),
-    current_step INT NOT NULL DEFAULT 1,
+    current_step TEXT NOT NULL DEFAULT 'personal',
+    personal_details JSONB DEFAULT '{}'::jsonb,
+    academic_details JSONB DEFAULT '{}'::jsonb,
+    financial_details JSONB DEFAULT '{}'::jsonb,
     risk_level TEXT NOT NULL DEFAULT 'low' CHECK (risk_level IN ('low', 'medium', 'high')),
     submitted_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
+
+-- Enforce single active draft per applicant and scheme (prevent duplicate drafts)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_active_draft_per_scheme 
+ON public.applications (applicant_id, scheme_id) 
+WHERE (status = 'draft');
 
 ALTER TABLE public.applications ENABLE ROW LEVEL SECURITY;
 
