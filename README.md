@@ -105,11 +105,26 @@ Visit [**http://localhost:8000/**](http://localhost:8000/)
 
 ---
 
+## ⚡ Supabase Authentication Integration
+
+The portal is integrated with **Supabase Auth** for applicant identity management and access control:
+
+- **Project URL**: `https://pnxgaiqdrpmqnahwopuq.supabase.co`
+- **Client Key**: Public publishable key (no secret service-role key in frontend code)
+- **Features Implemented**:
+  - 📝 **Applicant Registration**: Real-time sign up with email and password (`window.supabaseRegister`).
+  - 🔐 **Applicant Login**: Authenticates via `window.supabaseLogin` with active session management.
+  - 🚪 **Applicant Logout**: Securely signs out scholars and resets local application session state.
+  - 🛡️ **Route Protection**: Unauthenticated access to `/applicant/*` and `/application/*` routes automatically redirects to `#/login`.
+  - ⚠️ **Resilient Status & Alert Handling**: User-friendly alerts for Supabase email confirmation requirements and rate limits, with immediate prototype demo fallback.
+
+---
+
 ## 🔑 Prototype Demo Credentials
 
 | Role | Email / ID | Password | Access Route |
 |---|---|---|---|
-| **Scholar (Applicant)** | `student@demo.com` | `student123` | [`#/login`](http://localhost:8000/#/login) |
+| **Scholar (Supabase / Demo)** | `student@demo.com` | `student123` | [`#/login`](http://localhost:8000/#/login) |
 | **MoTA Nodal Officer** | `admin@mota.gov.in` | `admin123` | [`#/admin/login`](http://localhost:8000/#/admin/login) |
 
 ---
@@ -119,6 +134,7 @@ Visit [**http://localhost:8000/**](http://localhost:8000/)
 ```
 st-scholarship/
 ├── index.html         # Master SPA entry point & dynamic layout container
+├── supabase.js        # Supabase Auth client integration (CDN SDK v2)
 ├── app.js             # View controllers, application screens & action handlers
 ├── router.js          # Client-side SPA router with route guards & layouts
 ├── store.js           # State management & persistent mock database (localStorage)
