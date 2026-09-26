@@ -3,10 +3,13 @@
 > **Ministry of Tribal Affairs (MoTA) • Government of India**  
 > *Developed & Maintained by [@avijiitt](https://github.com/avijiitt)*
 
+[![Vercel Deployment](https://img.shields.io/badge/Vercel-Live_Portal-black?style=for-the-badge&logo=vercel)](https://st-scholarship.vercel.app)
 [![GIGW 3.0 Compliant](https://img.shields.io/badge/GIGW-3.0_Compliant-00531b?style=for-the-badge&logo=shield)](https://github.com/avijiitt/st-scholarship)
 [![DBT PFMS Enabled](https://img.shields.io/badge/DBT-PFMS_Direct_Credit-a04100?style=for-the-badge&logo=cashapp)](https://github.com/avijiitt/st-scholarship)
 [![DigiLocker Synced](https://img.shields.io/badge/DigiLocker-e--KYC_Verified-00183b?style=for-the-badge&logo=cloudflare)](https://github.com/avijiitt/st-scholarship)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
+
+> 🌐 **Live Production URL**: [**https://st-scholarship.vercel.app**](https://st-scholarship.vercel.app)
 
 ---
 
