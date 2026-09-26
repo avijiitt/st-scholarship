@@ -472,6 +472,11 @@ CREATE POLICY "Notifications: Update own"
     ON public.notifications FOR UPDATE 
     USING (user_id = auth.uid());
 
+DROP POLICY IF EXISTS "Notifications: Insert own" ON public.notifications;
+CREATE POLICY "Notifications: Insert own" 
+    ON public.notifications FOR INSERT 
+    WITH CHECK (user_id = auth.uid() OR public.is_admin() OR public.is_scrutiny_officer());
+
 -- ------------------------------------------------------------------------------
 -- 8. PRE-SEEDED SCHEMES (NOS & NFST)
 -- ------------------------------------------------------------------------------

@@ -2204,6 +2204,15 @@ router.register("/application/review", () => {
         </div>
       </div>
 
+      <!-- Error Container for Missing Fields, Docs, or Submission Failure -->
+      <div id="submit-error-container" class="hidden p-4 bg-error-container/20 text-on-surface rounded-xl border border-error/40 text-xs space-y-2 mb-4">
+        <div class="flex items-center gap-2 text-error font-bold text-sm">
+          <span class="material-symbols-outlined text-lg">error</span>
+          <span>Application Incomplete or Submission Error</span>
+        </div>
+        <div id="submit-error-details" class="space-y-1.5 pl-6"></div>
+      </div>
+
       <!-- Legal Declaration -->
       <div class="bg-surface-container-lowest p-space-md rounded-xl shadow-md border border-outline-variant/30">
         <label class="flex items-start gap-3 cursor-pointer text-xs leading-relaxed">
@@ -2220,8 +2229,9 @@ router.register("/application/review", () => {
           <button onclick="router.navigate('/application/documents')" class="px-4 py-2 bg-surface-container text-primary font-bold rounded text-xs">
             ← [Back to Documents]
           </button>
-          <button onclick="executeFinalSubmit()" class="px-6 py-3 bg-secondary hover:bg-secondary/90 text-white font-bold rounded text-sm shadow-md flex items-center gap-2">
-            <span class="material-symbols-outlined text-[18px]">send</span> Submit Application (अंतिम प्रस्तुति)
+          <button id="final-submit-btn" onclick="executeFinalSubmit()" class="px-6 py-3 bg-secondary hover:bg-secondary/90 text-white font-bold rounded text-sm shadow-md flex items-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed">
+            <span class="material-symbols-outlined text-[18px]">send</span>
+            <span>Submit Application (अंतिम प्रस्तुति)</span>
           </button>
         </div>
       </div>
@@ -2229,47 +2239,138 @@ router.register("/application/review", () => {
   `;
 }, { layout: "applicant", authRole: "applicant" });
 
-function executeFinalSubmit() {
+let isSubmittingApplication = false;
+
+async function executeFinalSubmit() {
+  if (isSubmittingApplication) return;
+
   const checkbox = document.getElementById("legal-declaration");
   const err = document.getElementById("declaration-err");
+  const submitBtn = document.getElementById("final-submit-btn");
+  const errorContainer = document.getElementById("submit-error-container");
+  const errorDetails = document.getElementById("submit-error-details");
 
-  if (!checkbox.checked) {
-    err.classList.remove("hidden");
+  if (errorContainer) errorContainer.classList.add("hidden");
+
+  // 1. Legal Declaration Check
+  if (checkbox && !checkbox.checked) {
+    if (err) err.classList.remove("hidden");
+    checkbox.focus();
     return;
   }
-  err.classList.add("hidden");
+  if (err) err.classList.add("hidden");
 
   const app = window.appStore.getApplication();
-  const code = app.schemeCode || "NOS";
-  const randomSerial = Math.floor(100000 + Math.random() * 900000);
-  app.id = `MOTA-${code}-2026-${randomSerial}`;
-  app.status = "Under Document Scrutiny";
-  app.submissionDate = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
-  app.history.push({
-    title: "Application Submitted to Ministry",
-    time: app.submissionDate,
-    officer: "Portal Gateway",
-    remark: `Direct electronic submission received under ${app.scheme}.`
-  });
 
-  window.appStore.saveApplication(app);
-
-  if (typeof window.supabaseSubmitFinalApplication === "function") {
-    window.supabaseSubmitFinalApplication({
-      applicationId: app.draftId || app.id,
-      schemeName: app.scheme,
-      schemeCode: app.schemeCode
-    }).then(res => {
-      if (res && res.success) {
-        console.log("Application submission recorded in Supabase:", res);
-      }
-    }).catch(err => {
-      console.warn("Supabase final submission notice:", err);
-    });
+  // 2. Prevent Duplicate Submission
+  if (app.status === "Under Document Scrutiny" || app.status === "Submitted" || app.status === "submitted") {
+    showToast(`Application is already submitted (Ref: ${app.id || app.application_number}). Duplicate submission is prevented.`, "warning");
+    if (errorContainer && errorDetails) {
+      errorDetails.innerHTML = `<p class="text-error font-semibold">This application was already submitted on ${app.submissionDate || 'record'}. You can track its live scrutiny status on the tracking portal.</p>`;
+      errorContainer.classList.remove("hidden");
+    }
+    return;
   }
 
-  showToast(`Application submitted! Ref: ${app.id}`, "success");
-  router.navigate("/application/success");
+  // 3. Validate Required Fields & Required Documents
+  let validation = { isValid: true, missingFields: [], missingDocs: [] };
+  if (typeof window.supabaseValidateApplicationForSubmission === "function") {
+    validation = window.supabaseValidateApplicationForSubmission(app);
+  }
+
+  if (!validation.isValid) {
+    if (errorContainer && errorDetails) {
+      let html = `<p class="font-bold text-error mb-2">Please complete the following required items before submitting:</p><ul class="list-disc pl-5 space-y-1 text-xs">`;
+      if (validation.missingFields.length > 0) {
+        validation.missingFields.forEach(f => {
+          html += `<li><strong>${escapeHTML(f.section)}:</strong> ${escapeHTML(f.field)} missing — <a href="#${f.step}" class="text-secondary font-bold underline hover:text-secondary-fixed">Complete [${escapeHTML(f.section)}]</a></li>`;
+        });
+      }
+      if (validation.missingDocs.length > 0) {
+        validation.missingDocs.forEach(d => {
+          html += `<li><strong>Document Missing:</strong> ${escapeHTML(d)} — <a href="#/application/documents" class="text-secondary font-bold underline hover:text-secondary-fixed">Upload in [Step 4]</a></li>`;
+        });
+      }
+      html += `</ul>`;
+      errorDetails.innerHTML = html;
+      errorContainer.classList.remove("hidden");
+      errorContainer.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    showToast("Submission blocked: Please fulfill all required fields and documents.", "error");
+    return;
+  }
+
+  // 4. Loading State & Duplicate Submission Lock
+  isSubmittingApplication = true;
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `
+      <span class="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+      <span>Submitting to Ministry (प्रस्तुत हो रहा है)...</span>
+    `;
+  }
+
+  try {
+    updateWizardSaveStatus("saving", "Submitting application to Ministry...");
+
+    let submitResult = { success: true };
+    if (typeof window.supabaseSubmitFinalApplication === "function") {
+      submitResult = await window.supabaseSubmitFinalApplication({
+        applicationId: app.draftId || app.id,
+        schemeName: app.scheme,
+        schemeCode: app.schemeCode
+      });
+    } else {
+      // Local fallback
+      const code = app.schemeCode || "NOS";
+      const randomSerial = Math.floor(100000 + Math.random() * 900000);
+      app.id = `MOTA-${code}-2026-${randomSerial}`;
+      app.status = "Under Document Scrutiny";
+      app.submissionDate = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+      app.history.push({
+        title: "Application Submitted to Ministry",
+        time: app.submissionDate,
+        officer: "Portal Gateway",
+        remark: `Direct electronic submission received under ${app.scheme}.`
+      });
+      window.appStore.saveApplication(app);
+    }
+
+    if (!submitResult.success) {
+      throw new Error(submitResult.error || "Submission failed");
+    }
+
+    const currentApp = window.appStore.getApplication();
+    const refNum = submitResult.applicationNumber || currentApp.id;
+
+    updateWizardSaveStatus("saved", "Application successfully submitted");
+    showToast(`✓ Application submitted successfully! Reference: ${refNum}`, "success");
+    router.navigate("/application/success");
+
+  } catch (err) {
+    console.error("Application submission failed:", err);
+    isSubmittingApplication = false;
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = `
+        <span class="material-symbols-outlined text-[18px]">send</span>
+        <span>Submit Application (अंतिम प्रस्तुति)</span>
+      `;
+    }
+    if (errorContainer && errorDetails) {
+      errorDetails.innerHTML = `<p class="text-error font-semibold">Submission Error: ${escapeHTML(err.message || 'Network error')}. Please check your connection or contact portal support.</p>`;
+      errorContainer.classList.remove("hidden");
+      errorContainer.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    showToast(`Submission failed: ${err.message || 'Error occurred'}`, "error");
+    updateWizardSaveStatus("error", "Submission failed. Please retry.");
+  } finally {
+    isSubmittingApplication = false;
+  }
+}
+
+if (typeof window !== "undefined") {
+  window.executeFinalSubmit = executeFinalSubmit;
 }
 
 // 15. Step 6: Submission Success (/application/success)

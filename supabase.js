@@ -749,64 +749,267 @@ async function supabaseSaveApplicationStep(params = {}) {
   return { success: true, source: "local_store" };
 }
 
+// 10B. Validate Application Completeness for Submission
+function supabaseValidateApplicationForSubmission(app = {}, scheme = null) {
+  const missingFields = [];
+  const missingDocs = [];
+
+  const personal = app.personal || {};
+  const category = app.category || {};
+  const academic = app.academic || {};
+  const financial = app.financial || {};
+  const documents = Array.isArray(app.documents) ? app.documents : [];
+
+  // 1. Personal Details Validation
+  if (!personal.fullName || !String(personal.fullName).trim()) {
+    missingFields.push({ section: "Personal Details", field: "Full Name", step: "/application/personal" });
+  }
+  if (!personal.dob || !String(personal.dob).trim()) {
+    missingFields.push({ section: "Personal Details", field: "Date of Birth", step: "/application/personal" });
+  }
+  if (!personal.mobile || !String(personal.mobile).trim()) {
+    missingFields.push({ section: "Personal Details", field: "Mobile Number", step: "/application/personal" });
+  }
+  if (!personal.email || !String(personal.email).trim() || !personal.email.includes("@")) {
+    missingFields.push({ section: "Personal Details", field: "Valid Email Address", step: "/application/personal" });
+  }
+  if (!personal.state || !String(personal.state).trim()) {
+    missingFields.push({ section: "Personal Details", field: "State of Domicile", step: "/application/personal" });
+  }
+  if (!personal.district || !String(personal.district).trim()) {
+    missingFields.push({ section: "Personal Details", field: "District", step: "/application/personal" });
+  }
+  if (!personal.address || !String(personal.address).trim()) {
+    missingFields.push({ section: "Personal Details", field: "Permanent Address", step: "/application/personal" });
+  }
+
+  // 2. ST Category Validation
+  if (!category.tribeName || !String(category.tribeName).trim()) {
+    missingFields.push({ section: "ST Category Details", field: "Tribe / Community Name", step: "/application/personal" });
+  }
+  if (!category.certNo || !String(category.certNo).trim()) {
+    missingFields.push({ section: "ST Category Details", field: "ST Caste Certificate No", step: "/application/personal" });
+  }
+  if (!category.issuingAuthority || !String(category.issuingAuthority).trim()) {
+    missingFields.push({ section: "ST Category Details", field: "Issuing Authority", step: "/application/personal" });
+  }
+  if (!category.issueDate || !String(category.issueDate).trim()) {
+    missingFields.push({ section: "ST Category Details", field: "Certificate Issue Date", step: "/application/personal" });
+  }
+
+  // 3. Academic Details Validation
+  if (!academic.university || !String(academic.university).trim()) {
+    missingFields.push({ section: "Academic Details", field: "Target / Enrolled University", step: "/application/academic" });
+  }
+  if (!academic.courseTitle || !String(academic.courseTitle).trim()) {
+    missingFields.push({ section: "Academic Details", field: "Degree / Course Title", step: "/application/academic" });
+  }
+  if (!academic.percentage || String(academic.percentage).trim() === "") {
+    missingFields.push({ section: "Academic Details", field: "Qualifying Score / Percentage", step: "/application/academic" });
+  }
+
+  // 4. Financial Details Validation
+  if (!financial.annualIncome || String(financial.annualIncome).trim() === "") {
+    missingFields.push({ section: "Financial Details", field: "Annual Family Income", step: "/application/financial" });
+  }
+  if (!financial.bankName || !String(financial.bankName).trim()) {
+    missingFields.push({ section: "Financial Details", field: "Disbursement Bank Name", step: "/application/financial" });
+  }
+  if (!financial.ifsc || !String(financial.ifsc).trim()) {
+    missingFields.push({ section: "Financial Details", field: "Bank IFSC Code", step: "/application/financial" });
+  }
+
+  // 5. Mandatory Documents Validation
+  if (documents.length === 0) {
+    missingDocs.push("Mandatory Scheme Documents (No documents uploaded yet)");
+  } else {
+    const docTypesAndNames = documents.map(d => `${d.type || ''} ${d.name || ''}`.toLowerCase()).join(" ");
+
+    // Check ST Caste Certificate
+    const hasCaste = /caste|tribe|st_cert|st cert|st certificate/i.test(docTypesAndNames);
+    if (!hasCaste) missingDocs.push("ST Caste Certificate (Article 342)");
+
+    // Check Income Certificate
+    const hasIncome = /income|annual_income/i.test(docTypesAndNames);
+    if (!hasIncome) missingDocs.push("Annual Income Certificate");
+
+    // Check Marksheet / Academic Proof
+    const hasAcademic = /marksheet|scorecard|degree|admission|offer|transcript|synopsis|ugc/i.test(docTypesAndNames);
+    if (!hasAcademic) missingDocs.push("Previous Qualifying Marksheet / Admission Letter");
+
+    // Check Identity / Bank
+    const hasIdentity = /aadhaar|identity|passbook|npci|passport/i.test(docTypesAndNames);
+    if (!hasIdentity) missingDocs.push("Aadhaar Card / Bank Passbook / Passport");
+  }
+
+  const isValid = missingFields.length === 0 && missingDocs.length === 0;
+
+  return {
+    isValid,
+    missingFields,
+    missingDocs,
+    summary: isValid ? "Application data and documents verified" : `Incomplete: ${missingFields.length} field(s), ${missingDocs.length} document(s) required.`
+  };
+}
+
 // 11. Final Submission to Database
 async function supabaseSubmitFinalApplication(params = {}) {
-  const { applicationId, schemeName, schemeCode } = params;
+  const { applicationId, schemeName, schemeCode, skipValidation } = params;
 
-  if (supabaseClient && applicationId) {
+  // Retrieve current application state
+  let currentApp = null;
+  if (typeof window !== "undefined" && window.appStore) {
+    currentApp = window.appStore.getApplication();
+  }
+
+  // 1. Duplicate Submission Check (Local State)
+  if (currentApp && (currentApp.status === "Under Document Scrutiny" || currentApp.status === "Submitted" || currentApp.status === "submitted")) {
+    return {
+      success: false,
+      error: `Application has already been submitted (Reference: ${currentApp.id || currentApp.application_number}). Duplicate submission is prohibited.`,
+      code: "ALREADY_SUBMITTED"
+    };
+  }
+
+  // 2. Validate Completeness (Fields + Documents)
+  if (!skipValidation && currentApp) {
+    const val = supabaseValidateApplicationForSubmission(currentApp);
+    if (!val.isValid) {
+      return {
+        success: false,
+        error: val.summary,
+        validation: val,
+        code: "VALIDATION_FAILED"
+      };
+    }
+  }
+
+  const nowIso = new Date().toISOString();
+  const submissionTimestampStr = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+  const code = schemeCode || (currentApp && currentApp.schemeCode) || "NOS";
+  const finalAppNumber = (currentApp && currentApp.id && !currentApp.id.startsWith("DRAFT-")) 
+    ? currentApp.id 
+    : `MOTA-${code}-2026-${Math.floor(100000 + Math.random() * 900000)}`;
+
+  let targetId = applicationId || (currentApp && (currentApp.draftId || currentApp.id));
+  let updatedApp = null;
+
+  // 3. Supabase Cloud Database Execution
+  if (supabaseClient) {
     try {
-      const nowIso = new Date().toISOString();
-      const { data: updatedApp, error: updateErr } = await supabaseClient
-        .from('applications')
-        .update({
-          status: 'submitted',
-          submitted_at: nowIso,
-          current_step: 'submitted',
-          updated_at: nowIso
-        })
-        .eq('id', applicationId)
-        .select()
-        .maybeSingle();
+      const profile = await supabaseGetCurrentProfile();
+      let resolvedUserId = profile ? profile.user_id : null;
+      if (!resolvedUserId) {
+        const { data: authData } = await supabaseClient.auth.getUser();
+        resolvedUserId = authData?.user?.id || null;
+      }
 
-      if (!updateErr && updatedApp) {
-        // Record in application_status_history
+      // Check if application exists and inspect current status (Duplicate DB Prevention)
+      if (targetId) {
+        const { data: existingApp, error: fetchErr } = await supabaseClient
+          .from('applications')
+          .select('id, status, application_number, scheme_id, applicant_id')
+          .or(`id.eq.${targetId},application_number.eq.${targetId}`)
+          .maybeSingle();
+
+        if (existingApp) {
+          targetId = existingApp.id;
+          if (existingApp.status === 'submitted' || existingApp.status === 'under_scrutiny') {
+            return {
+              success: false,
+              error: `Application ${existingApp.application_number} has already been submitted to the Ministry on record.`,
+              code: "ALREADY_SUBMITTED"
+            };
+          }
+        }
+      }
+
+      if (targetId) {
+        // Transition application status: draft -> submitted
+        const { data: dbUpdated, error: updateErr } = await supabaseClient
+          .from('applications')
+          .update({
+            status: 'submitted',
+            submitted_at: nowIso,
+            current_step: 'submitted',
+            updated_at: nowIso
+          })
+          .eq('id', targetId)
+          .select('*, schemes(*)')
+          .maybeSingle();
+
+        if (updateErr) {
+          console.warn("Supabase application submit update error:", updateErr);
+          return {
+            success: false,
+            error: `Database submission failed: ${updateErr.message}`
+          };
+        }
+
+        updatedApp = dbUpdated;
+
+        // 4. Insert Status History Record
         try {
           await supabaseClient.from('application_status_history').insert([{
-            application_id: applicationId,
+            application_id: targetId,
             old_status: 'draft',
             new_status: 'submitted',
-            remark: `Direct electronic submission received under ${schemeName || 'scholarship scheme'}.`
+            remark: `Direct electronic submission received under ${schemeName || 'scholarship scheme'}. Permanent Reference: ${updatedApp?.application_number || finalAppNumber}`,
+            changed_by: resolvedUserId
           }]);
         } catch (hErr) {
           console.warn("Status history insertion notice:", hErr);
         }
 
-        return { success: true, application: updatedApp, source: "supabase" };
+        // 5. Create Applicant Notification
+        if (resolvedUserId) {
+          try {
+            await supabaseClient.from('notifications').insert([{
+              user_id: resolvedUserId,
+              title: "Application Submitted Successfully",
+              message: `Your scholarship application (${updatedApp?.application_number || finalAppNumber}) for "${schemeName || 'ST Scholarship'}" has been successfully submitted to the Ministry for scrutiny.`,
+              type: "success",
+              is_read: false
+            }]);
+          } catch (nErr) {
+            console.warn("Notification insert notice:", nErr);
+          }
+        }
       }
     } catch (err) {
-      console.warn("supabaseSubmitFinalApplication Supabase error, falling back:", err);
+      console.warn("supabaseSubmitFinalApplication exception:", err);
+      return {
+        success: false,
+        error: `Submission failed: ${err.message || 'Network error'}`
+      };
     }
   }
 
-  // Local state fallback
-  if (window.appStore) {
+  // 6. Synchronize Local AppStore
+  if (typeof window !== "undefined" && window.appStore) {
     const app = window.appStore.getApplication();
-    const code = schemeCode || app.schemeCode || "NOS";
-    const randomSerial = Math.floor(100000 + Math.random() * 900000);
-    app.id = `MOTA-${code}-2026-${randomSerial}`;
+    app.id = updatedApp?.application_number || finalAppNumber;
     app.status = "Under Document Scrutiny";
-    app.submissionDate = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+    app.dbStatus = "submitted";
+    app.submitted_at = nowIso;
+    app.submissionDate = submissionTimestampStr;
+    if (!Array.isArray(app.history)) app.history = [];
     app.history.push({
       title: "Application Submitted to Ministry",
-      time: app.submissionDate,
+      time: submissionTimestampStr,
       officer: "Portal Gateway",
-      remark: `Direct electronic submission received under ${app.scheme}.`
+      remark: `Direct electronic submission received under ${app.scheme || schemeName}. Permanent Reference: ${app.id}`
     });
     window.appStore.saveApplication(app);
-    return { success: true, application: app, source: "local_store" };
   }
 
-  return { success: true };
+  return {
+    success: true,
+    applicationNumber: updatedApp?.application_number || finalAppNumber,
+    submittedAt: nowIso,
+    application: updatedApp,
+    source: supabaseClient ? "supabase" : "local_store"
+  };
 }
 
 // ------------------------------------------------------------------------------
@@ -1085,6 +1288,7 @@ if (typeof window !== "undefined") {
   window.supabaseGetSchemeByCodeOrId = supabaseGetSchemeByCodeOrId;
   window.supabaseGetOrCreateDraftApplication = supabaseGetOrCreateDraftApplication;
   window.supabaseSaveApplicationStep = supabaseSaveApplicationStep;
+  window.supabaseValidateApplicationForSubmission = supabaseValidateApplicationForSubmission;
   window.supabaseSubmitFinalApplication = supabaseSubmitFinalApplication;
   window.supabaseCreateApplication = supabaseCreateApplication;
   window.supabaseFetchApplications = supabaseFetchApplications;
