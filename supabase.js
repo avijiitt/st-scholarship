@@ -173,6 +173,144 @@ async function initSupabaseAuthSync() {
   }
 }
 
+/**
+ * Database Table Operations Helper Functions
+ */
+
+// 1. Fetch Active Schemes
+async function supabaseFetchSchemes() {
+  if (!supabaseClient) return [];
+  try {
+    const { data, error } = await supabaseClient
+      .from('schemes')
+      .select('*')
+      .eq('status', 'active');
+    if (error) throw error;
+    return data || [];
+  } catch (err) {
+    console.warn("supabaseFetchSchemes error:", err);
+    return [];
+  }
+}
+
+// 2. Fetch User Profile
+async function supabaseFetchProfile(userId) {
+  if (!supabaseClient || !userId) return null;
+  try {
+    const { data, error } = await supabaseClient
+      .from('profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+    if (error) throw error;
+    return data;
+  } catch (err) {
+    console.warn("supabaseFetchProfile error:", err);
+    return null;
+  }
+}
+
+// 3. Create or Save Application
+async function supabaseCreateApplication({ applicationNumber, applicantId, schemeId, status, currentStep, riskLevel }) {
+  if (!supabaseClient) return null;
+  try {
+    const { data, error } = await supabaseClient
+      .from('applications')
+      .insert([{
+        application_number: applicationNumber,
+        applicant_id: applicantId,
+        scheme_id: schemeId,
+        status: status || 'draft',
+        current_step: currentStep || 1,
+        risk_level: riskLevel || 'low',
+        submitted_at: status === 'submitted' ? new Date().toISOString() : null
+      }])
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  } catch (err) {
+    console.warn("supabaseCreateApplication error:", err);
+    return null;
+  }
+}
+
+// 4. Fetch Applications for an Applicant or Admin
+async function supabaseFetchApplications(applicantId) {
+  if (!supabaseClient) return [];
+  try {
+    let query = supabaseClient.from('applications').select('*, schemes(*), application_documents(*)');
+    if (applicantId) {
+      query = query.eq('applicant_id', applicantId);
+    }
+    const { data, error } = await query.order('created_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  } catch (err) {
+    console.warn("supabaseFetchApplications error:", err);
+    return [];
+  }
+}
+
+// 5. Update Application Status and record history
+async function supabaseUpdateApplicationStatus(applicationId, newStatus, remark, changedBy) {
+  if (!supabaseClient) return false;
+  try {
+    // Fetch current status
+    const { data: currentApp } = await supabaseClient
+      .from('applications')
+      .select('status')
+      .eq('id', applicationId)
+      .single();
+
+    const oldStatus = currentApp ? currentApp.status : null;
+
+    // Update application
+    const { error: updateErr } = await supabaseClient
+      .from('applications')
+      .update({
+        status: newStatus,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', applicationId);
+
+    if (updateErr) throw updateErr;
+
+    // Record in history table
+    await supabaseClient
+      .from('application_status_history')
+      .insert([{
+        application_id: applicationId,
+        old_status: oldStatus,
+        new_status: newStatus,
+        remark: remark || `Status changed from ${oldStatus} to ${newStatus}`,
+        changed_by: changedBy || null
+      }]);
+
+    return true;
+  } catch (err) {
+    console.warn("supabaseUpdateApplicationStatus error:", err);
+    return false;
+  }
+}
+
+// 6. Fetch User Notifications
+async function supabaseFetchNotifications(userId) {
+  if (!supabaseClient || !userId) return [];
+  try {
+    const { data, error } = await supabaseClient
+      .from('notifications')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  } catch (err) {
+    console.warn("supabaseFetchNotifications error:", err);
+    return [];
+  }
+}
+
 // Automatically sync session on load
 if (typeof window !== "undefined") {
   window.supabaseClient = supabaseClient;
@@ -181,4 +319,10 @@ if (typeof window !== "undefined") {
   window.supabaseLogout = supabaseLogout;
   window.supabaseGetSession = supabaseGetSession;
   window.initSupabaseAuthSync = initSupabaseAuthSync;
+  window.supabaseFetchSchemes = supabaseFetchSchemes;
+  window.supabaseFetchProfile = supabaseFetchProfile;
+  window.supabaseCreateApplication = supabaseCreateApplication;
+  window.supabaseFetchApplications = supabaseFetchApplications;
+  window.supabaseUpdateApplicationStatus = supabaseUpdateApplicationStatus;
+  window.supabaseFetchNotifications = supabaseFetchNotifications;
 }
