@@ -51,6 +51,260 @@ function renderWizardStepper(activeStepIndex) {
 }
 
 // ----------------------------------------------------
+// DYNAMIC SCHEMES HELPER FUNCTIONS (Supabase Connected)
+// ----------------------------------------------------
+
+const DEFAULT_SCHEMES = (typeof window !== "undefined" && window.DEFAULT_SCHEMES) ? window.DEFAULT_SCHEMES : [
+  {
+    id: "sch-001-nos",
+    name: "National Overseas Scholarship (NOS)",
+    code: "SCH-MOTA-NOS",
+    description: "100% financial assistance covering full tuition fees, contingency living expenses, and international airfare for Scheduled Tribe scholars pursuing Master's and Ph.D. degrees abroad at QS Top 500 Global Universities.",
+    education_level: "Master's / Ph.D.",
+    study_location: "Abroad (QS Top 500 Universities)",
+    deadline: "2026-11-30T23:59:59.000Z",
+    status: "active",
+    required_documents: [
+      "Aadhaar Card",
+      "ST Caste Certificate (Article 342)",
+      "Annual Family Income Certificate (<= ₹6.00 Lakhs)",
+      "Unconditional Offer Letter from QS Top 500 University",
+      "GRE / IELTS / TOEFL Scorecard",
+      "NPCI Seeded Active Bank Passbook"
+    ]
+  },
+  {
+    id: "sch-002-nfst",
+    name: "National Fellowship for ST Students (NFST)",
+    code: "SCH-MOTA-NFST",
+    description: "Monthly research stipend of ₹38,000/month + HRA and annual contingency grant for regular full-time M.Phil and Ph.D. scholars pursuing doctoral research in recognized Indian Universities, IITs, and NITs.",
+    education_level: "M.Phil / Ph.D. Regular Research",
+    study_location: "Indian Universities / IITs / NITs",
+    deadline: "2026-12-15T23:59:59.000Z",
+    status: "active",
+    required_documents: [
+      "Aadhaar Card",
+      "ST Caste Certificate (Article 342)",
+      "Annual Family Income Certificate (<= ₹6.00 Lakhs)",
+      "UGC-NET / JRF Award Letter",
+      "Ph.D. Admission / Registration Letter",
+      "Research Synopsis & Guide Endorsement",
+      "NPCI Seeded Active Bank Passbook"
+    ]
+  },
+  {
+    id: "sch-003-pms",
+    name: "Post-Matric Scholarship for ST Students (PMS-ST)",
+    code: "SCH-MOTA-PMS",
+    description: "Centrally sponsored scholarship providing 100% institutional non-refundable fee waivers and monthly maintenance allowance for Scheduled Tribe students pursuing higher post-secondary degree and professional programs in India.",
+    education_level: "Post-Matric / Degree / Professional",
+    study_location: "India (Accredited Colleges & Universities)",
+    deadline: "2026-10-31T23:59:59.000Z",
+    status: "active",
+    required_documents: [
+      "Aadhaar Card",
+      "ST Caste Certificate (Article 342)",
+      "Annual Family Income Certificate (<= ₹2.50 Lakhs)",
+      "Previous Year Qualifying Marksheet",
+      "College Admission Fee Receipt & Student ID",
+      "NPCI Seeded Active Bank Passbook"
+    ]
+  }
+];
+
+function escapeHTML(str) {
+  if (str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function formatSchemeDeadline(deadlineStr) {
+  if (!deadlineStr) return "Rolling Intake / Open";
+  try {
+    const d = new Date(deadlineStr);
+    if (isNaN(d.getTime())) return deadlineStr;
+    return d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+  } catch (e) {
+    return deadlineStr;
+  }
+}
+
+function getRequiredDocsCount(reqDocs) {
+  if (!reqDocs) return 0;
+  if (Array.isArray(reqDocs)) return reqDocs.length;
+  try {
+    const parsed = typeof reqDocs === "string" ? JSON.parse(reqDocs) : reqDocs;
+    return Array.isArray(parsed) ? parsed.length : 0;
+  } catch (e) {
+    return 0;
+  }
+}
+
+function getSchemeDetailRoute(code) {
+  const c = (code || "").toUpperCase();
+  if (c.includes("NOS")) return "#/schemes/nos";
+  if (c.includes("NFST") || c.includes("NF")) return "#/schemes/nfst";
+  if (c.includes("PMS")) return "#/schemes/pms";
+  return "#/schemes";
+}
+
+function getSchemeApplyCode(code) {
+  const c = (code || "").toUpperCase();
+  if (c.includes("NOS")) return "NOS";
+  if (c.includes("NFST") || c.includes("NF")) return "NFST";
+  if (c.includes("PMS")) return "PMS";
+  return code || "NOS";
+}
+
+function renderSchemeCardHTML(scheme) {
+  const docCount = getRequiredDocsCount(scheme.required_documents);
+  const detailRoute = getSchemeDetailRoute(scheme.code);
+  const applyCode = getSchemeApplyCode(scheme.code);
+  const deadline = formatSchemeDeadline(scheme.deadline);
+
+  let barColor = "bg-secondary";
+  let applyBtnClass = "bg-secondary hover:bg-secondary/90 text-white";
+  let categoryTag = "Higher Education";
+  let tagColor = "bg-surface-container-highest text-primary";
+
+  if (scheme.code && scheme.code.includes("NOS")) {
+    barColor = "bg-secondary";
+    categoryTag = "Overseas / International";
+  } else if (scheme.code && (scheme.code.includes("NFST") || scheme.code.includes("NF"))) {
+    barColor = "bg-primary-container";
+    applyBtnClass = "bg-primary-container hover:bg-primary text-white";
+    categoryTag = "Research / Doctoral";
+    tagColor = "bg-tertiary-container/15 text-on-tertiary-fixed-variant";
+  } else if (scheme.code && scheme.code.includes("PMS")) {
+    barColor = "bg-tertiary-container";
+    applyBtnClass = "bg-tertiary-container hover:bg-tertiary text-white";
+    categoryTag = "Post-Matric / Degree";
+    tagColor = "bg-secondary-fixed/50 text-on-secondary-fixed-variant";
+  }
+
+  return `
+    <div class="bg-surface-container-lowest rounded-xl shadow-md overflow-hidden border border-outline-variant/30 flex flex-col justify-between hover:shadow-lg transition">
+      <div class="h-2 ${barColor}"></div>
+      <div class="p-space-lg flex-1 flex flex-col justify-between">
+        <div>
+          <div class="flex justify-between items-center mb-2 gap-2">
+            <span class="px-2.5 py-0.5 rounded text-xs font-semibold ${tagColor}">
+              ${escapeHTML(categoryTag)}
+            </span>
+            <span class="text-xs font-mono text-outline shrink-0">${escapeHTML(scheme.code || "")}</span>
+          </div>
+
+          <h3 class="font-title-md font-bold text-primary text-xl mb-1">${escapeHTML(scheme.name)}</h3>
+          <p class="text-secondary font-medium text-xs mb-3 flex items-center gap-1">
+            <span class="material-symbols-outlined text-[15px]">location_on</span>
+            ${escapeHTML(scheme.study_location || "India / Abroad")}
+          </p>
+          <p class="text-on-surface-variant text-sm mb-4 leading-relaxed line-clamp-3">
+            ${escapeHTML(scheme.description || "")}
+          </p>
+
+          <div class="bg-surface-container-low p-3 rounded-lg text-xs space-y-1.5 mb-4">
+            <div class="flex justify-between items-center">
+              <span class="text-outline">Education Level:</span>
+              <span class="font-semibold text-on-surface">${escapeHTML(scheme.education_level || "Degree")}</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-outline flex items-center gap-1">
+                <span class="material-symbols-outlined text-[14px]">event</span> Deadline:
+              </span>
+              <span class="font-bold text-error">${escapeHTML(deadline)}</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-outline flex items-center gap-1">
+                <span class="material-symbols-outlined text-[14px]">folder</span> Required Docs:
+              </span>
+              <span class="font-semibold text-primary font-mono bg-white px-1.5 py-0.5 rounded border border-outline-variant/30">
+                ${docCount} Documents
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex gap-2 pt-2 border-t border-outline-variant/20">
+          <a href="${detailRoute}" class="flex-1 py-2.5 bg-surface-container hover:bg-surface-container-high text-primary font-bold rounded text-center text-sm transition">
+            View Details
+          </a>
+          <a href="#/application/personal?scheme=${encodeURIComponent(applyCode)}" class="flex-1 py-2.5 ${applyBtnClass} font-bold rounded text-center text-sm transition shadow-sm">
+            Apply Now
+          </a>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Global cached schemes for search filtering
+window.cachedSupabaseSchemes = [];
+
+async function loadDynamicSchemes(containerId, options = {}) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  // 1. Loading State
+  container.innerHTML = `
+    <div class="col-span-full py-12 flex flex-col items-center justify-center text-center">
+      <div class="w-8 h-8 border-3 border-secondary border-t-transparent rounded-full animate-spin mb-3"></div>
+      <p class="text-sm font-bold text-primary">Fetching active schemes from Supabase database...</p>
+      <p class="text-xs text-outline mt-1">Connecting to public.schemes</p>
+    </div>
+  `;
+
+  try {
+    const fetchFunc = window.supabaseFetchSchemes || (async () => []);
+    let res = await fetchFunc(options);
+
+    // If options.simulateError was passed or error occurred
+    if (res && res.success === false) {
+      throw new Error(res.error || "Unable to fetch schemes");
+    }
+
+    let schemes = Array.isArray(res) ? res : ((res && res.data) ? res.data : []);
+
+    // Filter active schemes
+    const activeSchemes = schemes.filter(s => !s.status || s.status === 'active');
+    window.cachedSupabaseSchemes = activeSchemes;
+
+    // 2. Empty State
+    if (activeSchemes.length === 0) {
+      container.innerHTML = `
+        <div class="col-span-full p-8 text-center bg-surface-container-low rounded-xl border border-outline-variant/40 my-4">
+          <span class="material-symbols-outlined text-outline text-5xl mb-2">inventory_2</span>
+          <h3 class="text-lg font-bold text-primary">No Active Schemes Found</h3>
+          <p class="text-xs text-on-surface-variant mt-1">There are currently no active scholarship schemes open for application in the database.</p>
+        </div>
+      `;
+      return;
+    }
+
+    // 3. Render Active Schemes Cards
+    const displaySchemes = options.limit ? activeSchemes.slice(0, options.limit) : activeSchemes;
+    container.innerHTML = displaySchemes.map(s => renderSchemeCardHTML(s)).join("");
+
+  } catch (err) {
+    // 4. Error State
+    container.innerHTML = `
+      <div class="col-span-full p-6 text-center bg-error-container text-on-error-container rounded-xl border border-error/30 my-4">
+        <span class="material-symbols-outlined text-error text-4xl mb-2">error</span>
+        <h3 class="text-base font-bold text-error">Failed to Load Schemes from Database</h3>
+        <p class="text-xs mt-1 mb-3 font-mono">${escapeHTML(err.message || "Database connection error")}</p>
+        <button onclick="loadDynamicSchemes('${containerId}')" class="px-4 py-2 bg-error text-white font-bold rounded text-xs hover:bg-error/90 shadow-sm inline-flex items-center gap-1">
+          <span class="material-symbols-outlined text-[16px]">refresh</span> Retry Loading Schemes
+        </button>
+      </div>
+    `;
+  }
+}
+
+// ----------------------------------------------------
 // ROUTE HANDLERS
 // ----------------------------------------------------
 
@@ -153,89 +407,35 @@ router.register("/", () => {
           </div>
         </section>
 
-        <!-- Flagship Schemes Cards -->
+        <!-- Flagship Schemes Cards (Loaded from Database) -->
         <section class="w-full mb-space-xl">
           <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-space-lg gap-space-sm">
             <div>
               <div class="inline-flex items-center gap-1 text-secondary font-label-sm font-bold uppercase tracking-wider mb-1">
-                <span>MoTA Central Flagships</span>
+                <span>MoTA Central Flagships • Supabase Live</span>
               </div>
               <h2 class="font-headline-lg font-bold text-primary text-2xl">
                 Featured Schemes &amp; Fellowships
               </h2>
             </div>
             <a class="inline-flex items-center gap-1 font-label-lg text-secondary hover:text-on-secondary-fixed-variant font-bold transition-colors" href="#/schemes">
-              View All 14 Schemes <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+              View All Schemes <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
             </a>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-space-lg">
-            <!-- NOS Card -->
-            <div class="bg-surface-container-lowest rounded-xl shadow-md overflow-hidden border border-outline-variant/30 flex flex-col justify-between">
-              <div class="h-2 bg-secondary"></div>
-              <div class="p-space-lg flex-1 flex flex-col justify-between">
-                <div>
-                  <div class="flex justify-between items-center mb-2">
-                    <span class="px-2.5 py-0.5 rounded text-xs font-semibold bg-surface-container-highest text-primary">International</span>
-                    <span class="text-xs font-mono text-outline">SCH-MOTA-NOS</span>
-                  </div>
-                  <h3 class="font-title-md font-bold text-primary text-xl mb-1">National Overseas Scholarship (NOS)</h3>
-                  <p class="text-secondary font-medium text-sm mb-3">Higher studies abroad (QS Top 500)</p>
-                  <p class="text-on-surface-variant text-sm mb-4 leading-relaxed">
-                    100% financial assistance covering full tuition fees, living expenses, and airfare for Master's and Ph.D. scholars abroad.
-                  </p>
-                  <div class="bg-surface-container-low p-3 rounded-lg text-xs space-y-1 mb-4">
-                    <div class="flex justify-between"><span class="text-outline">Eligibility:</span> <span class="font-semibold text-on-surface">55%+ in Master's</span></div>
-                    <div class="flex justify-between"><span class="text-outline">Income Limit:</span> <span class="font-semibold text-on-surface">≤ ₹6.00 Lakhs/yr</span></div>
-                    <div class="flex justify-between"><span class="text-outline">Annual Slots:</span> <span class="font-semibold text-primary">20 Scholars</span></div>
-                  </div>
-                </div>
-                <div class="flex gap-2">
-                  <a href="#/schemes/nos" class="flex-1 py-2.5 bg-surface-container hover:bg-surface-container-high text-primary font-bold rounded text-center text-sm transition">
-                    View Details
-                  </a>
-                  <a href="#/application/personal?scheme=NOS" class="flex-1 py-2.5 bg-secondary hover:bg-secondary/90 text-white font-bold rounded text-center text-sm transition shadow-sm">
-                    Apply Now
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            <!-- NFST Card -->
-            <div class="bg-surface-container-lowest rounded-xl shadow-md overflow-hidden border border-outline-variant/30 flex flex-col justify-between">
-              <div class="h-2 bg-primary-container"></div>
-              <div class="p-space-lg flex-1 flex flex-col justify-between">
-                <div>
-                  <div class="flex justify-between items-center mb-2">
-                    <span class="px-2.5 py-0.5 rounded text-xs font-semibold bg-tertiary-container/15 text-on-tertiary-fixed-variant">Research / Ph.D.</span>
-                    <span class="text-xs font-mono text-outline">SCH-MOTA-NF</span>
-                  </div>
-                  <h3 class="font-title-md font-bold text-primary text-xl mb-1">National Fellowship for ST Students (NFST)</h3>
-                  <p class="text-secondary font-medium text-sm mb-3">Higher research in Indian Universities / IITs / NITs</p>
-                  <p class="text-on-surface-variant text-sm mb-4 leading-relaxed">
-                    Stipend up to ₹38,000/month + contingency grant for regular M.Phil and Ph.D. scholars in recognized Indian universities.
-                  </p>
-                  <div class="bg-surface-container-low p-3 rounded-lg text-xs space-y-1 mb-4">
-                    <div class="flex justify-between"><span class="text-outline">Eligibility:</span> <span class="font-semibold text-on-surface">UGC-NET / JRF Qualified</span></div>
-                    <div class="flex justify-between"><span class="text-outline">Income Limit:</span> <span class="font-semibold text-on-surface">≤ ₹6.00 Lakhs/yr</span></div>
-                    <div class="flex justify-between"><span class="text-outline">Annual Slots:</span> <span class="font-semibold text-primary">750 Scholars</span></div>
-                  </div>
-                </div>
-                <div class="flex gap-2">
-                  <a href="#/schemes/nfst" class="flex-1 py-2.5 bg-surface-container hover:bg-surface-container-high text-primary font-bold rounded text-center text-sm transition">
-                    View Details
-                  </a>
-                  <a href="#/application/personal?scheme=NFST" class="flex-1 py-2.5 bg-primary-container hover:bg-primary text-white font-bold rounded text-center text-sm transition shadow-sm">
-                    Apply Now
-                  </a>
-                </div>
-              </div>
-            </div>
+          <!-- Dynamic Database Schemes Grid -->
+          <div id="landing-schemes-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-space-lg">
+            ${DEFAULT_SCHEMES.map(s => renderSchemeCardHTML(s)).join("")}
           </div>
         </section>
       </div>
     </main>
   `;
+
+  // Fetch live active schemes from Supabase database
+  setTimeout(() => {
+    loadDynamicSchemes("landing-schemes-container");
+  }, 20);
 });
 
 // 2. Applicant Login (/login)
@@ -586,61 +786,109 @@ router.register("/schemes", () => {
     <div class="max-w-7xl mx-auto px-margin py-space-xl">
       <div class="mb-space-lg flex flex-col md:flex-row justify-between items-start md:items-end gap-3">
         <div>
-          <span class="text-xs uppercase font-bold text-secondary tracking-wider block mb-1">Ministry of Tribal Affairs</span>
+          <span class="text-xs uppercase font-bold text-secondary tracking-wider block mb-1">Ministry of Tribal Affairs • Supabase Live</span>
           <h1 class="font-headline-lg font-bold text-primary text-3xl">All Schemes &amp; Fellowships</h1>
-          <p class="text-sm text-on-surface-variant mt-1">Select an eligible scheme to inspect detailed guidelines or apply online.</p>
+          <p class="text-sm text-on-surface-variant mt-1">Live active scholarship schemes retrieved from official Supabase database (public.schemes).</p>
         </div>
-        <a href="#/application/new" class="px-5 py-2.5 bg-secondary text-white font-bold rounded text-sm shadow-sm hover:bg-secondary/90">
-          Apply for New Scheme
-        </a>
+        <div class="flex items-center gap-2">
+          <button onclick="loadDynamicSchemes('all-schemes-container')" class="px-3 py-2 bg-surface-container hover:bg-surface-container-high text-primary font-bold rounded text-xs inline-flex items-center gap-1 transition">
+            <span class="material-symbols-outlined text-[16px]">refresh</span> Refresh DB
+          </button>
+          <a href="#/application/new" class="px-5 py-2.5 bg-secondary text-white font-bold rounded text-sm shadow-sm hover:bg-secondary/90 transition">
+            Apply for New Scheme
+          </a>
+        </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-space-lg">
-        <!-- Card NOS -->
-        <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30 flex flex-col justify-between">
-          <div>
-            <div class="flex justify-between items-center mb-2">
-              <span class="px-2 py-0.5 rounded text-xs font-bold bg-surface-container-highest text-primary">Overseas / International</span>
-              <span class="text-xs font-mono text-outline">SCH-MOTA-NOS</span>
-            </div>
-            <h2 class="text-xl font-bold text-primary mb-1">National Overseas Scholarship (NOS)</h2>
-            <p class="text-xs text-secondary font-semibold mb-2">Master's &amp; Doctoral degrees in Top 500 QS Universities</p>
-            <p class="text-sm text-on-surface-variant mb-4">100% financial assistance covering full tuition fees, contingency living grant, and international travel.</p>
-          </div>
-          <div class="flex gap-2">
-            <a href="#/schemes/nos" class="flex-1 py-2 text-center bg-surface-container text-primary font-bold rounded text-sm hover:bg-surface-container-high">
-              View Details
-            </a>
-            <a href="#/application/personal?scheme=NOS" class="flex-1 py-2 text-center bg-secondary text-white font-bold rounded text-sm hover:bg-secondary/90 shadow-sm">
-              Apply Now
-            </a>
-          </div>
+      <!-- Search & Category Filters -->
+      <div class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant/30 mb-space-lg flex flex-wrap items-center justify-between gap-3 shadow-sm">
+        <div class="flex items-center gap-2 flex-1 min-w-[260px] bg-surface-container-low px-3 py-2 rounded-lg border border-outline-variant/30">
+          <span class="material-symbols-outlined text-outline text-[20px]">search</span>
+          <input type="text" id="scheme-search-input" oninput="filterLoadedSchemes()" placeholder="Search schemes by name, level, location, or code..." class="w-full text-xs font-semibold bg-transparent border-none focus:outline-none text-on-surface"/>
         </div>
+        <div class="flex items-center gap-2 text-xs">
+          <span class="text-outline font-semibold">Filter:</span>
+          <button onclick="filterSchemesByCategory('all')" class="px-3 py-1 rounded-full font-bold bg-primary text-white" id="filter-all">All Schemes</button>
+          <button onclick="filterSchemesByCategory('abroad')" class="px-3 py-1 rounded-full font-semibold bg-surface-container text-on-surface hover:bg-surface-container-high" id="filter-abroad">Abroad (NOS)</button>
+          <button onclick="filterSchemesByCategory('research')" class="px-3 py-1 rounded-full font-semibold bg-surface-container text-on-surface hover:bg-surface-container-high" id="filter-research">Research (NFST)</button>
+          <button onclick="filterSchemesByCategory('postmatric')" class="px-3 py-1 rounded-full font-semibold bg-surface-container text-on-surface hover:bg-surface-container-high" id="filter-postmatric">Post-Matric (PMS)</button>
+        </div>
+      </div>
 
-        <!-- Card NFST -->
-        <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30 flex flex-col justify-between">
-          <div>
-            <div class="flex justify-between items-center mb-2">
-              <span class="px-2 py-0.5 rounded text-xs font-bold bg-tertiary-container/15 text-on-tertiary-fixed-variant">Research / India</span>
-              <span class="text-xs font-mono text-outline">SCH-MOTA-NF</span>
-            </div>
-            <h2 class="text-xl font-bold text-primary mb-1">National Fellowship for ST Students (NFST)</h2>
-            <p class="text-xs text-secondary font-semibold mb-2">M.Phil and Ph.D. scholars in recognized Indian Universities</p>
-            <p class="text-sm text-on-surface-variant mb-4">Monthly stipend of ₹38,000 + HRA and annual contingency grant for higher doctoral research.</p>
-          </div>
-          <div class="flex gap-2">
-            <a href="#/schemes/nfst" class="flex-1 py-2 text-center bg-surface-container text-primary font-bold rounded text-sm hover:bg-surface-container-high">
-              View Details
-            </a>
-            <a href="#/application/personal?scheme=NFST" class="flex-1 py-2 text-center bg-primary-container text-white font-bold rounded text-sm hover:bg-primary shadow-sm">
-              Apply Now
-            </a>
-          </div>
-        </div>
+      <!-- Dynamic All Schemes Grid Container -->
+      <div id="all-schemes-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-space-lg">
+        ${DEFAULT_SCHEMES.map(s => renderSchemeCardHTML(s)).join("")}
       </div>
     </div>
   `;
+
+  // Fetch live active schemes from Supabase database
+  setTimeout(() => {
+    loadDynamicSchemes("all-schemes-container");
+  }, 20);
 });
+
+window.filterLoadedSchemes = function() {
+  const query = (document.getElementById("scheme-search-input")?.value || "").toLowerCase().trim();
+  const container = document.getElementById("all-schemes-container");
+  if (!container) return;
+  const schemes = window.cachedSupabaseSchemes || DEFAULT_SCHEMES;
+  const filtered = schemes.filter(s => 
+    (s.name || "").toLowerCase().includes(query) ||
+    (s.description || "").toLowerCase().includes(query) ||
+    (s.education_level || "").toLowerCase().includes(query) ||
+    (s.study_location || "").toLowerCase().includes(query) ||
+    (s.code || "").toLowerCase().includes(query)
+  );
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div class="col-span-full p-8 text-center bg-surface-container-low rounded-xl border border-outline-variant/40 my-4">
+        <span class="material-symbols-outlined text-outline text-4xl mb-1">search_off</span>
+        <h4 class="text-sm font-bold text-primary">No Matching Schemes</h4>
+        <p class="text-xs text-on-surface-variant mt-1">Try refining your search keyword or clearing the filter.</p>
+      </div>
+    `;
+  } else {
+    container.innerHTML = filtered.map(s => renderSchemeCardHTML(s)).join("");
+  }
+};
+
+window.filterSchemesByCategory = function(category) {
+  const container = document.getElementById("all-schemes-container");
+  if (!container) return;
+  const schemes = window.cachedSupabaseSchemes || DEFAULT_SCHEMES;
+  
+  ["all", "abroad", "research", "postmatric"].forEach(cat => {
+    const btn = document.getElementById(`filter-${cat}`);
+    if (btn) {
+      if (cat === category) {
+        btn.className = "px-3 py-1 rounded-full font-bold bg-primary text-white";
+      } else {
+        btn.className = "px-3 py-1 rounded-full font-semibold bg-surface-container text-on-surface hover:bg-surface-container-high";
+      }
+    }
+  });
+
+  let filtered = schemes;
+  if (category === "abroad") {
+    filtered = schemes.filter(s => (s.code || "").includes("NOS") || (s.study_location || "").toLowerCase().includes("abroad"));
+  } else if (category === "research") {
+    filtered = schemes.filter(s => (s.code || "").includes("NFST") || (s.code || "").includes("NF") || (s.name || "").toLowerCase().includes("fellowship"));
+  } else if (category === "postmatric") {
+    filtered = schemes.filter(s => (s.code || "").includes("PMS") || (s.education_level || "").toLowerCase().includes("post-matric"));
+  }
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div class="col-span-full p-8 text-center bg-surface-container-low rounded-xl border border-outline-variant/40 my-4">
+        <span class="material-symbols-outlined text-outline text-4xl mb-1">filter_alt_off</span>
+        <h4 class="text-sm font-bold text-primary">No Schemes Found for this Filter</h4>
+      </div>
+    `;
+  } else {
+    container.innerHTML = filtered.map(s => renderSchemeCardHTML(s)).join("");
+  }
+};
 
 // 5. Scheme NFST Details (/schemes/nfst)
 router.register("/schemes/nfst", () => {
@@ -721,6 +969,49 @@ router.register("/schemes/nos", () => {
             <li>Secured unconditional admission in an eligible institution ranked in Top 500 QS rankings.</li>
             <li>Total annual family income must not exceed ₹6.00 Lakhs per annum.</li>
             <li>Age limit: Below 35 years as on 1st April of selection year.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  `;
+});
+
+// 6B. Scheme PMS Details (/schemes/pms)
+router.register("/schemes/pms", () => {
+  const container = document.getElementById("main-view-container");
+  container.innerHTML = `
+    <div class="max-w-4xl mx-auto px-margin py-space-xl">
+      <div class="mb-4">
+        <a href="#/schemes" class="text-xs font-bold text-secondary hover:underline flex items-center gap-1">
+          <span class="material-symbols-outlined text-[16px]">arrow_back</span> Back to Schemes
+        </a>
+      </div>
+
+      <div class="bg-surface-container-lowest p-space-xl rounded-xl shadow-md border border-outline-variant/30">
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <span class="px-2.5 py-0.5 rounded text-xs font-bold bg-tertiary-container/15 text-on-tertiary-fixed-variant">Post-Matric / Indian Colleges</span>
+            <h1 class="text-2xl font-bold text-primary mt-1">Post-Matric Scholarship for ST Students (PMS-ST)</h1>
+            <p class="text-sm text-secondary font-semibold">Undergraduate, Postgraduate &amp; Professional Studies in India</p>
+          </div>
+          <a href="#/application/personal?scheme=PMS" class="px-5 py-2.5 bg-tertiary-container hover:bg-tertiary text-white font-bold rounded text-sm shadow-md">
+            Apply Now
+          </a>
+        </div>
+
+        <div class="space-y-4 text-sm text-on-surface-variant leading-relaxed">
+          <div class="p-3 bg-surface-container-low rounded-lg grid grid-cols-2 sm:grid-cols-3 gap-2 font-semibold">
+            <div><span class="text-outline text-xs block">Target Scholars:</span> All Eligible ST Students</div>
+            <div><span class="text-outline text-xs block">Coverage:</span> 100% Fee Reimbursement + Maintenance</div>
+            <div><span class="text-outline text-xs block">Family Income Cap:</span> ≤ ₹2.50 Lakhs/yr</div>
+          </div>
+
+          <h3 class="text-base font-bold text-primary">Key Scheme Guidelines &amp; Benefits</h3>
+          <ul class="list-disc pl-5 space-y-1">
+            <li>For Scheduled Tribe students enrolled in post-matriculation or post-secondary courses in recognized institutions.</li>
+            <li>Covers all non-refundable compulsory institutional fees and monthly study maintenance allowances.</li>
+            <li>Annual family income from all sources must not exceed ₹2.50 Lakhs per annum.</li>
+            <li>Disbursed directly via DBT into scholar's Aadhaar-seeded bank account through PFMS.</li>
           </ul>
         </div>
       </div>

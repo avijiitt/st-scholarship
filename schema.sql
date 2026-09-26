@@ -484,6 +484,16 @@ VALUES
     '2026-12-15 23:59:59+00',
     'active',
     '["Aadhaar Card", "ST Caste Certificate", "Annual Family Income Certificate", "UGC-NET / JRF Award Letter", "Ph.D. Registration / Admission Letter", "Research Synopsis & Guide Endorsement", "NPCI Seeded Bank Passbook"]'::jsonb
+),
+(
+    'Post-Matric Scholarship for ST Students (PMS-ST)',
+    'SCH-MOTA-PMS',
+    'Centrally sponsored scheme providing 100% compulsory non-refundable fees reimbursement and monthly maintenance allowance for Scheduled Tribe students pursuing recognized post-secondary education in India.',
+    'Post-Matric / Undergraduate / Diploma / Professional',
+    'India (Accredited Colleges & Universities)',
+    '2026-10-31 23:59:59+00',
+    'active',
+    '["Aadhaar Card", "ST Caste Certificate", "Annual Income Certificate (<= 2.5 Lakhs)", "Previous Year Marksheet / Scorecard", "Admission Fee Receipt / College ID", "NPCI Seeded Bank Passbook"]'::jsonb
 )
 ON CONFLICT (code) DO NOTHING;
 
