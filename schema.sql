@@ -257,13 +257,17 @@ CREATE TABLE IF NOT EXISTS public.application_documents (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     application_id UUID NOT NULL REFERENCES public.applications(id) ON DELETE CASCADE,
     document_type TEXT NOT NULL,
-    file_path TEXT,
-    file_name TEXT,
+    file_path TEXT NOT NULL,
+    file_name TEXT NOT NULL,
+    file_size BIGINT DEFAULT 0,
+    mime_type TEXT DEFAULT 'application/pdf',
     verification_status TEXT NOT NULL DEFAULT 'pending' CHECK (verification_status IN ('pending', 'verified', 'rejected', 'deficiency')),
     ocr_status TEXT NOT NULL DEFAULT 'pending' CHECK (ocr_status IN ('pending', 'processing', 'completed', 'failed')),
     confidence_score NUMERIC(5, 2) DEFAULT 0.00,
     officer_remark TEXT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+    CONSTRAINT uq_application_doc_type UNIQUE (application_id, document_type)
 );
 
 ALTER TABLE public.application_documents ENABLE ROW LEVEL SECURITY;
@@ -518,3 +522,72 @@ CREATE INDEX IF NOT EXISTS idx_documents_application ON public.application_docum
 CREATE INDEX IF NOT EXISTS idx_history_application ON public.application_status_history(application_id);
 CREATE INDEX IF NOT EXISTS idx_deficiencies_application ON public.deficiencies(application_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_user ON public.notifications(user_id, is_read);
+
+-- ------------------------------------------------------------------------------
+-- 10. SUPABASE STORAGE CONFIGURATION & OBJECT RLS POLICIES
+-- Bucket: scholarship-documents (Private, 5 MB limit, PDF/JPG/JPEG only)
+-- Storage Path Structure: {user_id}/{application_id}/{document_type}/{random_file_name}
+-- ------------------------------------------------------------------------------
+
+-- Ensure storage bucket exists
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+    'scholarship-documents',
+    'scholarship-documents',
+    false, -- Private bucket: access requires RLS check / signed URLs
+    5242880, -- Maximum 5 MB per file (5 * 1024 * 1024)
+    ARRAY['application/pdf', 'image/jpeg', 'image/jpg']
+)
+ON CONFLICT (id) DO UPDATE SET
+    public = false,
+    file_size_limit = 5242880,
+    allowed_mime_types = ARRAY['application/pdf', 'image/jpeg', 'image/jpg'];
+
+-- Ensure storage objects table has RLS enabled
+ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+
+-- Storage Object RLS Policies
+-- 1. Read Policy: Applicant reads only their own documents; Admin & Officer can review
+DROP POLICY IF EXISTS "Storage: Read own application documents" ON storage.objects;
+CREATE POLICY "Storage: Read own application documents"
+    ON storage.objects FOR SELECT
+    USING (
+        bucket_id = 'scholarship-documents'
+        AND (
+            -- Applicant owns folder (first segment is user_id)
+            auth.uid()::text = (string_to_array(name, '/'))[1]
+            OR public.is_admin()
+            OR public.is_scrutiny_officer()
+        )
+    );
+
+-- 2. Insert Policy: Applicant can upload only into their own user_id directory
+DROP POLICY IF EXISTS "Storage: Upload own application documents" ON storage.objects;
+CREATE POLICY "Storage: Upload own application documents"
+    ON storage.objects FOR INSERT
+    WITH CHECK (
+        bucket_id = 'scholarship-documents'
+        AND auth.uid()::text = (string_to_array(name, '/'))[1]
+    );
+
+-- 3. Update Policy: Applicant can replace/update files in their own directory
+DROP POLICY IF EXISTS "Storage: Update own application documents" ON storage.objects;
+CREATE POLICY "Storage: Update own application documents"
+    ON storage.objects FOR UPDATE
+    USING (
+        bucket_id = 'scholarship-documents'
+        AND auth.uid()::text = (string_to_array(name, '/'))[1]
+    );
+
+-- 4. Delete Policy: Applicant can delete files in their own directory; Admin can delete
+DROP POLICY IF EXISTS "Storage: Delete own application documents" ON storage.objects;
+CREATE POLICY "Storage: Delete own application documents"
+    ON storage.objects FOR DELETE
+    USING (
+        bucket_id = 'scholarship-documents'
+        AND (
+            auth.uid()::text = (string_to_array(name, '/'))[1]
+            OR public.is_admin()
+        )
+    );
+
