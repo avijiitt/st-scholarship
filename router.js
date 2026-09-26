@@ -262,6 +262,10 @@ class Router {
             </div>
             ${authUser && authUser.role === "applicant" ? `
               <div class="flex items-center gap-2">
+                <button onclick="openNotificationCenterModal()" class="relative p-2 text-primary hover:bg-surface-container rounded-full transition" title="In-App Notifications">
+                  <span class="material-symbols-outlined text-[20px]">notifications</span>
+                  <span class="absolute top-1 right-1 w-2 h-2 bg-secondary rounded-full"></span>
+                </button>
                 <a href="#/applicant/dashboard" class="px-4 py-2 bg-primary text-white font-semibold rounded text-sm flex items-center gap-1 shadow-sm">
                   <span class="material-symbols-outlined text-[18px]">dashboard</span> Dashboard
                 </a>
@@ -325,6 +329,10 @@ class Router {
               </div>
               <span class="ml-1 px-1.5 py-0.5 bg-tertiary-container text-white rounded text-[10px] font-bold">ST Verified</span>
             </div>
+            <button onclick="openNotificationCenterModal()" class="relative p-2 text-primary hover:bg-surface-container rounded-full transition" title="Notifications">
+              <span class="material-symbols-outlined text-[20px]">notifications</span>
+              <span class="absolute top-1 right-1 w-2 h-2 bg-secondary rounded-full"></span>
+            </button>
             <button onclick="handleApplicantLogout()" class="text-xs text-on-surface-variant hover:text-error flex items-center gap-1 font-semibold px-2 py-1 rounded hover:bg-surface-container">
               <span class="material-symbols-outlined text-[16px]">logout</span> Logout
             </button>
@@ -398,6 +406,10 @@ class Router {
 
           <div class="flex items-center gap-3">
             <span class="text-xs text-primary-fixed-dim hidden sm:inline">Officer: Shri K. S. Verma (Deputy Secretary)</span>
+            <button onclick="openNotificationCenterModal()" class="relative p-2 text-white hover:bg-primary-container rounded-full transition" title="System Notifications">
+              <span class="material-symbols-outlined text-[20px]">notifications</span>
+              <span class="absolute top-1 right-1 w-2 h-2 bg-secondary-fixed rounded-full"></span>
+            </button>
             <button onclick="window.appStore.logout(); router.navigate('/admin/login');" class="text-xs bg-primary-container hover:bg-primary-container/80 text-white font-semibold px-3 py-1.5 rounded flex items-center gap-1">
               <span class="material-symbols-outlined text-[16px]">logout</span> Sign Out
             </button>

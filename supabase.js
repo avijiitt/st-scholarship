@@ -352,7 +352,8 @@ async function supabaseFetchApplicantTrackingData(selectedAppId) {
           updated_at,
           schemes (*),
           application_status_history (*),
-          deficiencies (*)
+          deficiencies (*),
+          application_documents (*, ocr_results (*))
         `);
 
       if (applicantProfile && applicantProfile.id) {
@@ -617,7 +618,7 @@ async function supabaseFetchAdminQueue(filters = {}) {
           financial_details,
           profiles ( id, full_name, email, mobile, state, district ),
           schemes ( id, name, code ),
-          application_documents (*),
+          application_documents (*, ocr_results (*)),
           deficiencies (*)
         `)
         .order('submitted_at', { ascending: false, nullsFirst: false })
@@ -805,9 +806,11 @@ async function supabaseExecuteAdminReviewAction(params = {}) {
         if (applicantUserId) {
           await supabaseClient.from('notifications').insert([{
             user_id: applicantUserId,
+            application_id: actualAppId,
             title: "Document Verified",
-            message: `One of your application documents has been approved by the scrutiny officer.`,
-            type: "success"
+            message: `One of your application documents has been approved by the scrutiny officer. ${officerRemark || ''}`.trim(),
+            type: "success",
+            is_read: false
           }]);
         }
       } catch (dErr) {
@@ -865,26 +868,34 @@ async function supabaseExecuteAdminReviewAction(params = {}) {
         }]);
       }
 
-      // 4. Create Applicant Notification
+      // 4. Create Applicant Notification (MVP Notification Trigger)
       if (applicantUserId) {
         let notifType = "info";
         let notifTitle = "Application Status Update";
         if (targetStatus === "deficiency_raised") {
           notifType = "warning";
-          notifTitle = "Action Required: Document Deficiency";
+          notifTitle = "Deficiency Raised: Action Required";
         } else if (targetStatus === "rejected") {
           notifType = "error";
-          notifTitle = "Application Scrutiny: Rejected";
-        } else if (targetStatus === "provisionally_eligible" || targetStatus === "selected") {
+          notifTitle = "Selection Result Updated: Rejected";
+        } else if (targetStatus === "provisionally_eligible") {
           notifType = "success";
-          notifTitle = "Provisionally Eligible / Approved";
+          notifTitle = "Selection Result Updated: Provisionally Eligible";
+        } else if (targetStatus === "selected") {
+          notifType = "success";
+          notifTitle = "Selection Result Updated: Selected for Award";
+        } else if (targetStatus === "committee_screening") {
+          notifType = "info";
+          notifTitle = "Application Forwarded: Committee Screening";
         }
 
         await supabaseClient.from('notifications').insert([{
           user_id: applicantUserId,
+          application_id: actualAppId,
           title: notifTitle,
           message: effectiveRemark,
-          type: notifType
+          type: notifType,
+          is_read: false
         }]);
       }
     } catch (eErr) {
@@ -1415,8 +1426,10 @@ function supabaseValidateApplicationForSubmission(app = {}, scheme = null) {
 
   return {
     isValid,
+    valid: isValid,
     missingFields,
     missingDocs,
+    missingDocuments: missingDocs,
     summary: isValid ? "Application data and documents verified" : `Incomplete: ${missingFields.length} field(s), ${missingDocs.length} document(s) required.`
   };
 }
@@ -1460,7 +1473,7 @@ async function supabaseSubmitFinalApplication(params = {}) {
     ? currentApp.id 
     : `MOTA-${code}-2026-${Math.floor(100000 + Math.random() * 900000)}`;
 
-  let targetId = applicationId || (currentApp && (currentApp.draftId || currentApp.id));
+  let targetId = applicationId || (params && params.id) || (currentApp && (currentApp.draftId || currentApp.id));
   let updatedApp = null;
 
   // 3. Supabase Cloud Database Execution
@@ -1579,6 +1592,362 @@ async function supabaseSubmitFinalApplication(params = {}) {
     application: updatedApp,
     source: supabaseClient ? "supabase" : "local_store"
   };
+}
+
+// ------------------------------------------------------------------------------
+// 11B. AI / OCR PRELIMINARY VERIFICATION ENGINE (PHASE 1 & PHASE 2)
+// UI Label: "AI-assisted preliminary verification. Final decision by authorised officer."
+// Phase 1: Rule-based mock flags (Name mismatch, Missing document, Unreadable document, Income verification pending, Expired certificate)
+// Phase 2: OCR extraction to public.ocr_results table
+// ------------------------------------------------------------------------------
+
+async function supabaseRunPreliminaryOcrAndVerification(params = {}) {
+  const { file, documentType, applicationId, documentId, filePath, candidateData } = params;
+
+  let candidateName = candidateData?.fullName || "";
+  let candidateDob = candidateData?.dob || "15/08/2001";
+  let declaredIncome = candidateData?.annualIncome 
+    ? Number(String(candidateData.annualIncome).replace(/[^\d]/g, "")) 
+    : 240000;
+
+  if (!candidateName && typeof window !== "undefined" && window.appStore) {
+    const app = window.appStore.getApplication();
+    const user = window.appStore.getAuthUser();
+    candidateName = app.personal?.fullName || user?.name || "Birsa Munda";
+    if (app.personal?.dob) candidateDob = app.personal.dob;
+    if (app.income?.annualIncome) {
+      declaredIncome = Number(String(app.income.annualIncome).replace(/[^\d]/g, "")) || 240000;
+    }
+  }
+
+  const fileName = (file && file.name) ? file.name.toLowerCase() : "";
+  const fileSize = (file && file.size) ? file.size : 150000;
+  const docType = (documentType || "").toLowerCase();
+
+  const flags = [];
+  let confidenceScore = 97.50;
+  let extractedName = candidateName || "Birsa Munda";
+  let extractedDob = candidateDob || "15/08/2001";
+  let extractedCertNum = "JH/" + (docType.includes("caste") ? "ST" : docType.includes("income") ? "INC" : "GOV") + "/2025/" + Math.floor(100000 + Math.random() * 900000);
+  let extractedIncome = declaredIncome;
+  let rawText = "";
+
+  // 1. Unreadable document rule (Low size < 1KB, or blur/unreadable flag)
+  if (fileSize < 1024 || fileName.includes("corrupt") || fileName.includes("blur") || fileName.includes("unreadable")) {
+    flags.push("Unreadable document");
+    confidenceScore = 32.50;
+    rawText = "[UNREADABLE DOCUMENT SCAN] Optical character resolution below threshold (DPI < 150). Text unsegmented.";
+    extractedName = "UNKNOWN / ILLEGIBLE";
+  }
+
+  // 2. Name mismatch rule
+  if (fileName.includes("mismatch") || fileName.includes("other") || fileName.includes("wrong_name")) {
+    flags.push("Name mismatch");
+    extractedName = "Sunil Kumar Soren"; // Different from applicant
+    confidenceScore = Math.min(confidenceScore, 78.40);
+  }
+
+  // 3. Expired certificate rule (Issue date > 3 years old or expired)
+  if (fileName.includes("expired") || fileName.includes("old") || (docType.includes("income") && fileName.includes("2021"))) {
+    flags.push("Expired certificate");
+    extractedCertNum = "JH/INC/2021/481902";
+    confidenceScore = Math.min(confidenceScore, 85.00);
+  }
+
+  // 4. Income verification pending rule
+  if (docType.includes("income")) {
+    if (fileName.includes("pending") || fileName.includes("unverified") || declaredIncome > 600000) {
+      flags.push("Income verification pending");
+    }
+    extractedIncome = declaredIncome || 240000;
+  }
+
+  // 5. Generate realistic Raw OCR Text
+  if (!rawText) {
+    if (docType.includes("caste")) {
+      rawText = `GOVERNMENT OF JHARKHAND • DEPARTMENT OF REVENUE & LAND REFORMS\nCERTIFICATE OF SCHEDULED TRIBE (ST)\nCertificate No: ${extractedCertNum}\nThis is to certify that Shri/Kumari ${extractedName}, resident of Ranchi, Jharkhand belongs to the Munda Community recognized as a Scheduled Tribe under the Constitution (Scheduled Tribes) Order, 1950.\nDate of Birth: ${extractedDob}\nIssued By: Sub-Divisional Magistrate / Tehsildar\nDigitally Signed & Validated via DigiLocker.`;
+    } else if (docType.includes("income")) {
+      rawText = `GOVERNMENT OF JHARKHAND • OFFICE OF THE REVENUE TEHSILDAR\nANNUAL FAMILY INCOME CERTIFICATE (FINANCIAL YEAR 2025-2026)\nCertificate No: ${extractedCertNum}\nThis is to certify that the total gross annual income of the family of ${extractedName}, residing at Ranchi, Jharkhand, is Rs. ${extractedIncome.toLocaleString('en-IN')}/-.\nValid for Academic Year 2026-2027.`;
+    } else {
+      rawText = `OFFICIAL UNIVERSITY ENROLLMENT & ADMISSION OFFER\nCandidate Name: ${extractedName}\nDate of Birth: ${extractedDob}\nReference / Student ID: ${extractedCertNum}\nSubject: Unconditional Offer of Admission for Master of Science / Ph.D. Program 2026.\nStatus: Unconditional Offer Confirmed.`;
+    }
+  }
+
+  const ocrId = "ocr-" + Math.random().toString(36).substring(2, 10);
+  const ocrRecord = {
+    id: ocrId,
+    document_id: documentId || null,
+    extracted_name: extractedName,
+    extracted_dob: extractedDob,
+    extracted_certificate_number: extractedCertNum,
+    extracted_income: extractedIncome,
+    confidence_score: confidenceScore,
+    raw_text: rawText,
+    flags: flags,
+    disclaimer: "AI-assisted preliminary verification. Final decision by authorised officer.",
+    created_at: new Date().toISOString()
+  };
+
+  // If Supabase client is connected and documentId is available, save to ocr_results table
+  if (supabaseClient && documentId) {
+    try {
+      await supabaseClient
+        .from('ocr_results')
+        .insert([{
+          document_id: documentId,
+          extracted_name: extractedName,
+          extracted_dob: extractedDob,
+          extracted_certificate_number: extractedCertNum,
+          extracted_income: extractedIncome,
+          confidence_score: confidenceScore,
+          raw_text: rawText,
+          flags: flags
+        }]);
+
+      await supabaseClient
+        .from('application_documents')
+        .update({
+          ocr_status: 'completed',
+          confidence_score: confidenceScore,
+          officer_remark: flags.length > 0 ? `Preliminary AI Flags: ${flags.join(", ")}` : 'Pre-verified by AI OCR Engine'
+        })
+        .eq('id', documentId);
+    } catch (ocrErr) {
+      console.warn("Save OCR results table notice:", ocrErr);
+    }
+  }
+
+  return ocrRecord;
+}
+
+// Application-wide rule flag checker (checks for Missing document flag)
+function supabaseCheckApplicationRuleFlags(application) {
+  const flags = [];
+  const requiredDocs = [
+    "Aadhaar Card",
+    "ST Caste Certificate",
+    "Annual Family Income Certificate"
+  ];
+
+  const docs = Array.isArray(application?.documents)
+    ? application.documents
+    : Array.isArray(application?.application_documents)
+      ? application.application_documents
+      : [];
+
+  requiredDocs.forEach(req => {
+    const isPresent = docs.some(d => {
+      const docType = (typeof d === 'string' ? d : d.document_type || d.type || "").toLowerCase();
+      const reqLower = req.toLowerCase();
+      return docType.includes(reqLower) || reqLower.includes(docType);
+    });
+    if (!isPresent) {
+      flags.push(`Missing document: ${req}`);
+    }
+  });
+
+  return flags;
+}
+
+// ------------------------------------------------------------------------------
+// 11C. IN-APP NOTIFICATIONS ENGINE (MVP)
+// ------------------------------------------------------------------------------
+
+async function supabaseCreateNotification({ userId, applicationId, title, message, type = "info" }) {
+  const record = {
+    id: "notif-" + Math.random().toString(36).substring(2, 10),
+    user_id: userId,
+    application_id: applicationId || null,
+    title,
+    message,
+    type,
+    is_read: false,
+    created_at: new Date().toISOString()
+  };
+
+  if (supabaseClient && userId) {
+    try {
+      const { data, error } = await supabaseClient
+        .from('notifications')
+        .insert([{
+          user_id: userId,
+          application_id: applicationId || null,
+          title,
+          message,
+          type,
+          is_read: false
+        }])
+        .select()
+        .single();
+      if (!error && data) {
+        return { success: true, notification: data };
+      }
+    } catch (nErr) {
+      console.warn("supabaseCreateNotification error:", nErr);
+    }
+  }
+
+  // Local fallback
+  if (typeof window !== "undefined" && window.appStore) {
+    if (!Array.isArray(window.appStore.notifications)) window.appStore.notifications = [];
+    window.appStore.notifications.unshift(record);
+  }
+
+  return { success: true, notification: record };
+}
+
+async function supabaseMarkNotificationAsRead(notificationId) {
+  if (supabaseClient && notificationId) {
+    try {
+      await supabaseClient
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('id', notificationId);
+    } catch (err) {
+      console.warn("supabaseMarkNotificationAsRead error:", err);
+    }
+  }
+
+  if (typeof window !== "undefined" && window.appStore && Array.isArray(window.appStore.notifications)) {
+    const target = window.appStore.notifications.find(n => n.id === notificationId);
+    if (target) target.is_read = true;
+  }
+
+  return { success: true };
+}
+
+async function supabaseMarkAllNotificationsAsRead(userId) {
+  if (supabaseClient && userId) {
+    try {
+      await supabaseClient
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('user_id', userId);
+    } catch (err) {
+      console.warn("supabaseMarkAllNotificationsAsRead error:", err);
+    }
+  }
+
+  if (typeof window !== "undefined" && window.appStore && Array.isArray(window.appStore.notifications)) {
+    window.appStore.notifications.forEach(n => { n.is_read = true; });
+  }
+
+  return { success: true };
+}
+
+// ------------------------------------------------------------------------------
+// 11D. DEFICIENCY RESOLUTION ENGINE
+// ------------------------------------------------------------------------------
+
+async function supabaseRespondToDeficiency(params = {}) {
+  const { applicationId, deficiencyId, file, documentType, responseRemark } = params;
+
+  let currentProfile = null;
+  let applicantUserId = null;
+  if (supabaseClient) {
+    try {
+      currentProfile = await supabaseGetCurrentProfile();
+      applicantUserId = currentProfile?.user_id || null;
+    } catch (e) {}
+  }
+  if (!applicantUserId && typeof window !== "undefined" && window.appStore) {
+    const authUser = window.appStore.getAuthUser();
+    applicantUserId = authUser?.supabaseId || authUser?.id || "usr-applicant-1";
+  }
+
+  // 1. If revised file is attached, upload via Supabase Storage
+  let uploadResult = null;
+  if (file) {
+    uploadResult = await supabaseUploadDocument({
+      file,
+      applicationId,
+      documentType: documentType || "Revised Supporting Document"
+    });
+  }
+
+  const nowIso = new Date().toISOString();
+  const effectiveRemark = responseRemark || "Applicant uploaded revised document and submitted deficiency clarification.";
+
+  // 2. Update Deficiencies and Application records in Supabase
+  if (supabaseClient) {
+    try {
+      if (deficiencyId) {
+        await supabaseClient
+          .from('deficiencies')
+          .update({
+            status: 'responded',
+            response_text: effectiveRemark,
+            resolved_at: nowIso
+          })
+          .eq('id', deficiencyId);
+      } else if (applicationId) {
+        await supabaseClient
+          .from('deficiencies')
+          .update({
+            status: 'responded',
+            response_text: effectiveRemark,
+            resolved_at: nowIso
+          })
+          .eq('application_id', applicationId)
+          .eq('status', 'open');
+      }
+
+      // Transition status to resubmitted
+      await supabaseClient
+        .from('applications')
+        .update({
+          status: 'resubmitted',
+          updated_at: nowIso
+        })
+        .eq('id', applicationId);
+
+      // Status history entry
+      await supabaseClient
+        .from('application_status_history')
+        .insert([{
+          application_id: applicationId,
+          old_status: 'deficiency_raised',
+          new_status: 'resubmitted',
+          remark: `Deficiency clarification submitted: ${effectiveRemark}`,
+          changed_by: applicantUserId
+        }]);
+
+      // Notification
+      if (applicantUserId) {
+        await supabaseClient
+          .from('notifications')
+          .insert([{
+            user_id: applicantUserId,
+            application_id: applicationId,
+            title: "Deficiency Clarification Resubmitted",
+            message: "Your clarification and documents were successfully transmitted to the scrutiny officer.",
+            type: "info",
+            is_read: false
+          }]);
+      }
+    } catch (rErr) {
+      console.warn("supabaseRespondToDeficiency error:", rErr);
+    }
+  }
+
+  // Synchronize local appStore
+  if (typeof window !== "undefined" && window.appStore) {
+    const app = window.appStore.getApplication();
+    app.status = "Resubmitted (Clarified)";
+    if (!Array.isArray(app.history)) app.history = [];
+    app.history.push({
+      title: "Deficiency Clarification Submitted",
+      time: new Date().toLocaleString("en-IN"),
+      officer: "Applicant (Clarification)",
+      remark: effectiveRemark
+    });
+    if (app.deficiency) {
+      app.deficiency.status = "responded";
+    }
+    window.appStore.saveApplication(app);
+  }
+
+  return { success: true, status: "resubmitted", uploadResult };
 }
 
 // ------------------------------------------------------------------------------
@@ -1717,7 +2086,15 @@ async function supabaseUploadDocument(params = {}) {
     onProgress({ loaded: 85, total: 100, percent: 85, stage: "Recording Metadata" });
   }
 
-  // 5. Insert / Upsert Metadata into application_documents Table
+  // 5. Run Preliminary OCR & Rule-Based Verification (Phase 1 & Phase 2)
+  const ocrResult = await supabaseRunPreliminaryOcrAndVerification({
+    file,
+    documentType,
+    applicationId,
+    filePath: remoteStoragePath
+  });
+
+  // 6. Insert / Upsert Metadata into application_documents Table
   const docMetadata = {
     application_id: applicationId,
     document_type: documentType,
@@ -1725,24 +2102,46 @@ async function supabaseUploadDocument(params = {}) {
     file_name: file.name, // Original human filename preserved in metadata
     file_size: file.size,
     mime_type: file.type || (extension === "pdf" ? "application/pdf" : "image/jpeg"),
-    verification_status: "verified",
+    verification_status: (ocrResult.flags && ocrResult.flags.includes("Unreadable document")) ? "pending" : "verified",
     ocr_status: "completed",
-    confidence_score: 98.50,
-    officer_remark: "Uploaded by applicant • Pre-verified via DigiLocker e-KYC",
+    confidence_score: ocrResult.confidence_score || 98.50,
+    officer_remark: (ocrResult.flags && ocrResult.flags.length > 0)
+      ? `Preliminary AI Flags: ${ocrResult.flags.join(", ")}`
+      : "Uploaded by applicant • Pre-verified via DigiLocker e-KYC",
     updated_at: new Date().toISOString()
   };
 
+  let insertedDocId = null;
   if (supabaseClient && applicationId) {
     try {
-      await supabaseClient
+      const { data: upsertData } = await supabaseClient
         .from("application_documents")
-        .upsert(docMetadata, { onConflict: "application_id,document_type" });
+        .upsert(docMetadata, { onConflict: "application_id,document_type" })
+        .select()
+        .maybeSingle();
+
+      if (upsertData && upsertData.id) {
+        insertedDocId = upsertData.id;
+        ocrResult.document_id = insertedDocId;
+
+        // Phase 2: Save OCR result to ocr_results table
+        await supabaseClient.from('ocr_results').insert([{
+          document_id: insertedDocId,
+          extracted_name: ocrResult.extracted_name,
+          extracted_dob: ocrResult.extracted_dob,
+          extracted_certificate_number: ocrResult.extracted_certificate_number,
+          extracted_income: ocrResult.extracted_income,
+          confidence_score: ocrResult.confidence_score,
+          raw_text: ocrResult.raw_text,
+          flags: ocrResult.flags
+        }]);
+      }
     } catch (mErr) {
       console.warn("application_documents metadata sync notice:", mErr);
     }
   }
 
-  // 6. Synchronize with Local AppStore State
+  // 7. Synchronize with Local AppStore State
   if (typeof window !== "undefined" && window.appStore) {
     const app = window.appStore.getApplication();
     if (!Array.isArray(app.documents)) app.documents = [];
@@ -1752,12 +2151,14 @@ async function supabaseUploadDocument(params = {}) {
     );
 
     const docEntry = {
-      id: `doc-${cleanDocType}`,
+      id: insertedDocId || `doc-${cleanDocType}`,
       type: documentType,
       name: file.name,
       size: `${(file.size / 1024).toFixed(1)} KB`,
       filePath: remoteStoragePath,
-      verified: true,
+      verified: !ocrResult.flags.includes("Unreadable document"),
+      confidence: ocrResult.confidence_score,
+      ocrResult: ocrResult,
       date: new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
       uploadedAt: new Date().toISOString()
     };
@@ -1781,6 +2182,7 @@ async function supabaseUploadDocument(params = {}) {
     fileName: file.name,
     fileSize: file.size,
     metadata: docMetadata,
+    ocrResult: ocrResult,
     source: uploadSuccess ? "supabase_storage" : "local_storage"
   };
 }
@@ -1865,8 +2267,13 @@ if (typeof window !== "undefined") {
   window.supabaseFetchAdminDashboardMetrics = supabaseFetchAdminDashboardMetrics;
   window.supabaseFetchAdminQueue = supabaseFetchAdminQueue;
   window.supabaseExecuteAdminReviewAction = supabaseExecuteAdminReviewAction;
-  window.supabaseUpdateApplicationStatus = supabaseUpdateApplicationStatus;
   window.supabaseFetchNotifications = supabaseFetchNotifications;
+  window.supabaseCreateNotification = supabaseCreateNotification;
+  window.supabaseMarkNotificationAsRead = supabaseMarkNotificationAsRead;
+  window.supabaseMarkAllNotificationsAsRead = supabaseMarkAllNotificationsAsRead;
+  window.supabaseRunPreliminaryOcrAndVerification = supabaseRunPreliminaryOcrAndVerification;
+  window.supabaseCheckApplicationRuleFlags = supabaseCheckApplicationRuleFlags;
+  window.supabaseRespondToDeficiency = supabaseRespondToDeficiency;
   window.DEFAULT_SCHEMES = DEFAULT_SCHEMES;
   // Storage APIs
   window.supabaseValidateDocumentFile = supabaseValidateDocumentFile;

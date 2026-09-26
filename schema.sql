@@ -470,12 +470,15 @@ CREATE POLICY "Deficiencies: Write policy"
 CREATE TABLE IF NOT EXISTS public.notifications (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    application_id UUID REFERENCES public.applications(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     message TEXT NOT NULL,
     type TEXT NOT NULL DEFAULT 'info' CHECK (type IN ('info', 'success', 'warning', 'error', 'deficiency')),
     is_read BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
+
+ALTER TABLE public.notifications ADD COLUMN IF NOT EXISTS application_id UUID REFERENCES public.applications(id) ON DELETE CASCADE;
 
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
@@ -493,6 +496,73 @@ DROP POLICY IF EXISTS "Notifications: Insert own" ON public.notifications;
 CREATE POLICY "Notifications: Insert own" 
     ON public.notifications FOR INSERT 
     WITH CHECK (user_id = auth.uid() OR public.is_admin() OR public.is_scrutiny_officer());
+
+-- ------------------------------------------------------------------------------
+-- 7B. OCR RESULTS TABLE (AI-ASSISTED PRELIMINARY VERIFICATION)
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.ocr_results (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    document_id UUID NOT NULL REFERENCES public.application_documents(id) ON DELETE CASCADE,
+    extracted_name TEXT,
+    extracted_dob TEXT,
+    extracted_certificate_number TEXT,
+    extracted_income NUMERIC(12, 2),
+    confidence_score NUMERIC(5, 2) DEFAULT 0.00,
+    raw_text TEXT,
+    flags JSONB DEFAULT '[]'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.ocr_results ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "OCR Results: Read policy" ON public.ocr_results;
+CREATE POLICY "OCR Results: Read policy" 
+    ON public.ocr_results FOR SELECT 
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.application_documents d
+            JOIN public.applications a ON a.id = d.application_id
+            WHERE d.id = ocr_results.document_id
+            AND (
+                a.applicant_id = public.get_current_profile_id()
+                OR public.is_admin()
+                OR public.is_scrutiny_officer()
+            )
+        )
+    );
+
+DROP POLICY IF EXISTS "OCR Results: Insert policy" ON public.ocr_results;
+CREATE POLICY "OCR Results: Insert policy" 
+    ON public.ocr_results FOR INSERT 
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.application_documents d
+            JOIN public.applications a ON a.id = d.application_id
+            WHERE d.id = ocr_results.document_id
+            AND (
+                a.applicant_id = public.get_current_profile_id()
+                OR public.is_admin()
+                OR public.is_scrutiny_officer()
+            )
+        )
+        OR public.is_admin()
+    );
+
+DROP POLICY IF EXISTS "OCR Results: Update policy" ON public.ocr_results;
+CREATE POLICY "OCR Results: Update policy" 
+    ON public.ocr_results FOR UPDATE 
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.application_documents d
+            JOIN public.applications a ON a.id = d.application_id
+            WHERE d.id = ocr_results.document_id
+            AND (
+                public.is_admin()
+                OR public.is_scrutiny_officer()
+            )
+        )
+    );
 
 -- ------------------------------------------------------------------------------
 -- 8. PRE-SEEDED SCHEMES (NOS & NFST)
