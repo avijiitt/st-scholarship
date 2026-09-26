@@ -131,7 +131,7 @@ async function startOrResumeWizardApplication(schemeCode) {
 // DYNAMIC SCHEMES HELPER FUNCTIONS (Supabase Connected)
 // ----------------------------------------------------
 
-const DEFAULT_SCHEMES = (typeof window !== "undefined" && window.DEFAULT_SCHEMES) ? window.DEFAULT_SCHEMES : [
+const APP_DEFAULT_SCHEMES = (typeof window !== "undefined" && window.DEFAULT_SCHEMES) ? window.DEFAULT_SCHEMES : [
   {
     id: "sch-001-nos",
     name: "National Overseas Scholarship (NOS)",
@@ -502,7 +502,7 @@ router.register("/", () => {
 
           <!-- Dynamic Database Schemes Grid -->
           <div id="landing-schemes-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-space-lg">
-            ${DEFAULT_SCHEMES.map(s => renderSchemeCardHTML(s)).join("")}
+            ${(window.DEFAULT_SCHEMES || APP_DEFAULT_SCHEMES).map(s => renderSchemeCardHTML(s)).join("")}
           </div>
         </section>
       </div>
@@ -894,7 +894,7 @@ router.register("/schemes", () => {
 
       <!-- Dynamic All Schemes Grid Container -->
       <div id="all-schemes-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-space-lg">
-        ${DEFAULT_SCHEMES.map(s => renderSchemeCardHTML(s)).join("")}
+        ${(window.DEFAULT_SCHEMES || APP_DEFAULT_SCHEMES).map(s => renderSchemeCardHTML(s)).join("")}
       </div>
     </div>
   `;
@@ -909,7 +909,7 @@ window.filterLoadedSchemes = function() {
   const query = (document.getElementById("scheme-search-input")?.value || "").toLowerCase().trim();
   const container = document.getElementById("all-schemes-container");
   if (!container) return;
-  const schemes = window.cachedSupabaseSchemes || DEFAULT_SCHEMES;
+  const schemes = window.cachedSupabaseSchemes || window.DEFAULT_SCHEMES || APP_DEFAULT_SCHEMES;
   const filtered = schemes.filter(s => 
     (s.name || "").toLowerCase().includes(query) ||
     (s.description || "").toLowerCase().includes(query) ||
@@ -933,7 +933,7 @@ window.filterLoadedSchemes = function() {
 window.filterSchemesByCategory = function(category) {
   const container = document.getElementById("all-schemes-container");
   if (!container) return;
-  const schemes = window.cachedSupabaseSchemes || DEFAULT_SCHEMES;
+  const schemes = window.cachedSupabaseSchemes || window.DEFAULT_SCHEMES || APP_DEFAULT_SCHEMES;
   
   ["all", "abroad", "research", "postmatric"].forEach(cat => {
     const btn = document.getElementById(`filter-${cat}`);
@@ -3922,14 +3922,27 @@ router.register("/admin/schemes", () => {
   `;
 }, { layout: "admin", authRole: "admin" });
 
-// Initialize routing & Supabase session on DOMContentLoaded
-document.addEventListener("DOMContentLoaded", async () => {
+// Initialize routing & Supabase session
+async function startNTSPPortal() {
+  try {
+    if (window.router) {
+      window.router.handleRouting();
+    }
+  } catch (err) {
+    console.error("Portal initial routing error:", err);
+  }
+
   if (window.initSupabaseAuthSync) {
     try {
       await window.initSupabaseAuthSync();
     } catch (e) {
-      console.warn("Supabase auth sync error:", e);
+      console.warn("Supabase auth sync notice:", e);
     }
   }
-  router.handleRouting();
-});
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", startNTSPPortal);
+} else {
+  startNTSPPortal();
+}

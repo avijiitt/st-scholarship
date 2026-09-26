@@ -178,7 +178,7 @@ async function initSupabaseAuthSync() {
  */
 
 // Core Demo Scheme Records
-const DEFAULT_SCHEMES = [
+const CORE_DB_SCHEMES = [
   {
     id: "sch-001-nos",
     name: "National Overseas Scholarship (NOS)",
@@ -263,7 +263,7 @@ async function supabaseFetchSchemes(options = {}) {
   }
 
   // Database fallback demo records
-  const fallbackResult = [...DEFAULT_SCHEMES];
+  const fallbackResult = [...CORE_DB_SCHEMES];
   fallbackResult.success = true;
   fallbackResult.source = "database_defaults";
   return fallbackResult;
@@ -1007,7 +1007,7 @@ async function supabaseGetCurrentProfile() {
 
 // 8. Resolve Scheme Record by Code or ID
 async function supabaseGetSchemeByCodeOrId(schemeIdentifier) {
-  if (!schemeIdentifier) return DEFAULT_SCHEMES[0];
+  if (!schemeIdentifier) return CORE_DB_SCHEMES[0];
   const cleanId = String(schemeIdentifier).trim();
 
   if (supabaseClient) {
@@ -1028,13 +1028,13 @@ async function supabaseGetSchemeByCodeOrId(schemeIdentifier) {
 
   // Fallback to local schemes list
   const cleanUpper = cleanId.toUpperCase();
-  const found = DEFAULT_SCHEMES.find(s => 
+  const found = CORE_DB_SCHEMES.find(s => 
     s.id === cleanId || 
     s.code === cleanId || 
     s.code.toUpperCase().includes(cleanUpper) || 
     s.name.toUpperCase().includes(cleanUpper)
   );
-  return found || DEFAULT_SCHEMES[0];
+  return found || CORE_DB_SCHEMES[0];
 }
 
 // 9. Get or Create Draft Application (Prevents duplicates for same applicant + scheme)
@@ -2274,7 +2274,7 @@ if (typeof window !== "undefined") {
   window.supabaseRunPreliminaryOcrAndVerification = supabaseRunPreliminaryOcrAndVerification;
   window.supabaseCheckApplicationRuleFlags = supabaseCheckApplicationRuleFlags;
   window.supabaseRespondToDeficiency = supabaseRespondToDeficiency;
-  window.DEFAULT_SCHEMES = DEFAULT_SCHEMES;
+  window.DEFAULT_SCHEMES = CORE_DB_SCHEMES;
   // Storage APIs
   window.supabaseValidateDocumentFile = supabaseValidateDocumentFile;
   window.supabaseGenerateStoragePath = supabaseGenerateStoragePath;
