@@ -265,7 +265,7 @@ class Router {
                 <a href="#/applicant/dashboard" class="px-4 py-2 bg-primary text-white font-semibold rounded text-sm flex items-center gap-1 shadow-sm">
                   <span class="material-symbols-outlined text-[18px]">dashboard</span> Dashboard
                 </a>
-                <button onclick="window.appStore.logout(); router.navigate('/');" class="px-3 py-2 bg-surface-container text-on-surface rounded text-xs font-semibold hover:bg-surface-container-high" title="Sign Out">
+                <button onclick="handleApplicantLogout()" class="px-3 py-2 bg-surface-container text-on-surface rounded text-xs font-semibold hover:bg-surface-container-high" title="Sign Out">
                   Logout
                 </button>
               </div>
@@ -325,7 +325,7 @@ class Router {
               </div>
               <span class="ml-1 px-1.5 py-0.5 bg-tertiary-container text-white rounded text-[10px] font-bold">ST Verified</span>
             </div>
-            <button onclick="window.appStore.logout(); router.navigate('/');" class="text-xs text-on-surface-variant hover:text-error flex items-center gap-1 font-semibold px-2 py-1 rounded hover:bg-surface-container">
+            <button onclick="handleApplicantLogout()" class="text-xs text-on-surface-variant hover:text-error flex items-center gap-1 font-semibold px-2 py-1 rounded hover:bg-surface-container">
               <span class="material-symbols-outlined text-[16px]">logout</span> Logout
             </button>
           </div>
@@ -453,3 +453,17 @@ class Router {
 }
 
 window.router = new Router();
+
+window.handleApplicantLogout = async function() {
+  if (window.supabaseLogout) {
+    await window.supabaseLogout();
+  }
+  if (window.appStore) {
+    window.appStore.logout();
+  }
+  showToast("Signed out successfully.", "info");
+  window.router.navigate("/");
+};
+function handleApplicantLogout() {
+  window.handleApplicantLogout();
+}

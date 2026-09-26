@@ -254,24 +254,34 @@ router.register("/login", () => {
       <!-- Demo Credentials Banner -->
       <div class="p-3 bg-secondary-fixed/40 border border-secondary/20 rounded-lg text-xs mb-4">
         <p class="font-bold text-on-secondary-fixed flex items-center gap-1 mb-1">
-          <span class="material-symbols-outlined text-[16px]">info</span> Demo Credentials for Prototype:
+          <span class="material-symbols-outlined text-[16px]">verified_user</span> Supabase Auth Gateway:
         </p>
-        <p class="text-on-secondary-fixed-variant">Email: <strong class="font-mono">student@demo.com</strong></p>
-        <p class="text-on-secondary-fixed-variant">Password: <strong class="font-mono">student123</strong></p>
+        <p class="text-on-secondary-fixed-variant">Log in with your registered email &amp; password, or use prototype credentials:</p>
+        <p class="text-on-secondary-fixed-variant mt-1">Email: <strong class="font-mono">student@demo.com</strong> | Password: <strong class="font-mono">student123</strong></p>
+      </div>
+
+      <!-- Error State Alert -->
+      <div id="login-error-container" class="hidden mb-4 p-3 bg-error-container text-on-error-container border border-error/30 rounded-lg text-xs font-semibold flex items-center gap-2">
+        <span class="material-symbols-outlined text-[18px] text-error shrink-0">error</span>
+        <span id="login-error-text"></span>
       </div>
 
       <form id="applicant-login-form" onsubmit="handleApplicantLogin(event)" class="space-y-space-md">
         <div>
-          <label class="block text-xs font-bold text-on-surface mb-1">Applicant Email / OTR ID *</label>
-          <input type="text" id="app-login-user" value="student@demo.com" class="w-full h-11 px-3 bg-surface-container-low rounded border border-outline-variant/40 text-sm font-semibold" required/>
+          <label class="block text-xs font-bold text-on-surface mb-1">Applicant Email *</label>
+          <input type="email" id="app-login-user" value="student@demo.com" placeholder="name@domain.com" class="w-full h-11 px-3 bg-surface-container-low rounded border border-outline-variant/40 text-sm font-semibold focus:outline-none focus:border-primary" required/>
         </div>
         <div>
-          <label class="block text-xs font-bold text-on-surface mb-1">Password *</label>
-          <input type="password" id="app-login-pwd" value="student123" class="w-full h-11 px-3 bg-surface-container-low rounded border border-outline-variant/40 text-sm font-semibold" required/>
+          <div class="flex justify-between items-center mb-1">
+            <label class="block text-xs font-bold text-on-surface">Password *</label>
+            <a href="#" onclick="showToast('Password reset link available via Supabase Auth email recovery.', 'info'); return false;" class="text-[11px] text-secondary hover:underline font-semibold">Forgot?</a>
+          </div>
+          <input type="password" id="app-login-pwd" value="student123" placeholder="••••••••" class="w-full h-11 px-3 bg-surface-container-low rounded border border-outline-variant/40 text-sm font-semibold focus:outline-none focus:border-primary" required/>
         </div>
 
-        <button type="submit" class="w-full py-3 bg-secondary hover:bg-secondary/90 text-white font-bold rounded shadow-md flex items-center justify-center gap-2">
-          <span class="material-symbols-outlined text-[20px]">login</span> Sign In to Dashboard
+        <button type="submit" id="login-submit-btn" class="w-full py-3 bg-secondary hover:bg-secondary/90 text-white font-bold rounded shadow-md flex items-center justify-center gap-2 transition disabled:opacity-60">
+          <span class="material-symbols-outlined text-[20px]">login</span>
+          <span id="login-btn-text">Sign In to Dashboard</span>
         </button>
       </form>
 
@@ -283,22 +293,100 @@ router.register("/login", () => {
   `;
 });
 
-function handleApplicantLogin(e) {
+async function handleApplicantLogin(e) {
   e.preventDefault();
-  const email = document.getElementById("app-login-user").value.trim();
-  const pwd = document.getElementById("app-login-pwd").value.trim();
+  const emailInput = document.getElementById("app-login-user");
+  const pwdInput = document.getElementById("app-login-pwd");
+  const btn = document.getElementById("login-submit-btn");
+  const btnText = document.getElementById("login-btn-text");
+  const errContainer = document.getElementById("login-error-container");
+  const errText = document.getElementById("login-error-text");
 
-  if (email === "student@demo.com" && pwd === "student123") {
-    window.appStore.setAuthUser({
-      role: "applicant",
-      email: "student@demo.com",
-      name: "Priya Munda",
-      otrId: "OTR-2025-ST-884129"
-    });
-    showToast("Welcome Priya Munda! Signed in successfully.", "success");
-    router.navigate("/applicant/dashboard");
-  } else {
-    showToast("Invalid credentials. Use student@demo.com / student123", "error");
+  const email = emailInput.value.trim();
+  const pwd = pwdInput.value.trim();
+
+  errContainer.classList.add("hidden");
+
+  // Loading state
+  btn.disabled = true;
+  btnText.textContent = "Authenticating with Supabase...";
+  const originalBtnHTML = btn.innerHTML;
+  btn.innerHTML = `<span class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> <span>Authenticating with Supabase...</span>`;
+
+  try {
+    let authSuccess = false;
+    let authUserObj = null;
+
+    if (window.supabaseLogin) {
+      const res = await window.supabaseLogin({ email, password: pwd });
+      if (res.success && res.user) {
+        authSuccess = true;
+        const meta = res.user.user_metadata || {};
+        authUserObj = {
+          role: "applicant",
+          email: res.user.email,
+          name: meta.full_name || (res.user.email ? res.user.email.split("@")[0] : "Scholar"),
+          otrId: meta.otr_id || ("OTR-2025-ST-" + res.user.id.substring(0, 6).toUpperCase()),
+          supabaseId: res.user.id
+        };
+      } else if (email === "student@demo.com" && pwd === "student123") {
+        // Fallback demo credentials
+        authSuccess = true;
+        authUserObj = {
+          role: "applicant",
+          email: "student@demo.com",
+          name: "Priya Munda",
+          otrId: "OTR-2025-ST-884129"
+        };
+      } else {
+        let msg = res.error || "Authentication failed.";
+        if (res.error === "Email not confirmed") {
+          msg = "Your email has not been verified yet. Please check your inbox for the Supabase confirmation link.";
+        } else if (res.error === "Invalid login credentials") {
+          msg = "Invalid email or password. Please verify your credentials.";
+        }
+        errText.textContent = msg;
+        errContainer.classList.remove("hidden");
+        showToast(msg, "error");
+      }
+    } else {
+      if (email === "student@demo.com" && pwd === "student123") {
+        authSuccess = true;
+        authUserObj = {
+          role: "applicant",
+          email: "student@demo.com",
+          name: "Priya Munda",
+          otrId: "OTR-2025-ST-884129"
+        };
+      } else {
+        const msg = "Invalid credentials. Use student@demo.com / student123 or register a new scholar account.";
+        errText.textContent = msg;
+        errContainer.classList.remove("hidden");
+        showToast(msg, "error");
+      }
+    }
+
+    if (authSuccess && authUserObj) {
+      window.appStore.setAuthUser(authUserObj);
+
+      // Sync application personal details
+      const app = window.appStore.getApplication();
+      app.personal.email = authUserObj.email;
+      if (authUserObj.name && authUserObj.name !== "Scholar") {
+        app.personal.fullName = authUserObj.name;
+      }
+      window.appStore.saveApplication(app);
+
+      showToast(`Welcome back, ${authUserObj.name}! Signed in successfully.`, "success");
+      router.navigate("/applicant/dashboard");
+    }
+  } catch (err) {
+    errText.textContent = err.message || "An unexpected error occurred during login.";
+    errContainer.classList.remove("hidden");
+    showToast("Login error: " + err.message, "error");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalBtnHTML;
   }
 }
 
@@ -308,54 +396,187 @@ router.register("/register", () => {
   container.innerHTML = `
     <div class="max-w-xl mx-auto my-12 p-space-xl bg-surface-container-lowest rounded-xl shadow-xl border border-outline-variant/30">
       <div class="text-center mb-space-lg">
-        <span class="text-xs uppercase font-bold text-secondary tracking-wider block mb-1">e-KYC Secured Gateway</span>
+        <span class="text-xs uppercase font-bold text-secondary tracking-wider block mb-1">e-KYC Secured Gateway • Supabase Auth</span>
         <h1 class="font-headline-sm text-primary font-bold text-2xl">One-Time Registration (OTR)</h1>
         <p class="text-xs text-on-surface-variant mt-1">
-          Aadhaar authentication ensures your scholarship reaches your seeded bank account without intermediary delays.
+          Create your verified scholar account to apply for overseas scholarships and national research fellowships.
         </p>
       </div>
 
-      <form onsubmit="handleRegistrationSubmit(event)" class="space-y-space-md">
-        <div>
-          <label class="block text-xs font-bold text-on-surface mb-1">12-Digit Aadhaar Number *</label>
-          <input type="text" id="reg-aadhaar" value="5429 8841 2901" class="w-full h-11 px-3 bg-surface-container-low font-mono rounded border border-outline-variant/40 text-sm" required/>
+      <!-- Error State Alert -->
+      <div id="reg-error-container" class="hidden mb-4 p-3 bg-error-container text-on-error-container border border-error/30 rounded-lg text-xs font-semibold flex items-center gap-2">
+        <span class="material-symbols-outlined text-[18px] text-error shrink-0">error</span>
+        <span id="reg-error-text"></span>
+      </div>
+
+      <!-- Success State Alert -->
+      <div id="reg-success-container" class="hidden mb-4 p-4 bg-tertiary-fixed text-on-tertiary-fixed border border-tertiary-container/30 rounded-xl text-xs space-y-2">
+        <div class="flex items-center gap-2 font-bold text-sm">
+          <span class="material-symbols-outlined text-tertiary-container text-xl">verified</span>
+          <span>Scholar Account Registered Successfully!</span>
         </div>
-        <div>
-          <label class="block text-xs font-bold text-on-surface mb-1">Mobile Number (Aadhaar Linked) *</label>
-          <input type="tel" id="reg-mobile" value="+91 98765 43210" class="w-full h-11 px-3 bg-surface-container-low rounded border border-outline-variant/40 text-sm" required/>
+        <p id="reg-success-desc" class="leading-relaxed"></p>
+        <div class="pt-2">
+          <a href="#/login" class="inline-flex items-center gap-1 px-4 py-2 bg-primary text-white rounded font-bold hover:bg-primary-container text-xs shadow-sm">
+            Proceed to Login <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+          </a>
         </div>
-        <div>
-          <label class="block text-xs font-bold text-on-surface mb-1">State of Domicile *</label>
-          <select id="reg-state" class="w-full h-11 px-3 bg-surface-container-low rounded border border-outline-variant/40 text-sm">
-            <option value="Jharkhand" selected>Jharkhand</option>
-            <option value="Odisha">Odisha</option>
-            <option value="Madhya Pradesh">Madhya Pradesh</option>
-            <option value="Chhattisgarh">Chhattisgarh</option>
-          </select>
+      </div>
+
+      <form id="applicant-reg-form" onsubmit="handleRegistrationSubmit(event)" class="space-y-space-md">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-bold text-on-surface mb-1">Full Legal Name *</label>
+            <input type="text" id="reg-name" value="Arjun Munda" placeholder="Enter full name" class="w-full h-11 px-3 bg-surface-container-low rounded border border-outline-variant/40 text-sm font-semibold focus:outline-none focus:border-primary" required/>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-on-surface mb-1">12-Digit Aadhaar Number *</label>
+            <input type="text" id="reg-aadhaar" value="5429 8841 2901" placeholder="XXXX XXXX XXXX" class="w-full h-11 px-3 bg-surface-container-low font-mono rounded border border-outline-variant/40 text-sm focus:outline-none focus:border-primary" required/>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-on-surface mb-1">Mobile Number (Aadhaar Linked) *</label>
+            <input type="tel" id="reg-mobile" value="+91 98765 43210" placeholder="+91 XXXXX XXXXX" class="w-full h-11 px-3 bg-surface-container-low rounded border border-outline-variant/40 text-sm focus:outline-none focus:border-primary" required/>
+          </div>
+
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-bold text-on-surface mb-1">Applicant Email Address *</label>
+            <input type="email" id="reg-email" placeholder="scholar@domain.com" class="w-full h-11 px-3 bg-surface-container-low rounded border border-outline-variant/40 text-sm font-semibold focus:outline-none focus:border-primary" required/>
+            <span class="text-[11px] text-outline mt-0.5 block">Used for Supabase account security and direct sanction notifications.</span>
+          </div>
+
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-bold text-on-surface mb-1">Create Account Password *</label>
+            <input type="password" id="reg-pwd" minlength="6" placeholder="Minimum 6 characters" class="w-full h-11 px-3 bg-surface-container-low rounded border border-outline-variant/40 text-sm font-semibold focus:outline-none focus:border-primary" required/>
+            <span class="text-[11px] text-outline mt-0.5 block">Password must be at least 6 characters.</span>
+          </div>
+
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-bold text-on-surface mb-1">State of Domicile *</label>
+            <select id="reg-state" class="w-full h-11 px-3 bg-surface-container-low rounded border border-outline-variant/40 text-sm focus:outline-none focus:border-primary">
+              <option value="Jharkhand" selected>Jharkhand</option>
+              <option value="Odisha">Odisha</option>
+              <option value="Madhya Pradesh">Madhya Pradesh</option>
+              <option value="Chhattisgarh">Chhattisgarh</option>
+              <option value="Rajasthan">Rajasthan</option>
+              <option value="Gujarat">Gujarat</option>
+              <option value="Maharashtra">Maharashtra</option>
+              <option value="Assam">Assam</option>
+            </select>
+          </div>
         </div>
 
-        <button type="submit" class="w-full py-3 bg-secondary hover:bg-secondary/90 text-white font-bold rounded shadow-md flex items-center justify-center gap-2">
-          <span class="material-symbols-outlined text-[20px]">fingerprint</span> Verify Aadhaar &amp; Generate OTR
+        <button type="submit" id="reg-submit-btn" class="w-full py-3 bg-secondary hover:bg-secondary/90 text-white font-bold rounded shadow-md flex items-center justify-center gap-2 transition disabled:opacity-60 mt-2">
+          <span class="material-symbols-outlined text-[20px]">fingerprint</span>
+          <span id="reg-btn-text">Verify &amp; Register Scholar</span>
         </button>
       </form>
 
       <div class="mt-4 pt-4 border-t border-outline-variant/20 text-center text-xs">
-        <span>Already registered?</span> <a href="#/login" class="text-secondary font-bold hover:underline">Sign In</a>
+        <span>Already registered?</span> <a href="#/login" class="text-secondary font-bold hover:underline ml-1">Sign In</a>
       </div>
     </div>
   `;
 });
 
-function handleRegistrationSubmit(e) {
+async function handleRegistrationSubmit(e) {
   e.preventDefault();
-  window.appStore.setAuthUser({
-    role: "applicant",
-    email: "student@demo.com",
-    name: "Priya Munda",
-    otrId: "OTR-2025-ST-884129"
-  });
-  showToast("Aadhaar OTP verified! OTR: OTR-2025-ST-884129 generated.", "success");
-  router.navigate("/applicant/dashboard");
+  const name = document.getElementById("reg-name").value.trim();
+  const aadhaar = document.getElementById("reg-aadhaar").value.trim();
+  const mobile = document.getElementById("reg-mobile").value.trim();
+  const email = document.getElementById("reg-email").value.trim();
+  const pwd = document.getElementById("reg-pwd").value.trim();
+  const state = document.getElementById("reg-state").value;
+
+  const btn = document.getElementById("reg-submit-btn");
+  const btnText = document.getElementById("reg-btn-text");
+  const errContainer = document.getElementById("reg-error-container");
+  const errText = document.getElementById("reg-error-text");
+  const successContainer = document.getElementById("reg-success-container");
+  const successDesc = document.getElementById("reg-success-desc");
+
+  errContainer.classList.add("hidden");
+  successContainer.classList.add("hidden");
+
+  if (pwd.length < 6) {
+    errText.textContent = "Password must be at least 6 characters long.";
+    errContainer.classList.remove("hidden");
+    return;
+  }
+
+  // Loading state
+  btn.disabled = true;
+  btnText.textContent = "Registering with Supabase...";
+  const originalBtnHTML = btn.innerHTML;
+  btn.innerHTML = `<span class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> <span>Registering Scholar with Supabase...</span>`;
+
+  try {
+    if (window.supabaseRegister) {
+      const res = await window.supabaseRegister({
+        email,
+        password: pwd,
+        fullName: name,
+        mobile,
+        state,
+        aadhaar
+      });
+
+      if (res.success) {
+        const genOtr = "OTR-2025-ST-" + Math.floor(100000 + Math.random() * 900000);
+
+        if (res.session && res.session.user) {
+          // Immediately authenticated (e.g. autoconfirm enabled)
+          window.appStore.setAuthUser({
+            role: "applicant",
+            email: res.user.email,
+            name: name,
+            otrId: genOtr,
+            supabaseId: res.user.id
+          });
+
+          // Sync application personal details
+          const app = window.appStore.getApplication();
+          app.personal.fullName = name;
+          app.personal.email = email;
+          app.personal.mobile = mobile;
+          app.personal.state = state;
+          window.appStore.saveApplication(app);
+
+          showToast("Registration successful! Welcome to the portal.", "success");
+          router.navigate("/applicant/dashboard");
+        } else {
+          // Account registered, confirmation email dispatched
+          successDesc.innerHTML = `Your scholar account has been securely created in Supabase Auth for <strong>${email}</strong> with generated OTR ID <code class="font-mono bg-white/60 px-1 py-0.5 rounded font-bold">${genOtr}</code>. Please check your email inbox to verify your email, then proceed to sign in.`;
+          successContainer.classList.remove("hidden");
+          showToast("Account created! Verification link sent to email.", "success");
+          document.getElementById("applicant-reg-form").reset();
+        }
+      } else {
+        errText.textContent = res.error || "Failed to register account with Supabase.";
+        errContainer.classList.remove("hidden");
+        showToast(res.error || "Registration failed", "error");
+      }
+    } else {
+      // Local fallback
+      const genOtr = "OTR-2025-ST-" + Math.floor(100000 + Math.random() * 900000);
+      window.appStore.setAuthUser({
+        role: "applicant",
+        email: email,
+        name: name,
+        otrId: genOtr
+      });
+      showToast("Registered successfully (Offline Mode).", "success");
+      router.navigate("/applicant/dashboard");
+    }
+  } catch (err) {
+    errText.textContent = err.message || "An unexpected error occurred during registration.";
+    errContainer.classList.remove("hidden");
+    showToast("Registration error: " + err.message, "error");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalBtnHTML;
+  }
 }
 
 // 4. All Schemes Directory (/schemes)
@@ -1804,7 +2025,14 @@ router.register("/admin/schemes", () => {
   `;
 }, { layout: "admin", authRole: "admin" });
 
-// Initialize routing on DOMContentLoaded
-document.addEventListener("DOMContentLoaded", () => {
+// Initialize routing & Supabase session on DOMContentLoaded
+document.addEventListener("DOMContentLoaded", async () => {
+  if (window.initSupabaseAuthSync) {
+    try {
+      await window.initSupabaseAuthSync();
+    } catch (e) {
+      console.warn("Supabase auth sync error:", e);
+    }
+  }
   router.handleRouting();
 });
