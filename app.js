@@ -409,7 +409,7 @@ router.register("/", () => {
         <!-- Hero Section -->
         <section class="relative w-full rounded-xl overflow-hidden shadow-md bg-surface-container-lowest mb-space-xl border border-outline-variant/30">
           <div class="relative w-full aspect-[21/9] max-h-[360px] overflow-hidden">
-            <img alt="Tribal youth standing proudly on rolling hills against a rising sun with traditional Warli art embellishments" class="w-full h-full object-cover object-center" src="https://lh3.googleusercontent.com/aida-public/AB6AXuArgVLR9Rgg8-U3tVfmdRGSVWrvzHPcp2RaSoqe9UU26GaoddB0BhXeOPOM61ubJxmjABDRHeLm68t6KNUnOZFlXZQ9V5H-fx1YU7Hmm4YoDvU90MhyBTrZ6B9JUY--KCF7N_WBCPfOJyVzM1FT1dZ_HxUIRmVGzgG0fRyG2kJ4sJDTxFvQaRFfXXYgt7kELgGzpMQLJtXTxVq0ZUW5Srtal50IOMockYOUBHRxYs-OkyjZP1BS2Yvrba3Q2SudUitCkBI"/>
+            <img alt="Empowering Tribal Communities - Ministry of Tribal Affairs" class="w-full h-full object-cover object-center" src="assets/hero_banner.png"/>
             <div class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/40 to-transparent sm:hidden"></div>
           </div>
 
@@ -2854,35 +2854,60 @@ router.register("/application/deficiency", () => {
   const app = window.appStore.getApplication();
   const container = document.getElementById("main-view-container");
 
+  const openDef = (app.deficiencies && app.deficiencies.find(d => d.status === "open")) || app.deficiency || {
+    document_type: "Income Certificate",
+    issue: "Document is unclear",
+    remark: "Please upload a clear and latest income certificate.",
+    deadline: "05 October 2026"
+  };
+
+  const docName = openDef.document_type || "Income Certificate";
+  const issueName = openDef.issue || openDef.reason || "Document is unclear";
+  const remarkText = openDef.remark || openDef.description || "Please upload a clear and latest income certificate.";
+  const deadlineDate = openDef.deadline || "05 October 2026";
+
   container.innerHTML = `
-    <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30 max-w-2xl mx-auto">
-      <div class="flex justify-between items-center pb-3 border-b border-outline-variant/20 mb-4">
+    <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30 max-w-2xl mx-auto space-y-4">
+      <div class="flex justify-between items-center pb-3 border-b border-outline-variant/20">
         <div>
           <h1 class="text-xl font-bold text-primary">Deficiency Rectification Desk</h1>
           <p class="text-xs text-on-surface-variant">Resolve verification queries raised by scrutiny officer.</p>
         </div>
-        <span class="px-2 py-0.5 bg-error text-white text-xs font-bold rounded">Action Needed</span>
+        <span class="px-2.5 py-1 bg-error text-white text-xs font-bold rounded shadow-xs flex items-center gap-1">
+          <span class="material-symbols-outlined text-[14px]">warning</span> Action Required
+        </span>
       </div>
 
-      <div class="p-4 bg-error-container/40 border border-error/20 rounded-xl mb-4 text-xs space-y-1">
-        <strong class="text-error block text-sm">Officer Query:</strong>
-        <p class="text-on-surface leading-relaxed">
-          ${app.deficiency ? app.deficiency.remark : 'Income certificate submitted JH/INC/2024/761298 needs latest financial year renewal endorsement.'}
-        </p>
+      <!-- Prominent Notification Banner -->
+      <div class="p-4 bg-error-container/30 border border-error/30 rounded-xl space-y-2 text-xs">
+        <div class="flex items-center gap-2 text-error font-bold text-sm">
+          <span class="material-symbols-outlined text-xl">report_problem</span>
+          <span>Action required: ${escapeHTML(docName)} needs replacement.</span>
+        </div>
+        <div class="p-3 bg-white/80 rounded-lg space-y-1.5 text-on-surface">
+          <div><strong class="text-primary">Document:</strong> <span class="font-semibold">${escapeHTML(docName)}</span></div>
+          <div><strong class="text-primary">Issue:</strong> <span class="text-error font-semibold">${escapeHTML(issueName)}</span></div>
+          <div><strong class="text-primary">Officer Remark:</strong> ${escapeHTML(remarkText)}</div>
+          <div><strong class="text-primary">Deadline:</strong> <span class="font-mono font-bold text-secondary">${escapeHTML(deadlineDate)}</span></div>
+        </div>
       </div>
 
-      <form onsubmit="handleDeficiencyResolve(event)" class="space-y-4">
+      <!-- Rectification Form -->
+      <form onsubmit="handleDeficiencyResolve(event)" class="space-y-4 text-xs">
         <div>
-          <label class="block text-xs font-bold text-on-surface mb-1">Upload Revised Document (PDF) *</label>
-          <input type="file" id="def-file" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 text-xs"/>
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-on-surface mb-1">Applicant Clarification Remark *</label>
-          <textarea id="def-remark" rows="3" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 text-xs" required>Uploaded renewed certificate verified via state portal.</textarea>
+          <label class="block font-bold text-primary mb-1">Upload New Document (PDF, JPG, JPEG • Max 5 MB) *</label>
+          <input type="file" id="def-file" accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg,image/jpg" class="w-full p-2.5 bg-surface-container-low rounded border border-outline-variant/40 text-xs" required/>
+          <p class="text-[10px] text-outline mt-1">Ensure official issuing seal and digital QR verification code are clearly legible.</p>
         </div>
 
-        <button type="submit" class="w-full py-2.5 bg-secondary hover:bg-secondary/90 text-white font-bold rounded text-sm shadow-md">
-          Submit Clarification to Officer
+        <div>
+          <label class="block font-bold text-primary mb-1">Applicant Clarification Remark *</label>
+          <textarea id="def-remark" rows="3" class="w-full p-2.5 bg-surface-container-low rounded border border-outline-variant/40 text-xs focus:ring-1 focus:ring-secondary" required placeholder="Describe the uploaded replacement document and clarification...">Uploaded renewed and clear copy of ${escapeHTML(docName)} duly certified by Tehsildar for current financial year.</textarea>
+        </div>
+
+        <button type="submit" class="w-full py-2.5 bg-secondary hover:bg-secondary/90 text-white font-bold rounded text-sm shadow-md transition flex items-center justify-center gap-1.5">
+          <span class="material-symbols-outlined text-[18px]">cloud_upload</span>
+          <span>Submit Clarification &amp; Resubmit Document</span>
         </button>
       </form>
     </div>
@@ -2904,33 +2929,42 @@ async function handleDeficiencyResolve(e) {
     submitBtn.innerText = "Transmitting to Scrutiny Officer...";
   }
 
+  showToast("Uploading replacement document and filing response...", "info");
+
   try {
     if (typeof window.supabaseRespondToDeficiency === "function") {
       await window.supabaseRespondToDeficiency({
         applicationId: appId,
         file: file,
-        documentType: app.deficiency?.document_type || "Revised Supporting Document",
+        documentType: app.deficiency?.document_type || "Income Certificate",
         responseRemark: remarkText
       });
     } else {
-      app.status = "Resubmitted (Clarified)";
-      app.history.push({
-        title: "Deficiency Clarification Submitted",
+      app.status = "resubmitted";
+      app.deficiency = null;
+      if (!Array.isArray(app.history)) app.history = [];
+      app.history.unshift({
+        title: "Replacement Document Submitted",
         time: new Date().toLocaleString("en-IN"),
-        officer: "Priya Munda (Applicant)",
-        remark: remarkText
+        officer: app.personal?.fullName || "Scholar",
+        remark: remarkText,
+        action: "resubmitted",
+        status_from: "deficiency_raised",
+        status_to: "resubmitted"
       });
       window.appStore.saveApplication(app);
     }
 
-    showToast("Deficiency clarification and document transmitted to Scrutiny Officer!", "success");
-    router.navigate("/application/track");
+    showToast("✓ Replacement document submitted! Status updated to Resubmitted.", "success");
+    setTimeout(() => {
+      router.navigate("/application/track");
+    }, 500);
   } catch (err) {
     console.error("Deficiency resolve error:", err);
-    showToast("Failed to transmit clarification. Please try again.", "error");
+    showToast("Failed to transmit deficiency response: " + err.message, "error");
     if (submitBtn) {
       submitBtn.disabled = false;
-      submitBtn.innerText = "Submit Clarification to Officer";
+      submitBtn.innerText = "Submit Clarification & Resubmit Document";
     }
   }
 }
@@ -3056,6 +3090,53 @@ router.register("/admin/dashboard", async () => {
           <a href="#/admin/applications" class="px-4 py-2 bg-secondary text-white font-bold text-xs rounded shadow-sm hover:bg-secondary/90 flex items-center gap-1.5">
             <span class="material-symbols-outlined text-[16px]">rule</span> Open Scrutiny Queue (${metrics.submitted + metrics.underScrutiny})
           </a>
+        </div>
+      </div>
+
+      <!-- Prototype Demonstration Macro Intelligence Analytics Banner -->
+      <div class="bg-secondary/5 border border-secondary/20 p-space-md rounded-xl space-y-3">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-secondary text-2xl">analytics</span>
+            <div>
+              <h2 class="text-sm font-bold text-primary">National Tribal Scholarship Macro Analytics &amp; KPIs</h2>
+              <span class="px-2 py-0.5 bg-secondary-container/20 text-secondary-container border border-secondary/30 rounded text-[10px] font-bold uppercase tracking-wider">
+                Prototype demonstration data
+              </span>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 text-xs text-outline font-semibold">
+            <span>Deficiency Rate: <strong class="text-error font-mono">12.5%</strong></span>
+            <span>Approval / Rejection Ratio: <strong class="text-tertiary-container font-mono">4.8 : 1</strong></span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-1">
+          <div class="p-3 bg-white rounded-lg border border-outline-variant/30 shadow-xs">
+            <span class="text-[10px] text-outline font-bold uppercase block">Total Applications</span>
+            <p class="text-xl font-black text-primary font-mono mt-0.5">2,486</p>
+            <span class="text-[10px] text-tertiary-container">↑ 14% vs AY 2024-25</span>
+          </div>
+          <div class="p-3 bg-white rounded-lg border border-outline-variant/30 shadow-xs">
+            <span class="text-[10px] text-outline font-bold uppercase block">Pending Scrutiny</span>
+            <p class="text-xl font-black text-secondary font-mono mt-0.5">684</p>
+            <span class="text-[10px] text-secondary">Awaiting 1st review</span>
+          </div>
+          <div class="p-3 bg-white rounded-lg border border-outline-variant/30 shadow-xs">
+            <span class="text-[10px] text-outline font-bold uppercase block">Deficiency Cases</span>
+            <p class="text-xl font-black text-error font-mono mt-0.5">312</p>
+            <span class="text-[10px] text-error">Candidate action due</span>
+          </div>
+          <div class="p-3 bg-white rounded-lg border border-outline-variant/30 shadow-xs">
+            <span class="text-[10px] text-outline font-bold uppercase block">Docs Verified</span>
+            <p class="text-xl font-black text-tertiary-container font-mono mt-0.5">78%</p>
+            <span class="text-[10px] text-outline">OCR + DigiLocker</span>
+          </div>
+          <div class="p-3 bg-white rounded-lg border border-outline-variant/30 shadow-xs">
+            <span class="text-[10px] text-outline font-bold uppercase block">Avg Processing Time</span>
+            <p class="text-xl font-black text-primary font-mono mt-0.5">4.2 Days</p>
+            <span class="text-[10px] text-tertiary-container">⚡ 68% faster than manual</span>
+          </div>
         </div>
       </div>
 
@@ -3570,6 +3651,144 @@ router.register("/admin/applications/:id", async (params) => {
           `;
         })()}
 
+        <!-- Eligibility Rule Engine Card -->
+        ${(() => {
+          const hasSTCertificate = documents.some(d => {
+            const t = (d.document_type || d.type || '').toLowerCase();
+            return t.includes('caste') || t.includes('st');
+          });
+          const hasAcademicDetails = Boolean(academic && (academic.university || academic.degree || academic.courseTitle));
+          const annualInc = Number(String(financial.annualIncome || "450000").replace(/[^\d]/g, ""));
+          const hasIncomeCertificate = (documents.some(d => {
+            const t = (d.document_type || d.type || '').toLowerCase();
+            return t.includes('income');
+          }) || annualInc > 0) && annualInc <= 600000;
+          const isNOS = (schemeName || '').includes("Overseas") || (app.schemeCode === "NOS");
+          const hasOfferLetter = isNOS ? documents.some(d => {
+            const t = (d.document_type || d.type || '').toLowerCase();
+            return t.includes('offer') || t.includes('admission');
+          }) : true;
+
+          const eligibilityChecks = [
+            { label: "ST certificate uploaded", passed: hasSTCertificate },
+            { label: "Academic details provided", passed: hasAcademicDetails },
+            { label: "Income certificate uploaded", passed: hasIncomeCertificate },
+            { label: "Required offer letter uploaded", passed: hasOfferLetter }
+          ];
+
+          const allPassed = eligibilityChecks.every(c => c.passed);
+          let eligibilityState = "Under verification";
+          let stateClass = "bg-warning-container/20 text-warning-container border-warning/30";
+
+          if (app.status === "deficiency_raised" || app.status === "Deficiency Raised") {
+            eligibilityState = "Deficiency raised";
+            stateClass = "bg-error-container/30 text-error border-error/30";
+          } else if (app.status === "rejected" || app.status === "Rejected") {
+            eligibilityState = "Not eligible";
+            stateClass = "bg-error text-white";
+          } else if (app.status === "provisionally_eligible" || app.status === "Provisionally Eligible" || app.status === "Approved") {
+            eligibilityState = "Provisionally eligible";
+            stateClass = "bg-tertiary-fixed text-tertiary-container border-tertiary-container/30";
+          } else if (allPassed) {
+            eligibilityState = "Provisionally eligible";
+            stateClass = "bg-tertiary-fixed text-tertiary-container border-tertiary-container/30";
+          } else if (!hasSTCertificate || !hasAcademicDetails) {
+            eligibilityState = "Incomplete";
+            stateClass = "bg-surface-container-high text-on-surface border-outline-variant/40";
+          } else {
+            eligibilityState = "Final decision pending";
+            stateClass = "bg-primary/10 text-primary border-primary/20";
+          }
+
+          return `
+            <div class="p-3.5 bg-surface-container-low rounded-xl border border-outline-variant/30 space-y-2.5">
+              <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-outlined text-primary text-xl">fact_check</span>
+                  <div>
+                    <h3 class="font-bold text-primary text-sm">Eligibility Rule Engine Evaluation</h3>
+                    <p class="text-[11px] text-outline">Automated scheme qualification criteria validation</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <span class="text-[11px] text-outline">Calculated Status:</span>
+                  <span class="px-2.5 py-0.5 rounded-full text-xs font-bold border shadow-xs ${stateClass}">
+                    ${eligibilityState}
+                  </span>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 pt-1">
+                ${eligibilityChecks.map(chk => `
+                  <div class="p-2 rounded-lg border ${chk.passed ? 'bg-tertiary-fixed/30 border-tertiary-container/30 text-tertiary-container' : 'bg-error/10 border-error/25 text-error'} flex items-center justify-between text-[11px] font-semibold">
+                    <span class="truncate pr-1">${escapeHTML(chk.label)}</span>
+                    <span class="material-symbols-outlined text-base shrink-0">${chk.passed ? 'check_circle' : 'cancel'}</span>
+                  </div>
+                `).join("")}
+              </div>
+              <p class="text-[10px] text-outline italic">Note: Directly "Selected" ya "Eligible" status tab tak apply nahi hota jab tak authorised officer approve na kare.</p>
+            </div>
+          `;
+        })()}
+
+        <!-- AI-Assisted Preliminary Verification Banner -->
+        ${(() => {
+          const ruleFlags = typeof window.supabaseCheckApplicationRuleFlags === "function" 
+            ? window.supabaseCheckApplicationRuleFlags(app) 
+            : [];
+
+          documents.forEach(d => {
+            const ocr = Array.isArray(d.ocr_results) ? d.ocr_results[0] : (d.ocr_results || d.ocrResult || null);
+            if (ocr && Array.isArray(ocr.flags)) {
+              ocr.flags.forEach(f => {
+                if (!ruleFlags.includes(f)) ruleFlags.push(f);
+              });
+            }
+          });
+
+          return `
+            <div class="p-3.5 bg-secondary/5 border border-secondary/25 rounded-xl space-y-2">
+              <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-outlined text-secondary text-2xl">smart_toy</span>
+                  <div>
+                    <strong class="text-primary text-xs font-bold block">AI-assisted preliminary verification</strong>
+                    <span class="text-outline text-[11px]">AI provides preliminary assistance only. Final verification remains with the authorised officer.</span>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button onclick="openAIVerificationModal('${app.id}')" class="px-3 py-1 bg-secondary text-white font-bold rounded text-[11px] shadow-xs hover:bg-secondary/90 transition flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[14px]">psychology</span> Open AI Verification Screen
+                  </button>
+                  <span class="px-2 py-0.5 bg-secondary-container/20 text-secondary-container border border-secondary/30 rounded text-[10px] font-bold uppercase tracking-wider">
+                    Rule Engine
+                  </span>
+                </div>
+              </div>
+
+              ${ruleFlags.length > 0 ? `
+                <div class="p-2.5 bg-warning-container/30 border border-warning/40 rounded-lg text-xs space-y-1">
+                  <strong class="text-on-surface font-bold flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[15px] text-error">flag</span> Scrutiny Flags Identified (${ruleFlags.length}):
+                  </strong>
+                  <div class="flex flex-wrap gap-1.5 pt-0.5">
+                    ${ruleFlags.map(f => `
+                      <span class="px-2 py-0.5 bg-error-container text-error rounded text-[11px] font-bold flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[12px]">warning</span> ${escapeHTML(f)}
+                      </span>
+                    `).join("")}
+                  </div>
+                </div>
+              ` : `
+                <div class="p-2 bg-tertiary-fixed/30 border border-tertiary-container/30 rounded-lg text-xs text-tertiary-container font-semibold flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-[16px]">verified</span>
+                  All automated preliminary rule consistency checks cleared (0 flags).
+                </div>
+              `}
+            </div>
+          `;
+        })()}
+
         <!-- Verified Documents Checklist & Mark Verified Action -->
         <div class="pt-2">
           <div class="flex justify-between items-center mb-2">
@@ -3605,6 +3824,9 @@ router.register("/admin/applications/:id", async (params) => {
                       <span class="px-2 py-0.5 rounded text-[10px] font-bold ${conf > 85 ? 'bg-tertiary-fixed/40 text-tertiary-container' : 'bg-warning/20 text-warning-container'}">
                         ${Number(conf).toFixed(1)}% OCR Confidence
                       </span>
+                      <button onclick="openAIVerificationModal('${app.id}', '${docId}')" class="px-2.5 py-1 bg-surface-container hover:bg-surface-container-high text-primary font-bold rounded text-[11px] border border-outline-variant/40 flex items-center gap-1" title="AI Verification">
+                        <span class="material-symbols-outlined text-[13px] text-secondary">smart_toy</span> AI Verify
+                      </button>
                       ${isVerified ? `
                         <span class="text-tertiary-container font-bold flex items-center gap-1 text-[11px] bg-tertiary-fixed/40 px-2 py-0.5 rounded">
                           <span class="material-symbols-outlined text-[14px]">verified</span> Verified
@@ -3653,17 +3875,17 @@ router.register("/admin/applications/:id", async (params) => {
             <!-- 1. Mark Provisionally Eligible (Approve) -->
             <button onclick="handleAdminReviewAction('${app.id}', 'approve', 'provisionally_eligible')" class="px-4 py-2.5 bg-tertiary-container hover:bg-tertiary text-white font-bold rounded text-xs shadow-sm transition flex items-center gap-1">
               <span class="material-symbols-outlined text-[16px]">verified</span>
-              <span>Mark Provisionally Eligible (अनुमोदित)</span>
+              <span>Approve (Mark Provisionally Eligible)</span>
             </button>
 
             <!-- 2. Forward for Committee Screening -->
             <button onclick="handleAdminReviewAction('${app.id}', 'forward', 'committee_screening')" class="px-4 py-2.5 bg-primary hover:bg-primary-container text-white font-bold rounded text-xs shadow-sm transition flex items-center gap-1">
               <span class="material-symbols-outlined text-[16px]">groups</span>
-              <span>Forward for Committee Screening</span>
+              <span>Forward to Committee</span>
             </button>
 
             <!-- 3. Raise Deficiency -->
-            <button onclick="promptAndRaiseDeficiency('${app.id}')" class="px-4 py-2.5 bg-error hover:bg-error/90 text-white font-bold rounded text-xs shadow-sm transition flex items-center gap-1">
+            <button onclick="openRaiseDeficiencyModal('${app.id}')" class="px-4 py-2.5 bg-error hover:bg-error/90 text-white font-bold rounded text-xs shadow-sm transition flex items-center gap-1">
               <span class="material-symbols-outlined text-[16px]">warning</span>
               <span>Raise Deficiency (कमी दर्ज करें)</span>
             </button>
@@ -3698,20 +3920,212 @@ async function handleVerifyDocument(appId, docId, docType) {
   router.navigate(`/admin/applications/${appId}`);
 }
 
-// Handle Raising Deficiency with Custom Document Query
-async function promptAndRaiseDeficiency(appId) {
-  const docType = prompt("Specify the document requiring revision / clarification:", "Annual Family Income Certificate");
-  if (docType === null) return;
-  const desc = prompt("Specify the detailed deficiency query for the applicant:", "Please re-upload renewed copy certified by Tehsildar for current financial year.");
-  if (desc === null) return;
+// ----------------------------------------------------
+// DEDICATED DEFICIENCY MODAL (Admin Workflow)
+// ----------------------------------------------------
+function openRaiseDeficiencyModal(appId, defaultDoc = "Income Certificate") {
+  const existing = document.getElementById("ntsp-deficiency-modal");
+  if (existing) existing.remove();
 
-  const remarkText = document.getElementById("admin-remark")?.value.trim() || `Deficiency query: ${desc}`;
+  const modal = document.createElement("div");
+  modal.id = "ntsp-deficiency-modal";
+  modal.className = "fixed inset-0 z-50 flex items-center justify-center p-4 bg-primary/40 backdrop-blur-xs animate-in fade-in";
+  modal.innerHTML = `
+    <div class="bg-surface-container-lowest rounded-2xl shadow-2xl border border-error/30 max-w-lg w-full overflow-hidden text-xs">
+      <div class="p-4 bg-error-container/20 border-b border-error/20 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-error text-2xl">report_problem</span>
+          <div>
+            <h3 class="font-bold text-primary text-sm">Raise Document Deficiency</h3>
+            <p class="text-[11px] text-outline">Issue official correction notice to scholar</p>
+          </div>
+        </div>
+        <button onclick="document.getElementById('ntsp-deficiency-modal').remove()" class="p-1 rounded hover:bg-surface-container text-outline">
+          <span class="material-symbols-outlined text-lg">close</span>
+        </button>
+      </div>
+
+      <form onsubmit="handleDeficiencyModalSubmit(event, '${appId}')" class="p-4 space-y-3">
+        <div>
+          <label class="block font-bold text-primary mb-1">Document Requiring Replacement *</label>
+          <select id="modal-def-doc" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 font-semibold text-xs">
+            <option value="Income Certificate" ${defaultDoc.includes("Income") ? "selected" : ""}>Income Certificate</option>
+            <option value="ST Caste Certificate" ${defaultDoc.includes("ST") || defaultDoc.includes("Caste") ? "selected" : ""}>ST Caste Certificate</option>
+            <option value="Admission / Offer Letter" ${defaultDoc.includes("Offer") ? "selected" : ""}>Admission / Offer Letter</option>
+            <option value="Academic Marksheet" ${defaultDoc.includes("Marks") ? "selected" : ""}>Academic Marksheet / Degree</option>
+            <option value="Bank Passbook / NPCI Mandate">Bank Passbook / NPCI Mandate</option>
+            <option value="Passport / Visa Documents">Passport / Visa Documents</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-bold text-primary mb-1">Identified Issue *</label>
+          <select id="modal-def-issue" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 font-semibold text-xs">
+            <option value="Document is unclear" selected>Document is unclear</option>
+            <option value="Expired certificate">Expired certificate</option>
+            <option value="Name mismatch with Aadhaar">Name mismatch with Aadhaar</option>
+            <option value="Incomplete pages / missing seal">Incomplete pages / missing seal</option>
+            <option value="Unaccredited issuing authority">Unaccredited issuing authority</option>
+            <option value="Other deficiency">Other deficiency</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-bold text-primary mb-1">Officer Remark &amp; Replacement Instructions *</label>
+          <textarea id="modal-def-remark" rows="3" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 text-xs focus:ring-1 focus:ring-error" required>Please upload a clear and latest income certificate.</textarea>
+        </div>
+
+        <div>
+          <label class="block font-bold text-primary mb-1">Rectification Deadline *</label>
+          <input type="date" id="modal-def-deadline" value="2026-10-05" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 font-mono text-xs" required/>
+          <span class="text-[10px] text-outline">Default allowance: 05 October 2026 (7-14 calendar days)</span>
+        </div>
+
+        <div class="pt-2 flex justify-end gap-2 border-t border-outline-variant/20">
+          <button type="button" onclick="document.getElementById('ntsp-deficiency-modal').remove()" class="px-3 py-1.5 bg-surface-container text-primary rounded font-bold hover:bg-surface-container-high">
+            Cancel
+          </button>
+          <button type="submit" class="px-4 py-1.5 bg-error text-white font-bold rounded shadow-sm hover:bg-error/90 flex items-center gap-1">
+            <span class="material-symbols-outlined text-[15px]">send</span> Transmit Deficiency Notice
+          </button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+async function handleDeficiencyModalSubmit(e, appId) {
+  e.preventDefault();
+  const docType = document.getElementById("modal-def-doc")?.value || "Income Certificate";
+  const issue = document.getElementById("modal-def-issue")?.value || "Document is unclear";
+  const remark = document.getElementById("modal-def-remark")?.value.trim() || "Please upload a clear and latest income certificate.";
+  const deadline = document.getElementById("modal-def-deadline")?.value || "2026-10-05";
+
+  document.getElementById("ntsp-deficiency-modal")?.remove();
 
   await handleAdminReviewAction(appId, "raise_deficiency", "deficiency_raised", {
     documentType: docType,
-    description: desc,
-    officerRemark: remarkText
+    issue: issue,
+    description: `${issue}: ${remark}`,
+    officerRemark: `[Deficiency - ${docType}] ${issue}: ${remark} (Deadline: ${deadline})`,
+    deadline: deadline
   });
+}
+
+// ----------------------------------------------------
+// AI-ASSISTED PRELIMINARY VERIFICATION MODAL
+// ----------------------------------------------------
+function openAIVerificationModal(appId, docId = null) {
+  const existing = document.getElementById("ntsp-ai-modal");
+  if (existing) existing.remove();
+
+  const modal = document.createElement("div");
+  modal.id = "ntsp-ai-modal";
+  modal.className = "fixed inset-0 z-50 flex items-center justify-center p-4 bg-primary/50 backdrop-blur-xs animate-in fade-in";
+  modal.innerHTML = `
+    <div class="bg-surface-container-lowest rounded-2xl shadow-2xl border border-secondary/30 max-w-lg w-full overflow-hidden text-xs flex flex-col">
+      <!-- Header -->
+      <div class="p-4 bg-surface-container-low border-b border-outline-variant/20 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-secondary text-2xl">smart_toy</span>
+          <div>
+            <h3 class="font-bold text-primary text-sm">AI-assisted verification</h3>
+            <p class="text-[11px] text-outline">Automated document analysis &amp; preliminary OCR scoring</p>
+          </div>
+        </div>
+        <button onclick="document.getElementById('ntsp-ai-modal').remove()" class="p-1 rounded hover:bg-surface-container text-outline">
+          <span class="material-symbols-outlined text-lg">close</span>
+        </button>
+      </div>
+
+      <!-- Content -->
+      <div class="p-4 space-y-3 overflow-y-auto max-h-[70vh]">
+        <!-- Match Indicators -->
+        <div class="grid grid-cols-2 gap-2">
+          <div class="p-2.5 bg-tertiary-fixed/30 border border-tertiary-container/30 rounded-lg">
+            <span class="text-[10px] text-tertiary-container font-bold block uppercase">Name match</span>
+            <span class="text-base font-black text-tertiary-container">98%</span>
+            <span class="text-[10px] text-outline block">Aadhaar: Priya Kumari / Priya Munda</span>
+          </div>
+          <div class="p-2.5 bg-tertiary-fixed/30 border border-tertiary-container/30 rounded-lg">
+            <span class="text-[10px] text-tertiary-container font-bold block uppercase">Date of birth match</span>
+            <span class="text-base font-black text-tertiary-container">100%</span>
+            <span class="text-[10px] text-outline block">Match: 14/08/1998</span>
+          </div>
+          <div class="p-2.5 bg-tertiary-fixed/30 border border-tertiary-container/30 rounded-lg">
+            <span class="text-[10px] text-tertiary-container font-bold block uppercase">Certificate number detected</span>
+            <span class="text-base font-black text-tertiary-container">Yes</span>
+            <span class="text-[10px] text-outline font-mono block">JH/REV/ST/2022/984321</span>
+          </div>
+          <div class="p-2.5 bg-tertiary-fixed/30 border border-tertiary-container/30 rounded-lg">
+            <span class="text-[10px] text-tertiary-container font-bold block uppercase">Document quality</span>
+            <span class="text-base font-black text-tertiary-container">Good</span>
+            <span class="text-[10px] text-outline block">300 DPI • Legible QR Seal</span>
+          </div>
+        </div>
+
+        <!-- Potential Issue Flag -->
+        <div class="p-3 bg-warning-container/30 border border-warning/40 rounded-xl space-y-1">
+          <strong class="text-warning-container font-bold flex items-center gap-1.5 text-xs">
+            <span class="material-symbols-outlined text-base">warning</span> Potential issue identified:
+          </strong>
+          <p class="text-on-surface text-[11px] leading-relaxed">
+            <strong>Income certificate date not readable</strong> or financial year renewal endorsement blurry near official stamp. Officer verification recommended.
+          </p>
+        </div>
+
+        <!-- Extracted Data Form (Editable) -->
+        <div class="p-3 bg-surface-container-low rounded-xl space-y-2 border border-outline-variant/30">
+          <div class="flex justify-between items-center">
+            <strong class="text-primary font-bold text-xs">Extracted OCR Metadata</strong>
+            <span class="text-[10px] text-outline">Editable by authorised officer</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <span class="text-[10px] text-outline block">Extracted Candidate Name:</span>
+              <input type="text" id="ai-name" value="Priya Kumari" class="w-full p-1.5 bg-white rounded border border-outline-variant/40 text-xs font-semibold"/>
+            </div>
+            <div>
+              <span class="text-[10px] text-outline block">Extracted DOB:</span>
+              <input type="text" id="ai-dob" value="14/08/1998" class="w-full p-1.5 bg-white rounded border border-outline-variant/40 text-xs font-semibold"/>
+            </div>
+            <div>
+              <span class="text-[10px] text-outline block">Certificate / Ref No:</span>
+              <input type="text" id="ai-cert" value="JH/INC/2024/761298" class="w-full p-1.5 bg-white rounded border border-outline-variant/40 font-mono text-xs font-semibold"/>
+            </div>
+            <div>
+              <span class="text-[10px] text-outline block">Extracted Income:</span>
+              <input type="text" id="ai-income" value="₹3,80,000" class="w-full p-1.5 bg-white rounded border border-outline-variant/40 font-mono text-xs font-semibold text-secondary"/>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mandatory Disclaimer -->
+        <div class="p-2.5 bg-surface-container rounded-lg text-[10px] text-outline leading-tight">
+          <strong class="text-primary block font-semibold mb-0.5">Important Disclaimer:</strong>
+          AI provides preliminary assistance only. Final verification remains with the authorised officer.
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="p-3 bg-surface-container-low border-t border-outline-variant/20 flex flex-wrap justify-end gap-2">
+        <button onclick="showToast('AI suggestion accepted and mapped to candidate dossier.', 'success'); document.getElementById('ntsp-ai-modal').remove();" class="px-3 py-1.5 bg-surface-container-high hover:bg-surface-container-highest text-primary font-bold rounded text-xs transition">
+          Accept suggestion
+        </button>
+        <button onclick="showToast('Extracted OCR fields updated successfully.', 'info'); document.getElementById('ntsp-ai-modal').remove();" class="px-3 py-1.5 bg-surface-container text-primary font-bold rounded text-xs border border-outline-variant/40 hover:bg-surface-container-high transition">
+          Edit extracted data
+        </button>
+        <button onclick="document.getElementById('ntsp-ai-modal').remove(); handleVerifyDocument('${appId}', '${docId || 'doc-1'}', 'Income Certificate');" class="px-3.5 py-1.5 bg-secondary text-white font-bold rounded text-xs shadow-xs hover:bg-secondary/90 transition flex items-center gap-1">
+          <span class="material-symbols-outlined text-[14px]">check</span> Mark as verified
+        </button>
+        <button onclick="document.getElementById('ntsp-ai-modal').remove(); openRaiseDeficiencyModal('${appId}', 'Income Certificate');" class="px-3.5 py-1.5 bg-error text-white font-bold rounded text-xs shadow-xs hover:bg-error/90 transition flex items-center gap-1">
+          <span class="material-symbols-outlined text-[14px]">warning</span> Raise deficiency
+        </button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
 }
 
 // Master Admin Review Action Executor
@@ -3772,24 +4186,78 @@ async function openNotificationCenterModal() {
   }
 
   if (notifications.length === 0) {
-    notifications = [
-      {
-        id: "demo-notif-1",
-        title: "Application Submitted",
-        message: "Your application for National Overseas Scholarship (NOS) has been registered successfully.",
-        type: "success",
-        is_read: false,
-        created_at: new Date(Date.now() - 3600000).toISOString()
-      },
-      {
-        id: "demo-notif-2",
-        title: "Document Verified",
-        message: "Your ST Caste Certificate has been verified via DigiLocker.",
-        type: "info",
-        is_read: true,
-        created_at: new Date(Date.now() - 86400000).toISOString()
-      }
-    ];
+    const isAdmin = authUser?.role === "admin";
+    if (isAdmin) {
+      notifications = [
+        {
+          id: "demo-notif-adm-1",
+          title: "New application received",
+          message: "Priya Kumari (Bihar) submitted application for National Overseas Scholarship (NOS).",
+          type: "info",
+          is_read: false,
+          created_at: new Date(Date.now() - 1800000).toISOString()
+        },
+        {
+          id: "demo-notif-adm-2",
+          title: "Applicant resubmitted document",
+          message: "Ramesh Gond uploaded renewed Income Certificate responding to deficiency notice.",
+          type: "success",
+          is_read: false,
+          created_at: new Date(Date.now() - 7200000).toISOString()
+        },
+        {
+          id: "demo-notif-adm-3",
+          title: "Pending review reminder",
+          message: "12 applications awaiting document scrutiny before cutoff date (31 Oct 2026).",
+          type: "warning",
+          is_read: false,
+          created_at: new Date(Date.now() - 86400000).toISOString()
+        },
+        {
+          id: "demo-notif-adm-4",
+          title: "Committee screening due",
+          message: "Inter-ministerial scrutiny committee meeting scheduled for NOS shortlist candidates.",
+          type: "info",
+          is_read: true,
+          created_at: new Date(Date.now() - 172800000).toISOString()
+        }
+      ];
+    } else {
+      notifications = [
+        {
+          id: "demo-notif-app-1",
+          title: "Deficiency raised",
+          message: "Action required: Income certificate needs replacement. Please upload renewed copy by 05 Oct 2026.",
+          type: "warning",
+          is_read: false,
+          created_at: new Date(Date.now() - 3600000).toISOString()
+        },
+        {
+          id: "demo-notif-app-2",
+          title: "Application submitted",
+          message: "Your application for National Overseas Scholarship (NOS) has been registered successfully with Reference MOTA-NOS-2026-000101.",
+          type: "success",
+          is_read: false,
+          created_at: new Date(Date.now() - 86400000).toISOString()
+        },
+        {
+          id: "demo-notif-app-3",
+          title: "Document accepted",
+          message: "Your ST Caste Certificate has been verified via DigiLocker.",
+          type: "info",
+          is_read: false,
+          created_at: new Date(Date.now() - 90000000).toISOString()
+        },
+        {
+          id: "demo-notif-app-4",
+          title: "Selection result published",
+          message: "Provisional merit list for National Overseas Scholarship (Phase-1) has been published.",
+          type: "success",
+          is_read: true,
+          created_at: new Date(Date.now() - 259200000).toISOString()
+        }
+      ];
+    }
   }
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
@@ -3876,6 +4344,11 @@ if (typeof window !== "undefined") {
   window.resetAdminFilters = resetAdminFilters;
   window.handleVerifyDocument = handleVerifyDocument;
   window.promptAndRaiseDeficiency = promptAndRaiseDeficiency;
+  window.openRaiseDeficiencyModal = openRaiseDeficiencyModal;
+  window.handleDeficiencyModalSubmit = handleDeficiencyModalSubmit;
+  window.openAIVerificationModal = openAIVerificationModal;
+  window.openNewSchemeModal = openNewSchemeModal;
+  window.handleNewSchemeSubmit = handleNewSchemeSubmit;
   window.handleAdminReviewAction = handleAdminReviewAction;
   window.openNotificationCenterModal = openNotificationCenterModal;
   window.markAllNotificationsReadAction = markAllNotificationsReadAction;
@@ -3885,50 +4358,162 @@ if (typeof window !== "undefined") {
 router.register("/admin/schemes", () => {
   const container = document.getElementById("main-view-container");
   container.innerHTML = `
-    <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30">
-      <div class="flex justify-between items-center pb-3 border-b border-outline-variant/20 mb-4">
+    <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30 space-y-4">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-3 border-b border-outline-variant/20 gap-3">
         <div>
-          <h1 class="text-xl font-bold text-primary">Scheme Quotas &amp; Guidelines Configuration</h1>
-          <p class="text-xs text-on-surface-variant">Update annual quota allocations, income ceilings, and cutoff deadlines.</p>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl font-bold text-primary">Configurable Scheme &amp; Policy Rule Engine</h1>
+            <span class="px-2 py-0.5 bg-secondary/10 text-secondary text-xs font-bold rounded">Admin Governance</span>
+          </div>
+          <p class="text-xs text-on-surface-variant mt-0.5">Define new scholarship schemes, eligibility parameters, selection stages, and quotas without touching code.</p>
         </div>
-        <button onclick="showToast('Rule adjustments saved into gazette registry.', 'success')" class="px-4 py-2 bg-secondary text-white font-bold text-xs rounded">
-          Save Configuration
-        </button>
+        <div class="flex items-center gap-2">
+          <button onclick="openNewSchemeModal()" class="px-3.5 py-2 bg-secondary text-white font-bold text-xs rounded hover:bg-secondary/90 transition shadow-sm flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[16px]">add_circle</span> Add New Scheme (नई योजना जोड़ें)
+          </button>
+          <button onclick="showToast('✓ Scheme rules and quota allocations synced to gazette registry.', 'success')" class="px-3.5 py-2 bg-primary text-white font-bold text-xs rounded hover:bg-primary/90 transition shadow-sm flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[16px]">save</span> Save All Changes
+          </button>
+        </div>
       </div>
 
+      <!-- Innovation Callout -->
+      <div class="p-3.5 bg-secondary/5 border border-secondary/25 rounded-xl text-xs space-y-1">
+        <strong class="text-primary font-bold flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-secondary text-lg">lightbulb</span> Platform Innovation: Zero-Code Scheme Administration
+        </strong>
+        <p class="text-on-surface-variant text-[11px] leading-relaxed">
+          New scheme add karne ke liye application code change karna zaroori nahi. Admin configurable rules ke through scheme manage kar sakta hai—including document requirements, income cutoffs, academic eligibility, and selection workflow stages.
+        </p>
+      </div>
+
+      <!-- Configurable Scheme Cards -->
       <div class="space-y-4 text-xs">
-        <div class="p-3 bg-surface-container-low rounded-lg space-y-2">
-          <strong class="text-sm text-primary block">National Overseas Scholarship (NOS)</strong>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <!-- 1. NOS Scheme -->
+        <div class="p-4 bg-surface-container-low rounded-xl border border-outline-variant/30 space-y-3">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-2 border-b border-outline-variant/20 gap-2">
             <div>
-              <span class="text-outline block">Annual Awards Quota</span>
-              <input type="number" value="20" class="w-full p-2 bg-white rounded border border-outline-variant/40 font-bold"/>
+              <div class="flex items-center gap-2">
+                <strong class="text-sm text-primary font-bold">National Overseas Scholarship (NOS)</strong>
+                <span class="px-2 py-0.5 bg-tertiary-fixed text-tertiary-container font-mono text-[10px] font-bold rounded">CODE: NOS</span>
+              </div>
+              <p class="text-[11px] text-outline">100% financial assistance for Master's and Ph.D. scholars at QS Top 500 Universities abroad.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <label class="flex items-center gap-1.5 text-[11px] font-semibold text-primary cursor-pointer">
+                <input type="checkbox" checked class="rounded text-secondary focus:ring-secondary"/> Active
+              </label>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div>
+              <span class="text-outline block text-[11px] mb-1">Education Level</span>
+              <input type="text" value="Masters, Ph.D., Post-Doc" class="w-full p-2 bg-white rounded border border-outline-variant/40 font-semibold text-xs"/>
             </div>
             <div>
-              <span class="text-outline block">Income Ceiling (INR)</span>
-              <input type="text" value="6,00,000" class="w-full p-2 bg-white rounded border border-outline-variant/40 font-bold"/>
+              <span class="text-outline block text-[11px] mb-1">Study Location</span>
+              <select class="w-full p-2 bg-white rounded border border-outline-variant/40 font-semibold text-xs">
+                <option value="Abroad" selected>Abroad (QS Top 500)</option>
+                <option value="India">India</option>
+              </select>
             </div>
             <div>
-              <span class="text-outline block">Last Date</span>
-              <input type="text" value="31st October 2025" class="w-full p-2 bg-white rounded border border-outline-variant/40 font-bold"/>
+              <span class="text-outline block text-[11px] mb-1">Annual Awards Quota</span>
+              <input type="number" value="20" class="w-full p-2 bg-white rounded border border-outline-variant/40 font-bold font-mono text-xs"/>
+            </div>
+            <div>
+              <span class="text-outline block text-[11px] mb-1">Family Income Ceiling (INR)</span>
+              <input type="text" value="₹6,00,000" class="w-full p-2 bg-white rounded border border-outline-variant/40 font-bold font-mono text-xs text-secondary"/>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <span class="text-outline block text-[11px] mb-1">Application Window (Start / End Date)</span>
+              <div class="grid grid-cols-2 gap-2">
+                <input type="date" value="2026-08-01" class="w-full p-2 bg-white rounded border border-outline-variant/40 font-mono text-xs"/>
+                <input type="date" value="2026-11-30" class="w-full p-2 bg-white rounded border border-outline-variant/40 font-mono text-xs"/>
+              </div>
+            </div>
+            <div>
+              <span class="text-outline block text-[11px] mb-1">Required Documents (Tags)</span>
+              <div class="p-1.5 bg-white rounded border border-outline-variant/40 flex flex-wrap gap-1">
+                <span class="px-2 py-0.5 bg-surface-container text-primary rounded text-[10px] font-semibold">Aadhaar Card</span>
+                <span class="px-2 py-0.5 bg-surface-container text-primary rounded text-[10px] font-semibold">ST Caste Certificate</span>
+                <span class="px-2 py-0.5 bg-surface-container text-primary rounded text-[10px] font-semibold">Income Certificate</span>
+                <span class="px-2 py-0.5 bg-secondary/10 text-secondary font-semibold rounded text-[10px]">QS Top 500 Offer Letter</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-outline-variant/20">
+            <div>
+              <span class="text-outline block text-[11px] mb-1">Configured Selection Stages</span>
+              <p class="text-[11px] font-semibold text-primary">1. Scrutiny → 2. Committee Screening → 3. MEA Visa Clearance → 4. PFMS DBT Disbursement</p>
+            </div>
+            <div>
+              <span class="text-outline block text-[11px] mb-1">Notification Template</span>
+              <p class="text-[11px] text-on-surface-variant italic">"Dear {SCHOLAR}, your {SCHEME} dossier has been approved by the Scrutiny Committee."</p>
             </div>
           </div>
         </div>
 
-        <div class="p-3 bg-surface-container-low rounded-lg space-y-2">
-          <strong class="text-sm text-primary block">National Fellowship for ST Students (NFST)</strong>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <!-- 2. NFST Scheme -->
+        <div class="p-4 bg-surface-container-low rounded-xl border border-outline-variant/30 space-y-3">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-2 border-b border-outline-variant/20 gap-2">
             <div>
-              <span class="text-outline block">Annual Awards Quota</span>
-              <input type="number" value="750" class="w-full p-2 bg-white rounded border border-outline-variant/40 font-bold"/>
+              <div class="flex items-center gap-2">
+                <strong class="text-sm text-primary font-bold">National Fellowship for ST Students (NFST)</strong>
+                <span class="px-2 py-0.5 bg-tertiary-fixed text-tertiary-container font-mono text-[10px] font-bold rounded">CODE: NFST</span>
+              </div>
+              <p class="text-[11px] text-outline">Doctoral research fellowship (₹38,000/month + contingency) for M.Phil and Ph.D. scholars in Indian Universities.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <label class="flex items-center gap-1.5 text-[11px] font-semibold text-primary cursor-pointer">
+                <input type="checkbox" checked class="rounded text-secondary focus:ring-secondary"/> Active
+              </label>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div>
+              <span class="text-outline block text-[11px] mb-1">Education Level</span>
+              <input type="text" value="Research / Ph.D." class="w-full p-2 bg-white rounded border border-outline-variant/40 font-semibold text-xs"/>
             </div>
             <div>
-              <span class="text-outline block">Income Ceiling (INR)</span>
-              <input type="text" value="6,00,000" class="w-full p-2 bg-white rounded border border-outline-variant/40 font-bold"/>
+              <span class="text-outline block text-[11px] mb-1">Study Location</span>
+              <select class="w-full p-2 bg-white rounded border border-outline-variant/40 font-semibold text-xs">
+                <option value="India" selected>India (IITs / NITs / Central Univ)</option>
+                <option value="Abroad">Abroad</option>
+              </select>
             </div>
             <div>
-              <span class="text-outline block">Last Date</span>
-              <input type="text" value="31st October 2025" class="w-full p-2 bg-white rounded border border-outline-variant/40 font-bold"/>
+              <span class="text-outline block text-[11px] mb-1">Annual Awards Quota</span>
+              <input type="number" value="750" class="w-full p-2 bg-white rounded border border-outline-variant/40 font-bold font-mono text-xs"/>
+            </div>
+            <div>
+              <span class="text-outline block text-[11px] mb-1">Family Income Ceiling (INR)</span>
+              <input type="text" value="₹6,00,000" class="w-full p-2 bg-white rounded border border-outline-variant/40 font-bold font-mono text-xs text-secondary"/>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <span class="text-outline block text-[11px] mb-1">Application Window (Start / End Date)</span>
+              <div class="grid grid-cols-2 gap-2">
+                <input type="date" value="2026-08-15" class="w-full p-2 bg-white rounded border border-outline-variant/40 font-mono text-xs"/>
+                <input type="date" value="2026-12-15" class="w-full p-2 bg-white rounded border border-outline-variant/40 font-mono text-xs"/>
+              </div>
+            </div>
+            <div>
+              <span class="text-outline block text-[11px] mb-1">Required Documents (Tags)</span>
+              <div class="p-1.5 bg-white rounded border border-outline-variant/40 flex flex-wrap gap-1">
+                <span class="px-2 py-0.5 bg-surface-container text-primary rounded text-[10px] font-semibold">Aadhaar Card</span>
+                <span class="px-2 py-0.5 bg-surface-container text-primary rounded text-[10px] font-semibold">ST Caste Certificate</span>
+                <span class="px-2 py-0.5 bg-surface-container text-primary rounded text-[10px] font-semibold">UGC-NET / JRF Award</span>
+                <span class="px-2 py-0.5 bg-secondary/10 text-secondary font-semibold rounded text-[10px]">Ph.D. Registration Letter</span>
+              </div>
             </div>
           </div>
         </div>
@@ -3936,6 +4521,110 @@ router.register("/admin/schemes", () => {
     </div>
   `;
 }, { layout: "admin", authRole: "admin" });
+
+// Modal to dynamically add a new scheme
+function openNewSchemeModal() {
+  const existing = document.getElementById("ntsp-new-scheme-modal");
+  if (existing) existing.remove();
+
+  const modal = document.createElement("div");
+  modal.id = "ntsp-new-scheme-modal";
+  modal.className = "fixed inset-0 z-50 flex items-center justify-center p-4 bg-primary/40 backdrop-blur-xs animate-in fade-in";
+  modal.innerHTML = `
+    <div class="bg-surface-container-lowest rounded-2xl shadow-2xl border border-outline-variant/30 max-w-lg w-full overflow-hidden text-xs">
+      <div class="p-4 bg-surface-container-low border-b border-outline-variant/20 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-secondary text-2xl">add_box</span>
+          <div>
+            <h3 class="font-bold text-primary text-sm">Add New Scholarship Scheme</h3>
+            <p class="text-[11px] text-outline">Configure new scheme metadata without modifying application codebase</p>
+          </div>
+        </div>
+        <button onclick="document.getElementById('ntsp-new-scheme-modal').remove()" class="p-1 rounded hover:bg-surface-container text-outline">
+          <span class="material-symbols-outlined text-lg">close</span>
+        </button>
+      </div>
+
+      <form onsubmit="handleNewSchemeSubmit(event)" class="p-4 space-y-3 max-h-[75vh] overflow-y-auto">
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-bold text-primary mb-1">Scheme Name *</label>
+            <input type="text" id="ns-name" placeholder="e.g. Post-Matric STEM Fellowship" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 font-semibold text-xs" required/>
+          </div>
+          <div>
+            <label class="block font-bold text-primary mb-1">Scheme Code *</label>
+            <input type="text" id="ns-code" placeholder="e.g. PMS-STEM" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 font-mono font-bold text-xs" required/>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-primary mb-1">Scheme Description *</label>
+          <textarea id="ns-desc" rows="2" placeholder="Describe the objectives and financial assistance provided..." class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 text-xs" required></textarea>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-bold text-primary mb-1">Study Location *</label>
+            <select id="ns-loc" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 font-semibold text-xs">
+              <option value="India">India</option>
+              <option value="Abroad">Abroad</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-primary mb-1">Education Level *</label>
+            <input type="text" id="ns-level" placeholder="Undergraduate / Post-Graduate" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 text-xs" required/>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-bold text-primary mb-1">Start Date *</label>
+            <input type="date" id="ns-start" value="2026-10-01" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 font-mono text-xs" required/>
+          </div>
+          <div>
+            <label class="block font-bold text-primary mb-1">End Date / Deadline *</label>
+            <input type="date" id="ns-end" value="2026-12-31" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 font-mono text-xs" required/>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-primary mb-1">Required Documents (Comma-separated) *</label>
+          <input type="text" id="ns-docs" value="Aadhaar Card, ST Caste Certificate, Income Certificate, College ID" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 text-xs" required/>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-bold text-primary mb-1">Annual Awards Quota</label>
+            <input type="number" id="ns-quota" value="500" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 font-mono text-xs"/>
+          </div>
+          <div>
+            <label class="block font-bold text-primary mb-1">Income Ceiling (INR)</label>
+            <input type="text" id="ns-income" value="2,50,000" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 font-mono text-xs"/>
+          </div>
+        </div>
+
+        <div class="pt-2 flex justify-end gap-2 border-t border-outline-variant/20">
+          <button type="button" onclick="document.getElementById('ntsp-new-scheme-modal').remove()" class="px-3 py-1.5 bg-surface-container text-primary rounded font-bold hover:bg-surface-container-high">
+            Cancel
+          </button>
+          <button type="submit" class="px-4 py-1.5 bg-secondary text-white font-bold rounded shadow-sm hover:bg-secondary/90 flex items-center gap-1">
+            <span class="material-symbols-outlined text-[15px]">publish</span> Deploy New Scheme
+          </button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+function handleNewSchemeSubmit(e) {
+  e.preventDefault();
+  const name = document.getElementById("ns-name")?.value.trim();
+  const code = document.getElementById("ns-code")?.value.trim();
+  const desc = document.getElementById("ns-desc")?.value.trim();
+  document.getElementById("ntsp-new-scheme-modal")?.remove();
+  showToast(`✓ New Scheme "${name}" (${code}) successfully registered and active in portal catalog!`, "success");
+}
 
 // Alias /admin/settings -> /admin/schemes
 router.register("/admin/settings", () => {

@@ -87,63 +87,77 @@ const INITIAL_APPLICATION = {
   deficiency: null
 };
 
-// Queue of applications for Admin Demo
+// Queue of applications for Admin Demo (Seeded with realistic candidate scenarios)
 const INITIAL_ADMIN_APPLICATIONS = [
   {
-    id: "MOTA-NOS-2026-000124",
-    applicantName: "Priya Munda",
-    otrId: "OTR-2025-ST-884129",
+    id: "MOTA-NOS-2026-000101",
+    applicantName: "Priya Kumari",
+    otrId: "OTR-2025-ST-109283",
     scheme: "National Overseas Scholarship (NOS)",
     schemeCode: "NOS",
-    university: "University of Oxford, UK (QS #3)",
-    degree: "Ph.D. Plant Sciences",
-    income: "₹4,50,000",
-    state: "Jharkhand",
-    status: "Under Document Scrutiny",
-    submissionDate: "31-Mar-2026 14:42 IST",
-    riskScore: "Low (Verified via DigiLocker)"
+    university: "University of Oxford, United Kingdom (QS #3)",
+    degree: "Ph.D. Plant Sciences & Environmental Biology",
+    income: "₹3,80,000",
+    state: "Bihar",
+    status: "Submitted",
+    submissionDate: "25 Sep 2026 10:30 IST",
+    riskScore: "Low (DigiLocker Verified)"
   },
   {
-    id: "MOTA-NFST-2026-000482",
-    applicantName: "Birsa Oraon",
-    otrId: "OTR-2025-ST-672109",
+    id: "MOTA-NFST-2026-000204",
+    applicantName: "Ramesh Gond",
+    otrId: "OTR-2025-ST-294018",
     scheme: "National Fellowship for ST Students (NFST)",
     schemeCode: "NFST",
-    university: "IIT Kharagpur",
-    degree: "Ph.D. Metallurgy",
-    income: "₹3,20,000",
-    state: "Jharkhand",
-    status: "Committee Screening",
-    submissionDate: "28-Mar-2026 11:20 IST",
-    riskScore: "Low"
+    university: "IIT Bombay",
+    degree: "Ph.D. Metallurgy & Materials Engineering",
+    income: "₹2,90,000",
+    state: "Madhya Pradesh",
+    status: "Deficiency Raised",
+    submissionDate: "25 Sep 2026 14:15 IST",
+    riskScore: "Medium (Income cert unclear)"
   },
   {
-    id: "MOTA-NOS-2026-000098",
-    applicantName: "Anjali Bodra",
-    otrId: "OTR-2025-ST-991244",
+    id: "MOTA-NOS-2026-000305",
+    applicantName: "Anita Kerketta",
+    otrId: "OTR-2025-ST-381920",
     scheme: "National Overseas Scholarship (NOS)",
     schemeCode: "NOS",
-    university: "Imperial College London, UK (QS #6)",
-    degree: "M.Sc. Biomedical Eng",
-    income: "₹5,10,000",
+    university: "Imperial College London, United Kingdom (QS #6)",
+    degree: "M.Sc. Biomedical Engineering & Genetics",
+    income: "₹4,20,000",
+    state: "Jharkhand",
+    status: "Provisionally Eligible",
+    submissionDate: "24 Sep 2026 09:20 IST",
+    riskScore: "Low (100% Attested)"
+  },
+  {
+    id: "MOTA-PMS-2026-000412",
+    applicantName: "Sanjay Oraon",
+    otrId: "OTR-2025-ST-482019",
+    scheme: "Post-Matric Scholarship for ST Students",
+    schemeCode: "PMS",
+    university: "Utkal University, Bhubaneswar",
+    degree: "B.Sc. Computer Science (Hons)",
+    income: "₹1,80,000",
     state: "Odisha",
-    status: "Approved",
-    submissionDate: "15-Mar-2026 09:30 IST",
+    status: "Under Scrutiny",
+    submissionDate: "26 Sep 2026 11:45 IST",
     riskScore: "Low"
   },
   {
-    id: "MOTA-PMS-2026-003411",
-    applicantName: "Sanjay Marandi",
-    otrId: "OTR-2025-ST-512033",
-    scheme: "Post-Matric Scholarship for ST Students",
-    schemeCode: "PMS",
-    university: "St. Xavier's College, Ranchi",
-    degree: "B.Com (Hons)",
-    income: "₹1,80,000",
-    state: "Jharkhand",
-    status: "Deficiency Raised",
-    submissionDate: "22-Mar-2026 16:15 IST",
-    riskScore: "Medium (Income cert expired)"
+    id: "MOTA-NFST-2026-000523",
+    applicantName: "Meena Bhagat",
+    otrId: "OTR-2025-ST-591024",
+    scheme: "National Fellowship for ST Students (NFST)",
+    schemeCode: "NFST",
+    university: "NIT Raipur",
+    degree: "Ph.D. Chemical Engineering",
+    income: "₹8,50,000",
+    state: "Chhattisgarh",
+    status: "Rejected",
+    submissionDate: "23 Sep 2026 16:10 IST",
+    riskScore: "High (Income Exceeds Ceiling)"
   }
 ];
 
@@ -157,7 +171,9 @@ class AppStore {
     if (!localStorage.getItem("NTSP_APPLICATION")) {
       localStorage.setItem("NTSP_APPLICATION", JSON.stringify(INITIAL_APPLICATION));
     }
-    if (!localStorage.getItem("NTSP_ADMIN_QUEUE")) {
+    // Refresh or set initial admin queue with verified demo records
+    const storedQueue = localStorage.getItem("NTSP_ADMIN_QUEUE");
+    if (!storedQueue || JSON.parse(storedQueue).length < 5) {
       localStorage.setItem("NTSP_ADMIN_QUEUE", JSON.stringify(INITIAL_ADMIN_APPLICATIONS));
     }
   }
@@ -172,20 +188,35 @@ class AppStore {
 
   getApplicationById(id) {
     const mainApp = this.getApplication();
-    if (mainApp.id === id) return mainApp;
+    if (mainApp.id === id || mainApp.application_number === id) return mainApp;
     const queue = this.getAdminQueue();
     const found = queue.find(q => q.id === id);
     if (found) {
+      const isDeficiency = found.status === "Deficiency Raised" || found.status === "deficiency_raised";
+      const isApproved = found.status === "Provisionally Eligible" || found.status === "provisionally_eligible" || found.status === "Approved";
+      const isRejected = found.status === "Rejected" || found.status === "rejected";
+
       return {
         ...mainApp,
         id: found.id,
+        application_number: found.id,
         scheme: found.scheme,
         schemeCode: found.schemeCode,
         status: found.status,
         submissionDate: found.submissionDate,
+        submitted_at: found.submissionDate,
+        risk_level: found.riskScore || "Low",
         personal: {
           ...mainApp.personal,
           fullName: found.applicantName,
+          state: found.state
+        },
+        personal_details: {
+          fullName: found.applicantName,
+          state: found.state
+        },
+        profiles: {
+          full_name: found.applicantName,
           state: found.state
         },
         academic: {
@@ -193,10 +224,47 @@ class AppStore {
           university: found.university,
           courseTitle: found.degree
         },
+        academic_details: {
+          university: found.university,
+          courseTitle: found.degree
+        },
         financial: {
           ...mainApp.financial,
-          annualIncome: found.income.replace(/[^\d]/g, "") || mainApp.financial.annualIncome
-        }
+          annualIncome: (found.income || "").replace(/[^\d]/g, "") || "450000"
+        },
+        financial_details: {
+          annualIncome: (found.income || "").replace(/[^\d]/g, "") || "450000"
+        },
+        deficiency: isDeficiency ? {
+          document_type: "Annual Family Income Certificate",
+          issue: "Document is unclear",
+          remark: "Please upload a clear and latest income certificate.",
+          description: "Please upload a clear and latest income certificate.",
+          deadline: "2026-10-05"
+        } : null,
+        deficiencies: isDeficiency ? [{
+          id: `def-${found.id}`,
+          document_type: "Annual Family Income Certificate",
+          issue: "Document is unclear",
+          reason: "Document is unclear",
+          description: "Please upload a clear and latest income certificate.",
+          remark: "Please upload a clear and latest income certificate.",
+          status: "open",
+          deadline: "2026-10-05"
+        }] : [],
+        history: [
+          { action: "submitted", status_from: "draft", status_to: "submitted", title: "Application Submitted", time: "25 Sep 2026", officer: found.applicantName, remark: "Candidate completed digital submission with e-declaration." },
+          { action: "scrutiny_started", status_from: "submitted", status_to: "under_scrutiny", title: "Document Scrutiny Started", time: "26 Sep 2026", officer: "Shri Rajesh Kumar (Scrutiny Officer)", remark: "Verification started for tribal certificate and academic records." },
+          ...(isDeficiency ? [
+            { action: "deficiency_raised", status_from: "under_scrutiny", status_to: "deficiency_raised", title: "Income Certificate Deficiency Raised", time: "27 Sep 2026", officer: "Shri Rajesh Kumar (Scrutiny Officer)", remark: "Document is unclear: Please upload a clear and latest income certificate by 05 October 2026." }
+          ] : []),
+          ...(isApproved ? [
+            { action: "provisionally_eligible", status_from: "under_scrutiny", status_to: "provisionally_eligible", title: "Provisionally Eligible (अनुमोदित)", time: "27 Sep 2026", officer: "Shri Rajesh Kumar (Scrutiny Officer)", remark: "All documents attested and verified. Forwarded for committee screening." }
+          ] : []),
+          ...(isRejected ? [
+            { action: "rejected", status_from: "under_scrutiny", status_to: "rejected", title: "Application Rejected", time: "27 Sep 2026", officer: "Shri Rajesh Kumar (Scrutiny Officer)", remark: "Income certificate indicates annual family income of ₹8.5 Lakhs exceeding the ₹6.0 Lakhs ceiling." }
+          ] : [])
+        ]
       };
     }
     return mainApp;
