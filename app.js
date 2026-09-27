@@ -4013,6 +4013,10 @@ async function handleDeficiencyModalSubmit(e, appId) {
   });
 }
 
+function promptAndRaiseDeficiency(appId) {
+  openRaiseDeficiencyModal(appId);
+}
+
 // ----------------------------------------------------
 // AI-ASSISTED PRELIMINARY VERIFICATION MODAL
 // ----------------------------------------------------
