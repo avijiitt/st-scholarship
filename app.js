@@ -1289,6 +1289,11 @@ router.register("/application/new", () => {
   `;
 }, { layout: "applicant", authRole: "applicant" });
 
+// Alias /application/start -> /application/new
+router.register("/application/start", () => {
+  router.navigate("/application/new");
+}, { layout: "applicant", authRole: "applicant" });
+
 // 10. Step 1: Personal Details (/application/personal)
 router.register("/application/personal", (params = {}) => {
   const app = window.appStore.getApplication();
@@ -1386,6 +1391,11 @@ router.register("/application/personal", (params = {}) => {
       </form>
     </div>
   `;
+}, { layout: "applicant", authRole: "applicant" });
+
+// Alias /application/category -> /application/personal
+router.register("/application/category", () => {
+  router.navigate("/application/personal");
 }, { layout: "applicant", authRole: "applicant" });
 
 function validatePersonal() {
@@ -3393,6 +3403,11 @@ router.register("/admin/applications", async () => {
   `;
 }, { layout: "admin", authRole: "admin" });
 
+// Alias /admin/queue -> /admin/applications
+router.register("/admin/queue", () => {
+  router.navigate("/admin/applications");
+}, { layout: "admin", authRole: "admin" });
+
 function updateAdminFilter(key, value) {
   adminQueueFilters[key] = value;
   router.navigate("/admin/applications");
@@ -3920,6 +3935,11 @@ router.register("/admin/schemes", () => {
       </div>
     </div>
   `;
+}, { layout: "admin", authRole: "admin" });
+
+// Alias /admin/settings -> /admin/schemes
+router.register("/admin/settings", () => {
+  router.navigate("/admin/schemes");
 }, { layout: "admin", authRole: "admin" });
 
 // Initialize routing & Supabase session

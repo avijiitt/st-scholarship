@@ -3,9 +3,14 @@
  * Supabase Authentication & Client Configuration
  */
 
+// Client Environment Configuration (Supports .env via env.js / window.__ENV__ or process.env)
 const SUPABASE_CONFIG = {
-  url: "https://pnxgaiqdrpmqnahwopuq.supabase.co",
-  publishableKey: "sb_publishable_sgFB_Ap_IV1p8njROsiccQ_WdKzaqGt"
+  url: (typeof window !== "undefined" && window.__ENV__ && window.__ENV__.SUPABASE_URL) ||
+       (typeof process !== "undefined" && process.env && (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL)) ||
+       "https://pnxgaiqdrpmqnahwopuq.supabase.co",
+  publishableKey: (typeof window !== "undefined" && window.__ENV__ && (window.__ENV__.SUPABASE_ANON_KEY || window.__ENV__.SUPABASE_PUBLISHABLE_KEY)) ||
+       (typeof process !== "undefined" && process.env && (process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY)) ||
+       "sb_publishable_sgFB_Ap_IV1p8njROsiccQ_WdKzaqGt"
 };
 
 // Initialize Supabase Client if library is available

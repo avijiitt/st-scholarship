@@ -31,12 +31,12 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 CREATE OR REPLACE FUNCTION public.get_current_profile_id()
 RETURNS UUID AS $$
     SELECT id FROM public.profiles WHERE user_id = auth.uid() LIMIT 1;
-$$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public;
+$$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public SET row_security = off;
 
 CREATE OR REPLACE FUNCTION public.get_current_role()
 RETURNS TEXT AS $$
     SELECT role FROM public.profiles WHERE user_id = auth.uid() LIMIT 1;
-$$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public;
+$$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public SET row_security = off;
 
 CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS BOOLEAN AS $$
@@ -44,7 +44,7 @@ RETURNS BOOLEAN AS $$
         SELECT 1 FROM public.profiles 
         WHERE user_id = auth.uid() AND role = 'admin'
     );
-$$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public;
+$$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public SET row_security = off;
 
 CREATE OR REPLACE FUNCTION public.is_scrutiny_officer()
 RETURNS BOOLEAN AS $$
@@ -52,7 +52,7 @@ RETURNS BOOLEAN AS $$
         SELECT 1 FROM public.profiles 
         WHERE user_id = auth.uid() AND role IN ('scrutiny_officer', 'admin', 'committee_member')
     );
-$$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public;
+$$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public SET row_security = off;
 
 -- ------------------------------------------------------------------------------
 -- RULE 1: APPLICANTS CAN READ AND UPDATE ONLY THEIR OWN PROFILE
@@ -130,8 +130,20 @@ CREATE POLICY "Schemes: Public read access"
     USING (true);
 
 DROP POLICY IF EXISTS "Schemes: Admin write access" ON public.schemes;
-CREATE POLICY "Schemes: Admin write access" 
-    ON public.schemes FOR ALL 
+DROP POLICY IF EXISTS "Schemes: Admin insert access" ON public.schemes;
+CREATE POLICY "Schemes: Admin insert access" 
+    ON public.schemes FOR INSERT 
+    WITH CHECK (public.is_admin());
+
+DROP POLICY IF EXISTS "Schemes: Admin update access" ON public.schemes;
+CREATE POLICY "Schemes: Admin update access" 
+    ON public.schemes FOR UPDATE 
+    USING (public.is_admin())
+    WITH CHECK (public.is_admin());
+
+DROP POLICY IF EXISTS "Schemes: Admin delete access" ON public.schemes;
+CREATE POLICY "Schemes: Admin delete access" 
+    ON public.schemes FOR DELETE 
     USING (public.is_admin());
 
 -- ------------------------------------------------------------------------------
