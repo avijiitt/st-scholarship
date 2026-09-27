@@ -186,6 +186,42 @@ const APP_DEFAULT_SCHEMES = (typeof window !== "undefined" && window.DEFAULT_SCH
       "College Admission Fee Receipt & Student ID",
       "NPCI Seeded Active Bank Passbook"
     ]
+  },
+  {
+    id: "sch-004-pre-matric",
+    name: "Pre-Matric Scholarship for ST Students",
+    code: "SCH-MOTA-PRE",
+    description: "Centrally sponsored scheme executed through State Governments to minimize drop-out rates during transition from elementary to secondary education, providing monthly stipends (₹225/mo Day Scholars, ₹525/mo Hostellers) + ad-hoc grants for ST students in Class IX and X.",
+    education_level: "Class IX & X (Secondary)",
+    study_location: "India (Govt / Recognized Schools)",
+    deadline: "2026-10-15T23:59:59.000Z",
+    status: "active",
+    required_documents: [
+      "Aadhaar Card",
+      "ST Caste Certificate (Article 342)",
+      "Annual Family Income Certificate (<= ₹2.50 Lakhs)",
+      "School Bonafide / Enrolment Certificate (Class IX or X)",
+      "Previous Class Marksheet",
+      "NPCI Seeded Active Bank Passbook"
+    ]
+  },
+  {
+    id: "sch-005-ugc-pg",
+    name: "UGC PG Scholarship for Professional Courses for SC/ST Candidates",
+    code: "SCH-UGC-PG-PROF",
+    description: "University Grants Commission (UGC) merit-based fellowship for SC/ST students in the first year of regular professional master's programs, providing ₹7,800/month for ME/M.Tech and ₹4,500/month for MBA, MCA, M.Pharm, LLM for 2-3 years across 1,000 national slots.",
+    education_level: "Postgraduate Professional (ME/M.Tech, MBA, MCA, M.Pharm, LLM)",
+    study_location: "India (UGC 2(f)/12(B) Universities)",
+    deadline: "2026-11-15T23:59:59.000Z",
+    status: "active",
+    required_documents: [
+      "Aadhaar Card",
+      "ST/SC Caste Certificate",
+      "Annual Family Income Certificate",
+      "PG Professional Course Admission / Enrolment Letter",
+      "Undergraduate Degree Marksheet",
+      "NPCI Seeded Active Bank Passbook"
+    ]
   }
 ];
 
@@ -223,6 +259,8 @@ function getRequiredDocsCount(reqDocs) {
 
 function getSchemeDetailRoute(code) {
   const c = (code || "").toUpperCase();
+  if (c.includes("PRE")) return "#/schemes/pre-matric";
+  if (c.includes("UGC") || c.includes("PROF")) return "#/schemes/ugc-pg";
   if (c.includes("NOS")) return "#/schemes/nos";
   if (c.includes("NFST") || c.includes("NF")) return "#/schemes/nfst";
   if (c.includes("PMS")) return "#/schemes/pms";
@@ -231,6 +269,8 @@ function getSchemeDetailRoute(code) {
 
 function getSchemeApplyCode(code) {
   const c = (code || "").toUpperCase();
+  if (c.includes("PRE")) return "PRE";
+  if (c.includes("UGC") || c.includes("PROF")) return "UGC";
   if (c.includes("NOS")) return "NOS";
   if (c.includes("NFST") || c.includes("NF")) return "NFST";
   if (c.includes("PMS")) return "PMS";
@@ -248,7 +288,17 @@ function renderSchemeCardHTML(scheme) {
   let categoryTag = "Higher Education";
   let tagColor = "bg-surface-container-highest text-primary";
 
-  if (scheme.code && scheme.code.includes("NOS")) {
+  if (scheme.code && (scheme.code.includes("PRE") || (scheme.name && scheme.name.includes("Pre-Matric")))) {
+    barColor = "bg-primary";
+    applyBtnClass = "bg-primary hover:bg-primary/90 text-white";
+    categoryTag = "Pre-Matric (Class IX & X)";
+    tagColor = "bg-primary/10 text-primary font-bold";
+  } else if (scheme.code && (scheme.code.includes("UGC") || scheme.code.includes("PROF") || (scheme.name && scheme.name.includes("UGC")))) {
+    barColor = "bg-secondary-fixed-dim";
+    applyBtnClass = "bg-secondary hover:bg-secondary/90 text-white";
+    categoryTag = "UGC / PG Professional";
+    tagColor = "bg-secondary-fixed/60 text-secondary font-bold";
+  } else if (scheme.code && scheme.code.includes("NOS")) {
     barColor = "bg-secondary";
     categoryTag = "Overseas / International";
   } else if (scheme.code && (scheme.code.includes("NFST") || scheme.code.includes("NF"))) {
@@ -883,12 +933,14 @@ router.register("/schemes", () => {
           <span class="material-symbols-outlined text-outline text-[20px]">search</span>
           <input type="text" id="scheme-search-input" oninput="filterLoadedSchemes()" placeholder="Search schemes by name, level, location, or code..." class="w-full text-xs font-semibold bg-transparent border-none focus:outline-none text-on-surface"/>
         </div>
-        <div class="flex items-center gap-2 text-xs">
+        <div class="flex items-center gap-1.5 flex-wrap text-xs">
           <span class="text-outline font-semibold">Filter:</span>
           <button onclick="filterSchemesByCategory('all')" class="px-3 py-1 rounded-full font-bold bg-primary text-white" id="filter-all">All Schemes</button>
-          <button onclick="filterSchemesByCategory('abroad')" class="px-3 py-1 rounded-full font-semibold bg-surface-container text-on-surface hover:bg-surface-container-high" id="filter-abroad">Abroad (NOS)</button>
-          <button onclick="filterSchemesByCategory('research')" class="px-3 py-1 rounded-full font-semibold bg-surface-container text-on-surface hover:bg-surface-container-high" id="filter-research">Research (NFST)</button>
+          <button onclick="filterSchemesByCategory('prematric')" class="px-3 py-1 rounded-full font-semibold bg-surface-container text-on-surface hover:bg-surface-container-high" id="filter-prematric">Pre-Matric (Class IX-X)</button>
           <button onclick="filterSchemesByCategory('postmatric')" class="px-3 py-1 rounded-full font-semibold bg-surface-container text-on-surface hover:bg-surface-container-high" id="filter-postmatric">Post-Matric (PMS)</button>
+          <button onclick="filterSchemesByCategory('ugc')" class="px-3 py-1 rounded-full font-semibold bg-surface-container text-on-surface hover:bg-surface-container-high" id="filter-ugc">UGC Professional (PG)</button>
+          <button onclick="filterSchemesByCategory('research')" class="px-3 py-1 rounded-full font-semibold bg-surface-container text-on-surface hover:bg-surface-container-high" id="filter-research">Research (NFST)</button>
+          <button onclick="filterSchemesByCategory('abroad')" class="px-3 py-1 rounded-full font-semibold bg-surface-container text-on-surface hover:bg-surface-container-high" id="filter-abroad">Abroad (NOS)</button>
         </div>
       </div>
 
@@ -935,7 +987,7 @@ window.filterSchemesByCategory = function(category) {
   if (!container) return;
   const schemes = window.cachedSupabaseSchemes || window.DEFAULT_SCHEMES || APP_DEFAULT_SCHEMES;
   
-  ["all", "abroad", "research", "postmatric"].forEach(cat => {
+  ["all", "abroad", "research", "postmatric", "prematric", "ugc"].forEach(cat => {
     const btn = document.getElementById(`filter-${cat}`);
     if (btn) {
       if (cat === category) {
@@ -953,6 +1005,10 @@ window.filterSchemesByCategory = function(category) {
     filtered = schemes.filter(s => (s.code || "").includes("NFST") || (s.code || "").includes("NF") || (s.name || "").toLowerCase().includes("fellowship"));
   } else if (category === "postmatric") {
     filtered = schemes.filter(s => (s.code || "").includes("PMS") || (s.education_level || "").toLowerCase().includes("post-matric"));
+  } else if (category === "prematric") {
+    filtered = schemes.filter(s => (s.code || "").includes("PRE") || (s.name || "").toLowerCase().includes("pre-matric") || (s.education_level || "").toLowerCase().includes("class ix"));
+  } else if (category === "ugc") {
+    filtered = schemes.filter(s => (s.code || "").includes("UGC") || (s.code || "").includes("PROF") || (s.name || "").toLowerCase().includes("ugc"));
   }
 
   if (filtered.length === 0) {
@@ -1090,6 +1146,130 @@ router.register("/schemes/pms", () => {
             <li>Annual family income from all sources must not exceed ₹2.50 Lakhs per annum.</li>
             <li>Disbursed directly via DBT into scholar's Aadhaar-seeded bank account through PFMS.</li>
           </ul>
+        </div>
+      </div>
+    </div>
+  `;
+});
+
+// 6C. Scheme Pre-Matric Details (/schemes/pre-matric)
+router.register("/schemes/pre-matric", () => {
+  const container = document.getElementById("main-view-container");
+  container.innerHTML = `
+    <div class="max-w-4xl mx-auto px-margin py-space-xl">
+      <div class="mb-4">
+        <a href="#/schemes" class="text-xs font-bold text-secondary hover:underline flex items-center gap-1">
+          <span class="material-symbols-outlined text-[16px]">arrow_back</span> Back to Schemes
+        </a>
+      </div>
+
+      <div class="bg-surface-container-lowest p-space-xl rounded-xl shadow-md border border-outline-variant/30">
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <span class="px-2.5 py-0.5 rounded text-xs font-bold bg-primary/10 text-primary">Pre-Matric / Secondary (Class IX &amp; X)</span>
+            <h1 class="text-2xl font-bold text-primary mt-1">Pre-Matric Scholarship for ST Students</h1>
+            <p class="text-sm text-secondary font-semibold">Centrally Sponsored Scheme | Ministry of Tribal Affairs (State/UT Executed)</p>
+          </div>
+          <a href="#/application/personal?scheme=PRE" onclick="event.preventDefault(); startOrResumeWizardApplication('PRE')" class="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white font-bold rounded text-sm shadow-md transition">
+            Apply Now
+          </a>
+        </div>
+
+        <div class="space-y-4 text-sm text-on-surface-variant leading-relaxed">
+          <!-- Key Metrics Grid -->
+          <div class="p-3 bg-surface-container-low rounded-lg grid grid-cols-2 sm:grid-cols-4 gap-2 font-semibold text-xs">
+            <div><span class="text-outline text-[11px] block">Eligible Classes:</span> Class IX &amp; X (Regular)</div>
+            <div><span class="text-outline text-[11px] block">Day Scholars:</span> ₹225/mo + ₹750 Ad-hoc (₹3,000/yr)</div>
+            <div><span class="text-outline text-[11px] block">Hostellers:</span> ₹525/mo + ₹1,000 Ad-hoc (₹6,250/yr)</div>
+            <div><span class="text-outline text-[11px] block">Income Ceiling:</span> ≤ ₹2.50 Lakhs/annum</div>
+          </div>
+
+          <h3 class="text-base font-bold text-primary">Scheme Objective</h3>
+          <p>
+            To minimize drop-out rates during the transition from elementary to secondary education (Class VIII to IX/X) and improve enrolment and retention of Scheduled Tribe students at the secondary level across India.
+          </p>
+
+          <h3 class="text-base font-bold text-primary">Eligibility Criteria</h3>
+          <ul class="list-disc pl-5 space-y-1">
+            <li>Must belong to a recognized Scheduled Tribe (ST) community.</li>
+            <li>Enrolled as a regular, full-time student in <strong>Class IX or X</strong> in a Government school or a school recognized by the Government/Central or State Board of Secondary Education.</li>
+            <li>Annual parental/family income from all sources must not exceed <strong>₹2.50 Lakh</strong> (revised from ₹2.00 Lakh).</li>
+            <li>Cannot be availing of any other Centrally funded pre-matric scholarship simultaneously.</li>
+          </ul>
+
+          <h3 class="text-base font-bold text-primary">Financial Benefits &amp; Allowances</h3>
+          <ul class="list-disc pl-5 space-y-1">
+            <li><strong>Day Scholars:</strong> ₹225 per month for 10 months (₹2,250/year) plus an annual ad-hoc grant of ₹750 (Total ₹3,000/year).</li>
+            <li><strong>Hostellers:</strong> ₹525 per month for 10 months (₹5,250/year) plus an annual ad-hoc grant of ₹1,000 (Total ₹6,250/year).</li>
+            <li><strong>PwD Allowances:</strong> Additional allowances for students with disabilities (reader allowance, escort allowance, special transport, helper grants).</li>
+          </ul>
+
+          <h3 class="text-base font-bold text-primary">Mode of Disbursement</h3>
+          <p>
+            Disbursed via Direct Benefit Transfer (DBT) directly into the student's or parent's Aadhaar-seeded bank account through National Scholarship Portal (NSP) / State Portals integrated with PFMS.
+          </p>
+        </div>
+      </div>
+    </div>
+  `;
+});
+
+// 6D. Scheme UGC PG Details (/schemes/ugc-pg)
+router.register("/schemes/ugc-pg", () => {
+  const container = document.getElementById("main-view-container");
+  container.innerHTML = `
+    <div class="max-w-4xl mx-auto px-margin py-space-xl">
+      <div class="mb-4">
+        <a href="#/schemes" class="text-xs font-bold text-secondary hover:underline flex items-center gap-1">
+          <span class="material-symbols-outlined text-[16px]">arrow_back</span> Back to Schemes
+        </a>
+      </div>
+
+      <div class="bg-surface-container-lowest p-space-xl rounded-xl shadow-md border border-outline-variant/30">
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <span class="px-2.5 py-0.5 rounded text-xs font-bold bg-secondary-fixed/60 text-secondary">UGC Postgraduate Professional | MoE</span>
+            <h1 class="text-2xl font-bold text-primary mt-1">UGC PG Scholarship for Professional Courses for SC/ST Candidates</h1>
+            <p class="text-sm text-secondary font-semibold">University Grants Commission (UGC) | Ministry of Education</p>
+          </div>
+          <a href="#/application/personal?scheme=UGC" onclick="event.preventDefault(); startOrResumeWizardApplication('UGC')" class="px-5 py-2.5 bg-secondary hover:bg-secondary/90 text-white font-bold rounded text-sm shadow-md transition">
+            Apply Now
+          </a>
+        </div>
+
+        <div class="space-y-4 text-sm text-on-surface-variant leading-relaxed">
+          <!-- Key Metrics Grid -->
+          <div class="p-3 bg-surface-container-low rounded-lg grid grid-cols-2 sm:grid-cols-4 gap-2 font-semibold text-xs">
+            <div><span class="text-outline text-[11px] block">Annual Slots:</span> 1,000 Fresh Scholarships</div>
+            <div><span class="text-outline text-[11px] block">ME / M.Tech:</span> ₹7,800/month (₹93,600/yr)</div>
+            <div><span class="text-outline text-[11px] block">Other PG Professional:</span> ₹4,500/month (₹54,000/yr)</div>
+            <div><span class="text-outline text-[11px] block">Tenure:</span> 2 to 3 Years (Course Duration)</div>
+          </div>
+
+          <h3 class="text-base font-bold text-primary">Scheme Objective</h3>
+          <p>
+            To provide direct financial assistance to Scheduled Caste (SC) and Scheduled Tribe (ST) candidates pursuing postgraduate studies in professional subjects in Indian universities and institutions, helping bridge disparities in higher professional sectors.
+          </p>
+
+          <h3 class="text-base font-bold text-primary">Eligibility Criteria</h3>
+          <ul class="list-disc pl-5 space-y-1">
+            <li>Candidate must belong to a recognized Scheduled Caste (SC) or Scheduled Tribe (ST) community.</li>
+            <li>Admitted in the <strong>first year</strong> of a regular, full-time postgraduate professional degree course (e.g., ME/M.Tech, MBA, MCA, M.Pharm, LLM, etc.).</li>
+            <li>Studying in universities/colleges/institutes recognized under Section 2(f) and 12(B) of the UGC Act, deemed universities, or institutes of national importance.</li>
+            <li><strong>Exclusions:</strong> Candidates pursuing non-professional postgraduate courses (general MA, MSc, etc.) or courses via distance education / correspondence / online mode are <em>not eligible</em>.</li>
+          </ul>
+
+          <h3 class="text-base font-bold text-primary">Financial Benefits</h3>
+          <ul class="list-disc pl-5 space-y-1">
+            <li><strong>ME / M.Tech Courses:</strong> ₹7,800 per month (₹93,600 per annum) for the entire duration of the course.</li>
+            <li><strong>Other Professional PG Courses (MBA, MCA, M.Pharm, LLM, etc.):</strong> ₹4,500 per month (₹54,000 per annum) for the duration of the course.</li>
+            <li>Awarded for 2 to 3 years depending on the sanctioned tenure of the PG course.</li>
+          </ul>
+
+          <h3 class="text-base font-bold text-primary">Mode of Disbursement</h3>
+          <p>
+            Direct Benefit Transfer (DBT) directly into the candidate's Aadhaar-seeded bank account through the Public Financial Management System (PFMS) under the DBT portal of UGC.
+          </p>
         </div>
       </div>
     </div>
@@ -1242,7 +1422,7 @@ router.register("/application/new", () => {
         </div>
       ` : ''}
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <!-- 1. NOS Track -->
         <div class="p-4 rounded-xl border-2 border-secondary bg-surface-container-low flex flex-col justify-between shadow-sm">
           <div>
@@ -1284,6 +1464,34 @@ router.register("/application/new", () => {
             </a>
           </div>
         </div>
+
+        <!-- 4. Pre-Matric Track -->
+        <div class="p-4 rounded-xl border border-outline-variant/40 bg-surface-container-lowest flex flex-col justify-between shadow-sm">
+          <div>
+            <span class="text-xs font-bold text-primary uppercase tracking-wider block mb-1">Pre-Matric School Track</span>
+            <h3 class="text-base font-bold text-primary">Pre-Matric Scholarship (ST)</h3>
+            <p class="text-xs text-on-surface-variant mt-2 leading-relaxed">Financial support for Class IX &amp; X ST students (Day Scholars: ₹3,000/yr, Hostellers: ₹6,250/yr; Income ≤ ₹2.5L).</p>
+          </div>
+          <div class="pt-4 border-t border-outline-variant/20 mt-4">
+            <a href="#/application/personal?scheme=PRE" onclick="event.preventDefault(); startOrResumeWizardApplication('PRE')" class="w-full py-2.5 bg-primary hover:bg-primary/90 text-white font-bold text-center rounded text-sm shadow-sm block transition">
+              Start / Resume Pre-Matric →
+            </a>
+          </div>
+        </div>
+
+        <!-- 5. UGC PG Professional Track -->
+        <div class="p-4 rounded-xl border border-outline-variant/40 bg-surface-container-lowest flex flex-col justify-between shadow-sm">
+          <div>
+            <span class="text-xs font-bold text-secondary uppercase tracking-wider block mb-1">UGC Professional Track</span>
+            <h3 class="text-base font-bold text-primary">UGC PG Scholarship (SC/ST)</h3>
+            <p class="text-xs text-on-surface-variant mt-2 leading-relaxed">1,000 slots for 1st yr PG professional courses (ME/M.Tech: ₹7,800/mo, MBA/MCA: ₹4,500/mo; 2-3 yrs).</p>
+          </div>
+          <div class="pt-4 border-t border-outline-variant/20 mt-4">
+            <a href="#/application/personal?scheme=UGC" onclick="event.preventDefault(); startOrResumeWizardApplication('UGC')" class="w-full py-2.5 bg-secondary hover:bg-secondary/90 text-white font-bold text-center rounded text-sm shadow-sm block transition">
+              Start / Resume UGC-PG →
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   `;
@@ -1298,7 +1506,7 @@ router.register("/application/start", () => {
 router.register("/application/personal", (params = {}) => {
   const app = window.appStore.getApplication();
   
-  // Set scheme if passed via URL query parameter (e.g. ?scheme=NOS, ?scheme=NFST or ?scheme=PMS)
+  // Set scheme if passed via URL query parameter (e.g. ?scheme=NOS, ?scheme=NFST, ?scheme=PMS, ?scheme=PRE, ?scheme=UGC)
   if (params && params.scheme) {
     const code = params.scheme.toUpperCase();
     if (code === "NOS") {
@@ -1312,6 +1520,14 @@ router.register("/application/personal", (params = {}) => {
     } else if (code === "PMS") {
       app.scheme = "Post-Matric Scholarship for ST Students (PMS-ST)";
       app.schemeCode = "PMS";
+      window.appStore.saveApplication(app);
+    } else if (code === "PRE" || code.includes("PRE")) {
+      app.scheme = "Pre-Matric Scholarship for ST Students";
+      app.schemeCode = "PRE";
+      window.appStore.saveApplication(app);
+    } else if (code === "UGC" || code.includes("UGC")) {
+      app.scheme = "UGC PG Scholarship for Professional Courses for SC/ST Candidates";
+      app.schemeCode = "UGC";
       window.appStore.saveApplication(app);
     }
   }
@@ -4517,6 +4733,181 @@ router.register("/admin/schemes", () => {
                 <span class="px-2 py-0.5 bg-surface-container text-primary rounded text-[10px] font-semibold">ST Caste Certificate</span>
                 <span class="px-2 py-0.5 bg-surface-container text-primary rounded text-[10px] font-semibold">UGC-NET / JRF Award</span>
                 <span class="px-2 py-0.5 bg-secondary/10 text-secondary font-semibold rounded text-[10px]">Ph.D. Registration Letter</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. PMS Scheme -->
+        <div class="p-4 bg-surface-container-low rounded-xl border border-outline-variant/30 space-y-3">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-2 border-b border-outline-variant/20 gap-2">
+            <div>
+              <div class="flex items-center gap-2">
+                <strong class="text-sm text-primary font-bold">Post-Matric Scholarship for ST Students (PMS-ST)</strong>
+                <span class="px-2 py-0.5 bg-tertiary-fixed text-tertiary-container font-mono text-[10px] font-bold rounded">CODE: PMS</span>
+              </div>
+              <p class="text-[11px] text-outline">100% compulsory course fees reimbursement &amp; maintenance allowance for accredited degree colleges in India.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <label class="flex items-center gap-1.5 text-[11px] font-semibold text-primary cursor-pointer">
+                <input type="checkbox" checked class="rounded text-secondary focus:ring-secondary"/> Active
+              </label>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div>
+              <span class="text-outline block text-[11px] mb-1">Education Level</span>
+              <input type="text" value="Undergraduate, PG, Professional" class="w-full p-2 bg-white rounded border border-outline-variant/40 font-semibold text-xs"/>
+            </div>
+            <div>
+              <span class="text-outline block text-[11px] mb-1">Study Location</span>
+              <select class="w-full p-2 bg-white rounded border border-outline-variant/40 font-semibold text-xs">
+                <option value="India" selected>India (Accredited Colleges)</option>
+                <option value="Abroad">Abroad</option>
+              </select>
+            </div>
+            <div>
+              <span class="text-outline block text-[11px] mb-1">Annual Awards Quota</span>
+              <input type="text" value="Demand-Driven (100% Eligible)" class="w-full p-2 bg-white rounded border border-outline-variant/40 font-bold font-mono text-xs"/>
+            </div>
+            <div>
+              <span class="text-outline block text-[11px] mb-1">Family Income Ceiling (INR)</span>
+              <input type="text" value="₹2,50,000" class="w-full p-2 bg-white rounded border border-outline-variant/40 font-bold font-mono text-xs text-secondary"/>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <span class="text-outline block text-[11px] mb-1">Application Window (Start / End Date)</span>
+              <div class="grid grid-cols-2 gap-2">
+                <input type="date" value="2026-07-01" class="w-full p-2 bg-white rounded border border-outline-variant/40 font-mono text-xs"/>
+                <input type="date" value="2026-10-31" class="w-full p-2 bg-white rounded border border-outline-variant/40 font-mono text-xs"/>
+              </div>
+            </div>
+            <div>
+              <span class="text-outline block text-[11px] mb-1">Required Documents (Tags)</span>
+              <div class="p-1.5 bg-white rounded border border-outline-variant/40 flex flex-wrap gap-1">
+                <span class="px-2 py-0.5 bg-surface-container text-primary rounded text-[10px] font-semibold">Aadhaar Card</span>
+                <span class="px-2 py-0.5 bg-surface-container text-primary rounded text-[10px] font-semibold">ST Caste Certificate</span>
+                <span class="px-2 py-0.5 bg-surface-container text-primary rounded text-[10px] font-semibold">Income Certificate (≤ ₹2.5L)</span>
+                <span class="px-2 py-0.5 bg-secondary/10 text-secondary font-semibold rounded text-[10px]">Admission Fee Receipt</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Pre-Matric Scheme -->
+        <div class="p-4 bg-surface-container-low rounded-xl border border-outline-variant/30 space-y-3">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-2 border-b border-outline-variant/20 gap-2">
+            <div>
+              <div class="flex items-center gap-2">
+                <strong class="text-sm text-primary font-bold">Pre-Matric Scholarship for ST Students</strong>
+                <span class="px-2 py-0.5 bg-tertiary-fixed text-tertiary-container font-mono text-[10px] font-bold rounded">CODE: PRE</span>
+              </div>
+              <p class="text-[11px] text-outline">Centrally sponsored scheme for Class IX &amp; X ST students (Day Scholars: ₹3,000/yr, Hostellers: ₹6,250/yr; Income ≤ ₹2.5L).</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <label class="flex items-center gap-1.5 text-[11px] font-semibold text-primary cursor-pointer">
+                <input type="checkbox" checked class="rounded text-secondary focus:ring-secondary"/> Active
+              </label>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div>
+              <span class="text-outline block text-[11px] mb-1">Education Level</span>
+              <input type="text" value="Class IX &amp; X (Secondary)" class="w-full p-2 bg-white rounded border border-outline-variant/40 font-semibold text-xs"/>
+            </div>
+            <div>
+              <span class="text-outline block text-[11px] mb-1">Study Location</span>
+              <select class="w-full p-2 bg-white rounded border border-outline-variant/40 font-semibold text-xs">
+                <option value="India" selected>India (Govt / Recognized Schools)</option>
+              </select>
+            </div>
+            <div>
+              <span class="text-outline block text-[11px] mb-1">Financial Benefits</span>
+              <input type="text" value="Day: ₹3,000/yr | Hosteller: ₹6,250/yr" class="w-full p-2 bg-white rounded border border-outline-variant/40 font-bold font-mono text-xs"/>
+            </div>
+            <div>
+              <span class="text-outline block text-[11px] mb-1">Family Income Ceiling (INR)</span>
+              <input type="text" value="₹2,50,000" class="w-full p-2 bg-white rounded border border-outline-variant/40 font-bold font-mono text-xs text-secondary"/>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <span class="text-outline block text-[11px] mb-1">Application Window (Start / End Date)</span>
+              <div class="grid grid-cols-2 gap-2">
+                <input type="date" value="2026-07-01" class="w-full p-2 bg-white rounded border border-outline-variant/40 font-mono text-xs"/>
+                <input type="date" value="2026-10-15" class="w-full p-2 bg-white rounded border border-outline-variant/40 font-mono text-xs"/>
+              </div>
+            </div>
+            <div>
+              <span class="text-outline block text-[11px] mb-1">Required Documents (Tags)</span>
+              <div class="p-1.5 bg-white rounded border border-outline-variant/40 flex flex-wrap gap-1">
+                <span class="px-2 py-0.5 bg-surface-container text-primary rounded text-[10px] font-semibold">Aadhaar Card</span>
+                <span class="px-2 py-0.5 bg-surface-container text-primary rounded text-[10px] font-semibold">ST Caste Certificate</span>
+                <span class="px-2 py-0.5 bg-surface-container text-primary rounded text-[10px] font-semibold">Income Certificate (≤ ₹2.5L)</span>
+                <span class="px-2 py-0.5 bg-secondary/10 text-secondary font-semibold rounded text-[10px]">School Bonafide Certificate</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. UGC PG Professional Scheme -->
+        <div class="p-4 bg-surface-container-low rounded-xl border border-outline-variant/30 space-y-3">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-2 border-b border-outline-variant/20 gap-2">
+            <div>
+              <div class="flex items-center gap-2">
+                <strong class="text-sm text-primary font-bold">UGC PG Scholarship for Professional Courses (SC/ST)</strong>
+                <span class="px-2 py-0.5 bg-tertiary-fixed text-tertiary-container font-mono text-[10px] font-bold rounded">CODE: UGC-PG</span>
+              </div>
+              <p class="text-[11px] text-outline">1,000 slots for 1st yr PG professional master's (ME/M.Tech: ₹7,800/mo, MBA/MCA: ₹4,500/mo; 2-3 yrs).</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <label class="flex items-center gap-1.5 text-[11px] font-semibold text-primary cursor-pointer">
+                <input type="checkbox" checked class="rounded text-secondary focus:ring-secondary"/> Active
+              </label>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div>
+              <span class="text-outline block text-[11px] mb-1">Education Level</span>
+              <input type="text" value="PG Professional (ME, M.Tech, MBA, MCA, LLM)" class="w-full p-2 bg-white rounded border border-outline-variant/40 font-semibold text-xs"/>
+            </div>
+            <div>
+              <span class="text-outline block text-[11px] mb-1">Study Location</span>
+              <select class="w-full p-2 bg-white rounded border border-outline-variant/40 font-semibold text-xs">
+                <option value="India" selected>India (UGC 2(f)/12(B) Universities)</option>
+              </select>
+            </div>
+            <div>
+              <span class="text-outline block text-[11px] mb-1">Annual Slots / Quota</span>
+              <input type="number" value="1000" class="w-full p-2 bg-white rounded border border-outline-variant/40 font-bold font-mono text-xs"/>
+            </div>
+            <div>
+              <span class="text-outline block text-[11px] mb-1">Monthly Stipend Rates</span>
+              <input type="text" value="M.Tech: ₹7,800 | Other PG: ₹4,500" class="w-full p-2 bg-white rounded border border-outline-variant/40 font-bold font-mono text-xs text-secondary"/>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <span class="text-outline block text-[11px] mb-1">Application Window (Start / End Date)</span>
+              <div class="grid grid-cols-2 gap-2">
+                <input type="date" value="2026-08-01" class="w-full p-2 bg-white rounded border border-outline-variant/40 font-mono text-xs"/>
+                <input type="date" value="2026-11-15" class="w-full p-2 bg-white rounded border border-outline-variant/40 font-mono text-xs"/>
+              </div>
+            </div>
+            <div>
+              <span class="text-outline block text-[11px] mb-1">Required Documents (Tags)</span>
+              <div class="p-1.5 bg-white rounded border border-outline-variant/40 flex flex-wrap gap-1">
+                <span class="px-2 py-0.5 bg-surface-container text-primary rounded text-[10px] font-semibold">Aadhaar Card</span>
+                <span class="px-2 py-0.5 bg-surface-container text-primary rounded text-[10px] font-semibold">ST/SC Caste Certificate</span>
+                <span class="px-2 py-0.5 bg-surface-container text-primary rounded text-[10px] font-semibold">Income Certificate</span>
+                <span class="px-2 py-0.5 bg-secondary/10 text-secondary font-semibold rounded text-[10px]">1st Yr Professional Admission Letter</span>
               </div>
             </div>
           </div>

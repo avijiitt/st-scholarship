@@ -118,7 +118,10 @@ stateDiagram-v2
 - Displays dynamic catalog populated from `public.schemes` table:
   - **National Overseas Scholarship (`NOS`)**: 100% tuition, airfare, and maintenance for QS Top 500 Global Universities.
   - **National Fellowship for ST Students (`NFST`)**: ₹38,000/month research stipend for domestic doctoral candidates.
-  - **Post-Matric Scholarship (`PMS`)**: Complete fee waiver and maintenance allowance.
+  - **Post-Matric Scholarship (`PMS`)**: Complete compulsory fee waiver and monthly maintenance allowance for accredited degree colleges.
+  - **Pre-Matric Scholarship for ST Students (`PRE`)**: Centrally sponsored scheme for Class IX & X ST students (Day Scholars: ₹3,000/yr, Hostellers: ₹6,250/yr; Income ceiling ≤ ₹2.50 Lakhs/yr).
+  - **UGC PG Scholarship for Professional Courses for SC/ST (`UGC-PG`)**: 1,000 annual merit slots for regular PG professional master's (ME/M.Tech: ₹7,800/mo, MBA/MCA: ₹4,500/mo; 2-3 yrs).
+- Dedicated detail routes: `#/schemes/nos`, `#/schemes/nfst`, `#/schemes/pms`, `#/schemes/pre-matric`, `#/schemes/ugc-pg`.
 - Shows key metadata: Education level, Study location, Deadline countdown, Required documents count.
 
 ### Step 3: Application Wizard & Auto-Save

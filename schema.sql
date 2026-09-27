@@ -606,7 +606,28 @@ VALUES
     'Post-Matric / Undergraduate / Diploma / Professional',
     'India',
     '2026-10-31 23:59:59+00',
+    'active',
     '["Aadhaar Card", "ST Caste Certificate", "Annual Income Certificate (<= 2.5 Lakhs)", "Previous Year Marksheet / Scorecard", "Admission Fee Receipt / College ID", "NPCI Seeded Active Bank Passbook"]'::jsonb
+),
+(
+    'Pre-Matric Scholarship for ST Students',
+    'PRE',
+    'Centrally sponsored scheme executed through State Governments to minimize drop-out rates during transition from elementary to secondary education, providing monthly stipends (₹225/mo Day Scholars, ₹525/mo Hostellers) + ad-hoc grants for ST students in Class IX and X.',
+    'Class IX & X (Secondary)',
+    'India',
+    '2026-10-15 23:59:59+00',
+    'active',
+    '["Aadhaar Card", "ST Caste Certificate", "Annual Family Income Certificate (<= 2.5 Lakhs)", "School Bonafide / Enrolment Certificate", "Previous Class Marksheet", "NPCI Seeded Active Bank Passbook"]'::jsonb
+),
+(
+    'UGC PG Scholarship for Professional Courses for SC/ST Candidates',
+    'UGC-PG',
+    'University Grants Commission (UGC) merit-based fellowship for SC/ST students in first year of regular professional master''s programs, providing ₹7,800/month for ME/M.Tech and ₹4,500/month for MBA, MCA, M.Pharm, LLM for 2-3 years across 1,000 national slots.',
+    'Postgraduate Professional (ME/M.Tech, MBA, MCA, M.Pharm, LLM)',
+    'India',
+    '2026-11-15 23:59:59+00',
+    'active',
+    '["Aadhaar Card", "ST/SC Caste Certificate", "Annual Family Income Certificate", "PG Professional Course Admission / Enrolment Letter", "Undergraduate Degree Marksheet", "NPCI Seeded Active Bank Passbook"]'::jsonb
 )
 ON CONFLICT (code) DO UPDATE SET
     name = EXCLUDED.name,

@@ -44,7 +44,9 @@ Just slick, real-time, transparent education funding with AI assistance, instant
 ### 1. 🎓 Top-Tier Schemes Out-Of-The-Box
 - **National Overseas Scholarship (`NOS`)**: 100% fully-funded grants covering tuition, living expenses, and international flights for Scheduled Tribe scholars at **QS Top 500 Universities** worldwide (Oxford, Imperial, Cambridge, Harvard).
 - **National Fellowship for ST Students (`NFST`)**: Monthly doctoral research stipend up to **₹38,000/month** + annual contingency grants for regular full-time scholars in IITs, NITs, and Central Universities.
-- **Post-Matric Scholarship (`PMS`)**: 100% compulsory fee reimbursement and maintenance allowances across India.
+- **Post-Matric Scholarship (`PMS`)**: 100% compulsory fee reimbursement and maintenance allowances across accredited higher education institutions in India.
+- **Pre-Matric Scholarship for ST Students (`PRE`)**: Centrally sponsored scheme for **Class IX & X** ST scholars to minimize transition drop-outs (Day Scholars: ₹3,000/yr, Hostellers: ₹6,250/yr; Income ceiling ≤ ₹2.50 Lakhs/yr).
+- **UGC PG Scholarship for Professional Courses (`UGC-PG`)**: 1,000 annual national slots for SC/ST students entering 1st year regular PG professional degrees (ME/M.Tech: ₹7,800/mo, MBA/MCA/M.Pharm/LLM: ₹4,500/mo; 2-3 yrs tenure).
 
 ### 2. 🤖 AI-Assisted Preliminary Verification & OCR Engine
 - **Instant scan analysis**: OCR extracts candidate name, DOB, certificate registration number, and annual family income in real-time.
