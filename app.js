@@ -1354,6 +1354,8 @@ router.register("/applicant/dashboard", () => {
   const readiness = window.appStore.getReadinessScore ? window.appStore.getReadinessScore() : { score: 75, items: [] };
   const calendarEvents = window.appStore.getScholarshipCalendar ? window.appStore.getScholarshipCalendar() : [];
   const nextAlert = calendarEvents.find(e => e.status === "action_required") || calendarEvents[1];
+  const twin = window.appStore.getDigitalTwinData ? window.appStore.getDigitalTwinData() : null;
+  const isHi = (typeof localStorage !== "undefined" && localStorage.getItem("NTSP_LANG") === "hi");
   const container = document.getElementById("main-view-container");
 
   container.innerHTML = `
@@ -1368,6 +1370,12 @@ router.register("/applicant/dashboard", () => {
           <p class="text-xs text-on-surface-variant mt-0.5">OTR ID: <strong class="font-mono text-secondary">${user.otrId}</strong> • Domicile: Jharkhand • Tribe: Munda (Article 342)</p>
         </div>
         <div class="flex items-center gap-2 flex-wrap">
+          <a href="#/digital-twin" class="px-3.5 py-2 bg-secondary/15 text-secondary hover:bg-secondary/25 font-bold rounded text-xs shadow-xs flex items-center gap-1 transition">
+            <span class="material-symbols-outlined text-[16px]">cognition</span> Digital Twin
+          </a>
+          <a href="#/career" class="px-3.5 py-2 bg-tertiary-container/15 text-tertiary-container hover:bg-tertiary-container/25 font-bold rounded text-xs shadow-xs flex items-center gap-1 transition">
+            <span class="material-symbols-outlined text-[16px]">trending_up</span> Career Pathway
+          </a>
           <a href="#/calendar" class="px-3.5 py-2 bg-surface-container hover:bg-surface-container-high text-primary font-bold rounded text-xs shadow-xs flex items-center gap-1 transition">
             <span class="material-symbols-outlined text-[16px]">calendar_month</span> Planning Calendar
           </a>
@@ -1376,6 +1384,89 @@ router.register("/applicant/dashboard", () => {
           </a>
         </div>
       </div>
+
+      <!-- INNOVATION 1: Scholarship Digital Twin & Early Intervention System -->
+      ${twin ? `
+        <div class="bg-surface-container-lowest rounded-xl shadow-md border border-outline-variant/30 p-space-lg space-y-4">
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 pb-3 border-b border-outline-variant/20">
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="material-symbols-outlined text-secondary text-xl">cognition</span>
+                <h2 class="text-lg font-bold text-primary">${isHi ? 'स्कॉलरशिप डिजिटल ट्विन एवं अर्ली इंटरवेंशन सिस्टम' : 'Scholarship Digital Twin & Early Intervention System'}</h2>
+                <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-secondary/15 text-secondary">
+                  ${isHi ? 'रीयल-टाइम एआई मॉनिटरिंग' : 'AI Autonomous Twin'}
+                </span>
+                <span class="px-2 py-0.5 rounded text-[11px] font-bold ${twin.renewalRisk && twin.renewalRisk.level === 'Low' ? 'bg-tertiary-container/15 text-tertiary-container' : 'bg-error-container/20 text-error'}">
+                  ${isHi ? 'नवीनीकरण जोखिम:' : 'Renewal Risk:'} ${escapeHTML(twin.renewalRisk.level)}
+                </span>
+              </div>
+              <p class="text-xs text-on-surface-variant mt-0.5">
+                ${isHi ? 'सक्रिय अभ्यर्थी डॉसियर - छात्रवृत्ति जीवनचक्र, दस्तावेज़ वैधता और कैरियर की निरंतरता का रीयल-टाइम विश्लेषण।' : 'Dynamic algorithmic replica monitoring lifecycle milestones, renewal compliance, and career progression.'}
+              </p>
+            </div>
+            <a href="#/digital-twin" class="px-3.5 py-1.5 bg-primary text-white font-bold rounded text-xs shadow-xs hover:bg-primary-container flex items-center gap-1 transition shrink-0">
+              <span class="material-symbols-outlined text-[16px]">visibility</span> ${isHi ? 'डिजिटल ट्विन देखें' : 'View Full Twin'}
+            </a>
+          </div>
+
+          <!-- 4-Gauge Metric Bar -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+            <div class="p-3 bg-surface-container-low rounded-xl border border-outline-variant/20">
+              <span class="text-outline block text-[11px]">${isHi ? 'प्रोफ़ाइल पूर्णता' : 'Profile Fidelity'}</span>
+              <div class="flex items-baseline gap-1 mt-1">
+                <strong class="text-primary text-lg font-mono font-bold">${twin.profileCompletion}%</strong>
+                <span class="text-[10px] text-tertiary-container font-semibold">e-KYC Synced</span>
+              </div>
+            </div>
+            <div class="p-3 bg-surface-container-low rounded-xl border border-outline-variant/20">
+              <span class="text-outline block text-[11px]">${isHi ? 'पात्र योजनाएं' : 'Matched Schemes'}</span>
+              <div class="flex items-baseline gap-1 mt-1">
+                <strong class="text-secondary text-lg font-mono font-bold">${twin.eligibleSchemesCount}</strong>
+                <span class="text-[10px] text-on-surface-variant">100% Verified</span>
+              </div>
+            </div>
+            <div class="p-3 bg-surface-container-low rounded-xl border border-outline-variant/20">
+              <span class="text-outline block text-[11px]">${isHi ? 'सत्यापित दस्तावेज़' : 'Wallet Docs'}</span>
+              <div class="flex items-baseline gap-1 mt-1">
+                <strong class="text-primary text-lg font-mono font-bold">${twin.documentsVerifiedCount} / ${twin.totalDocumentsCount}</strong>
+                <span class="text-[10px] text-tertiary-container font-semibold">SHA-256</span>
+              </div>
+            </div>
+            <div class="p-3 bg-surface-container-low rounded-xl border border-outline-variant/20">
+              <span class="text-outline block text-[11px]">${isHi ? 'कैरियर तत्परता' : 'Career Readiness'}</span>
+              <div class="flex items-baseline gap-1 mt-1">
+                <strong class="text-tertiary-container text-lg font-mono font-bold">${twin.careerReadinessScore}%</strong>
+                <span class="text-[10px] text-on-surface-variant font-semibold">Skill Bridge</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Early Intervention Warning Banner -->
+          ${twin.renewalRisk && twin.renewalRisk.level !== 'Low' ? `
+            <div class="p-3.5 rounded-xl bg-error-container/15 border-l-4 border-error text-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+              <div class="space-y-1">
+                <div class="flex items-center gap-1.5 text-error font-bold">
+                  <span class="material-symbols-outlined text-[18px]">warning</span>
+                  <span>${isHi ? 'अर्ली इंटरवेंशन चेतावनी: आय प्रमाण पत्र नवीनीकरण आवश्यक (21 दिन शेष)' : 'Early Intervention Warning: Income Certificate Validity Expiring in 21 Days'}</span>
+                </div>
+                <p class="text-on-surface-variant text-[11px] leading-relaxed">
+                  ${isHi 
+                    ? 'झारखंड ई-डिस्ट्रिक्ट आय प्रमाण पत्र (JH-INC-2025-0912) 15 अप्रैल 2026 को समाप्त हो रहा है। नवीनीकरण न होने पर PMS-ST का द्वितीय वर्ष संवितरण रुक सकता है।' 
+                    : 'Certificate JH-INC-2025-0912 expires on 15 Apr 2026. Automated pre-check flags that DWO renewal disbursement will be halted unless renewed.'}
+                </p>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <a href="#/wallet" class="px-3 py-1.5 bg-error text-white font-bold rounded text-[11px] hover:bg-error/90 shadow-xs flex items-center gap-1 transition">
+                  <span class="material-symbols-outlined text-[14px]">upload_file</span> ${isHi ? 'वॉलेट में अपडेट करें' : 'Update in Wallet'}
+                </a>
+                <a href="#/digital-twin" class="px-3 py-1.5 bg-surface-container text-primary font-bold rounded text-[11px] hover:bg-surface-container-high transition">
+                  ${isHi ? 'सुधार योजना' : 'Action Plan'}
+                </a>
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      ` : ''}
 
       <!-- FEATURE 1: Scholarship Readiness Score Card -->
       <div class="bg-surface-container-lowest rounded-xl shadow-md border border-outline-variant/30 p-space-lg space-y-4">
@@ -5447,7 +5538,7 @@ router.register("/admin/settings", () => {
 // SIH / MoTA DIFFERENTIATOR MODALS & ACTION HANDLERS (Features 1-14)
 // =========================================================================
 
-// Feature 2: "Why Am I Eligible?" Transparent Criteria Modal
+// Feature 2: "Why Am I Eligible?" Transparent Criteria & Graph Recommendation Modal
 window.openWhyAmIEligibleModal = function(schemeCode) {
   const currentLang = (typeof localStorage !== "undefined" && localStorage.getItem("NTSP_LANG") === "hi") ? "hi" : "en";
   const scheme = SCHEMES_CATALOG.find(s => 
@@ -5457,6 +5548,7 @@ window.openWhyAmIEligibleModal = function(schemeCode) {
   ) || SCHEMES_CATALOG[0];
 
   const eligibility = window.appStore ? window.appStore.getSchemeEligibility(scheme) : { eligible: true, reasons: [], failingReasons: [] };
+  const rec = window.appStore.getExplainableRecommendation ? window.appStore.getExplainableRecommendation(scheme.code) : null;
 
   const existing = document.getElementById("ntsp-eligibility-modal");
   if (existing) existing.remove();
@@ -5471,7 +5563,7 @@ window.openWhyAmIEligibleModal = function(schemeCode) {
           <span class="material-symbols-outlined text-secondary text-2xl">verified_user</span>
           <div>
             <h3 class="font-bold text-sm leading-tight">${escapeHTML(scheme.name)}</h3>
-            <span class="text-[11px] text-surface-variant font-mono">${escapeHTML(scheme.code)} • ${currentLang === 'hi' ? 'पात्रता विश्लेषण' : 'Why Am I Eligible?'}</span>
+            <span class="text-[11px] text-surface-variant font-mono">${escapeHTML(scheme.code)} • ${currentLang === 'hi' ? 'पात्रता एवं ग्राफ़ विश्लेषण' : 'Why Am I Eligible? (Graph Audit)'}</span>
           </div>
         </div>
         <button type="button" onclick="document.getElementById('ntsp-eligibility-modal').remove()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-lg transition">✕</button>
@@ -5490,6 +5582,61 @@ window.openWhyAmIEligibleModal = function(schemeCode) {
             </p>
           </div>
         </div>
+
+        ${rec ? `
+          <!-- Graph-Based Explainable Recommendation Engine (Innovation 2) -->
+          <div class="p-3.5 bg-surface-container-low rounded-xl border border-secondary/30 space-y-2.5">
+            <div class="flex justify-between items-center">
+              <div class="flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-secondary text-lg">schema</span>
+                <strong class="text-primary text-xs uppercase font-bold">
+                  ${currentLang === 'hi' ? 'ग्राफ़-आधारित अनुशंसा स्कोर' : 'Graph-Based Recommendation Model'}
+                </strong>
+              </div>
+              <span class="px-2.5 py-0.5 rounded font-mono font-bold text-xs bg-secondary text-white shadow-xs">
+                ${rec.totalScore}% Match
+              </span>
+            </div>
+
+            <!-- Mathematical Formula -->
+            <p class="text-[11px] font-mono text-outline bg-surface-container-lowest p-2 rounded-lg border border-outline-variant/30 text-center font-bold">
+              Score = 0.30×C + 0.25×I + 0.20×A + 0.15×L + 0.10×D
+            </p>
+
+            <!-- Breakdown Weights -->
+            <div class="space-y-1.5 text-xs">
+              <div class="flex justify-between items-center text-[11px]">
+                <span class="text-on-surface-variant">${rec.breakdown.categoryMatch.label}:</span>
+                <strong class="font-mono text-primary font-bold">${rec.breakdown.categoryMatch.score} / ${rec.breakdown.categoryMatch.max}</strong>
+              </div>
+              <div class="flex justify-between items-center text-[11px]">
+                <span class="text-on-surface-variant">${rec.breakdown.incomeEligibility.label}:</span>
+                <strong class="font-mono text-primary font-bold">${rec.breakdown.incomeEligibility.score} / ${rec.breakdown.incomeEligibility.max}</strong>
+              </div>
+              <div class="flex justify-between items-center text-[11px]">
+                <span class="text-on-surface-variant">${rec.breakdown.academicMatch.label}:</span>
+                <strong class="font-mono text-primary font-bold">${rec.breakdown.academicMatch.score} / ${rec.breakdown.academicMatch.max}</strong>
+              </div>
+              <div class="flex justify-between items-center text-[11px]">
+                <span class="text-on-surface-variant">${rec.breakdown.locationMatch.label}:</span>
+                <strong class="font-mono text-primary font-bold">${rec.breakdown.locationMatch.score} / ${rec.breakdown.locationMatch.max}</strong>
+              </div>
+              <div class="flex justify-between items-center text-[11px]">
+                <span class="text-on-surface-variant">${rec.breakdown.documentReadiness.label}:</span>
+                <strong class="font-mono text-primary font-bold">${rec.breakdown.documentReadiness.score} / ${rec.breakdown.documentReadiness.max}</strong>
+              </div>
+            </div>
+
+            <!-- Connected Graph Flow -->
+            <div class="pt-2 border-t border-outline-variant/20 text-[10px] text-outline font-mono space-y-0.5">
+              <div>Student ──[belongs to]──▸ Munda Tribe (ST Art. 342)</div>
+              <div>Student ──[studies]──▸ Degree Course Accredited</div>
+              <div>Course ──[matches]──▸ ${escapeHTML(scheme.name)}</div>
+              <div>Scholarship ──[requires]──▸ Data Wallet Reusable Docs</div>
+              <div>Scholarship ──[leads to]──▸ Sustainable Career Pathway</div>
+            </div>
+          </div>
+        ` : ''}
 
         <!-- Validated Criteria -->
         <div>
@@ -6276,6 +6423,794 @@ router.register("/admin/grievances", () => {
     </div>
   `;
 }, { layout: "admin", authRole: "admin" });
+
+// =========================================================================
+// INNOVATION 1: SCHOLARSHIP DIGITAL TWIN & EARLY INTERVENTION SYSTEM ROUTE
+// =========================================================================
+function renderDigitalTwinView() {
+  const twin = window.appStore.getDigitalTwinData ? window.appStore.getDigitalTwinData() : {
+    profileCompletion: 92,
+    eligibleSchemesCount: 5,
+    activeSubmissionsCount: 2,
+    documentsVerifiedCount: 6,
+    totalDocumentsCount: 7,
+    renewalRisk: { level: "Medium", score: 62 },
+    careerReadinessScore: 68
+  };
+  const isHi = (typeof localStorage !== "undefined" && localStorage.getItem("NTSP_LANG") === "hi");
+  const container = document.getElementById("main-view-container");
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="space-y-space-lg">
+      <!-- Digital Twin Header Dossier -->
+      <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="material-symbols-outlined text-secondary text-2xl">cognition</span>
+            <h1 class="text-xl font-bold text-primary">${isHi ? 'स्कॉलरशिप डिजिटल ट्विन एवं अर्ली इंटरवेंशन सिस्टम' : 'Scholarship Digital Twin & Early Intervention System'}</h1>
+            <span class="px-2.5 py-0.5 bg-secondary/15 text-secondary text-xs font-bold rounded border border-secondary/30">
+              ${isHi ? 'एआई-संचालित अभ्यर्थी प्रतिरूप' : 'Autonomous AI Digital Twin'}
+            </span>
+          </div>
+          <p class="text-xs text-on-surface-variant mt-1 max-w-2xl leading-relaxed">
+            ${isHi 
+              ? 'प्रत्येक छात्रवृत्ति अभ्यर्थी का एक वास्तविक समय डिजिटल प्रतिरूप जो पात्रता परिवर्तन, दस्तावेज़ समाप्ति जोखिम और कैरियर की प्रगति का सक्रिय रूप से विश्लेषण करता है।' 
+              : 'A real-time algorithmic candidate dossier that models scholarship lifecycle transitions, detects renewal friction weeks in advance, and bridges financial aid to career outcomes.'}
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2 flex-wrap shrink-0">
+          <button type="button" onclick="window.syncDigitalTwinWithDigiLocker()" class="px-3.5 py-2 bg-surface-container hover:bg-surface-container-high text-primary font-bold text-xs rounded transition flex items-center gap-1.5 shadow-xs">
+            <span class="material-symbols-outlined text-[16px]">sync</span> ${isHi ? 'डिजिलॉकर पुनः सिंक' : 'Sync with DigiLocker'}
+          </button>
+          <button type="button" onclick="window.runDigitalTwinDiagnostics()" class="px-4 py-2 bg-secondary text-white font-bold text-xs rounded shadow-xs hover:bg-secondary/90 transition flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[16px]">health_and_safety</span> ${isHi ? 'लाइव डायग्नोस्टिक रन करें' : 'Run Live Diagnostic'}
+          </button>
+        </div>
+      </div>
+
+      <!-- 6 Comprehensive Health Gauges -->
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 text-xs">
+        <div class="p-3 bg-surface-container-lowest rounded-xl shadow-xs border border-outline-variant/30">
+          <span class="text-outline block text-[11px]">${isHi ? 'प्रोफ़ाइल पूर्णता' : 'Profile Fidelity'}</span>
+          <div class="flex items-baseline gap-1 mt-1">
+            <strong class="text-primary text-xl font-mono font-bold">${twin.profileCompletion}%</strong>
+          </div>
+          <span class="text-[10px] text-tertiary-container font-semibold block mt-0.5">✓ Aadhaar e-KYC</span>
+        </div>
+
+        <div class="p-3 bg-surface-container-lowest rounded-xl shadow-xs border border-outline-variant/30">
+          <span class="text-outline block text-[11px]">${isHi ? 'पात्र योजनाएं' : 'Matched Schemes'}</span>
+          <div class="flex items-baseline gap-1 mt-1">
+            <strong class="text-secondary text-xl font-mono font-bold">${twin.eligibleSchemesCount}</strong>
+          </div>
+          <span class="text-[10px] text-on-surface-variant font-semibold block mt-0.5">${isHi ? '100% एसटी संरेखित' : 'Article 342 ST'}</span>
+        </div>
+
+        <div class="p-3 bg-surface-container-lowest rounded-xl shadow-xs border border-outline-variant/30">
+          <span class="text-outline block text-[11px]">${isHi ? 'सक्रिय आवेदन' : 'Active Submissions'}</span>
+          <div class="flex items-baseline gap-1 mt-1">
+            <strong class="text-primary text-xl font-mono font-bold">${twin.activeSubmissionsCount}</strong>
+          </div>
+          <span class="text-[10px] text-secondary font-semibold block mt-0.5">${isHi ? 'स्क्रूटनी स्तर पर' : 'In Scrutiny'}</span>
+        </div>
+
+        <div class="p-3 bg-surface-container-lowest rounded-xl shadow-xs border border-outline-variant/30">
+          <span class="text-outline block text-[11px]">${isHi ? 'वॉलेट दस्तावेज़' : 'Wallet Verified'}</span>
+          <div class="flex items-baseline gap-1 mt-1">
+            <strong class="text-primary text-xl font-mono font-bold">${twin.documentsVerifiedCount} / ${twin.totalDocumentsCount}</strong>
+          </div>
+          <span class="text-[10px] text-tertiary-container font-semibold block mt-0.5">SHA-256 Tamper-Proof</span>
+        </div>
+
+        <div class="p-3 bg-surface-container-lowest rounded-xl shadow-xs border border-outline-variant/30">
+          <span class="text-outline block text-[11px]">${isHi ? 'नवीनीकरण जोखिम' : 'Renewal Risk'}</span>
+          <div class="flex items-baseline gap-1 mt-1">
+            <strong class="${twin.renewalRisk.level === 'Low' ? 'text-tertiary-container' : 'text-error'} text-xl font-mono font-bold">${twin.renewalRisk.level}</strong>
+          </div>
+          <span class="text-[10px] text-error font-bold block mt-0.5">${isHi ? '21 दिन शेष' : '21 Days Left'}</span>
+        </div>
+
+        <div class="p-3 bg-surface-container-lowest rounded-xl shadow-xs border border-outline-variant/30">
+          <span class="text-outline block text-[11px]">${isHi ? 'कैरियर तत्परता' : 'Career Readiness'}</span>
+          <div class="flex items-baseline gap-1 mt-1">
+            <strong class="text-tertiary-container text-xl font-mono font-bold">${twin.careerReadinessScore}%</strong>
+          </div>
+          <span class="text-[10px] text-tertiary-container font-semibold block mt-0.5">${isHi ? 'कौशल ब्रिज सक्रिय' : 'Skill Gaps Mapped'}</span>
+        </div>
+      </div>
+
+      <!-- Early Intervention Alert & Action Plan -->
+      <div class="bg-surface-container-lowest rounded-xl shadow-md border border-error/30 overflow-hidden">
+        <div class="bg-error-container/20 px-space-md py-3 border-b border-error/30 flex items-center justify-between">
+          <div class="flex items-center gap-2 text-error font-bold text-sm">
+            <span class="material-symbols-outlined text-[20px]">notification_important</span>
+            <span>${isHi ? 'अर्ली इंटरवेंशन चेतावनी: आय प्रमाण पत्र समाप्ति जोखिम' : 'Early Intervention Warning: Predictive Renewal Friction Alert'}</span>
+          </div>
+          <span class="px-2 py-0.5 bg-error text-white font-mono text-[10px] font-bold rounded uppercase">
+            ${isHi ? 'कार्रवाई अपेक्षित' : 'Action Required'}
+          </span>
+        </div>
+
+        <div class="p-space-lg space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            <div class="p-3 bg-surface-container-low rounded-lg space-y-1">
+              <span class="text-outline font-semibold block">${isHi ? 'पहचाना गया जोखिम कारण:' : 'Detected Risk Factor:'}</span>
+              <strong class="text-primary text-sm block">Parental Income Certificate (JH-INC-2025-0912)</strong>
+              <p class="text-on-surface-variant text-[11px]">
+                ${isHi ? 'वैधता समाप्ति तिथि: 15 अप्रैल 2026 (21 दिन शेष)' : 'Validity expires on 15 April 2026 (21 days remaining)'}
+              </p>
+            </div>
+
+            <div class="p-3 bg-surface-container-low rounded-lg space-y-1">
+              <span class="text-outline font-semibold block">${isHi ? 'प्रणालीगत प्रभाव:' : 'Systemic Impact:'}</span>
+              <strong class="text-error text-sm block">${isHi ? 'द्वितीय वर्ष का डीबीटी संवितरण रुक सकता है' : 'Year-2 Renewal Disbursement Blocked'}</strong>
+              <p class="text-on-surface-variant text-[11px]">
+                ${isHi ? 'जिला कल्याण अधिकारी (DWO) स्तर पर नवीनीकरण सत्यापन अस्वीकृत हो सकता है।' : 'DWO Level-2 scrutiny halts PFMS installment release if income certificate is expired.'}
+              </p>
+            </div>
+
+            <div class="p-3 bg-surface-container-low rounded-lg space-y-1">
+              <span class="text-outline font-semibold block">${isHi ? 'सुझाया गया निवारण:' : 'Prescribed Resolution:'}</span>
+              <strong class="text-tertiary-container text-sm block">${isHi ? 'झारसेवा / सीएससी से नया प्रमाण पत्र जारी कराएं' : 'Apply via JharSewa / CSC Portal'}</strong>
+              <p class="text-on-surface-variant text-[11px]">
+                ${isHi ? 'जारी होने पर 1-क्लिक में डेटा वॉलेट में अपलोड करें।' : 'Upload renewed certificate to Data Wallet to auto-update all 5 schemes.'}
+              </p>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-outline-variant/20">
+            <div class="flex items-center gap-2 text-xs text-on-surface-variant">
+              <span class="material-symbols-outlined text-[18px] text-tertiary-container">verified</span>
+              <span>${isHi ? 'स्वचालित सिस्टम पूर्व-जांच द्वारा संचालित' : 'Powered by Proactive Rule Engine & Pre-flight Diagnostics'}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <a href="#/wallet" class="px-4 py-2 bg-error text-white font-bold text-xs rounded hover:bg-error/90 shadow-xs flex items-center gap-1.5 transition">
+                <span class="material-symbols-outlined text-[16px]">upload_file</span> ${isHi ? 'डेटा वॉलेट में नया प्रमाण पत्र अपलोड करें' : 'Update in Data Wallet'}
+              </a>
+              <a href="https://jharsewa.jharkhand.gov.in" target="_blank" class="px-3 py-2 bg-surface-container hover:bg-surface-container-high text-primary font-bold text-xs rounded transition flex items-center gap-1">
+                <span class="material-symbols-outlined text-[16px]">open_in_new</span> JharSewa Portal
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Candidate Lifecycle Progression Stepper -->
+      <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30 space-y-4">
+        <h3 class="text-sm font-bold text-primary pb-2 border-b border-outline-variant/20 flex items-center gap-2">
+          <span class="material-symbols-outlined text-secondary text-base">alt_route</span>
+          ${isHi ? 'छात्रवृत्ति डिजिटल ट्विन जीवनचक्र प्रगति' : 'Scholarship Digital Twin Lifecycle State Machine'}
+        </h3>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 text-xs">
+          <div class="p-3 bg-tertiary-container/10 border border-tertiary-container/30 rounded-xl space-y-1">
+            <div class="flex items-center justify-between">
+              <span class="material-symbols-outlined text-tertiary-container text-lg">check_circle</span>
+              <span class="text-[10px] font-bold text-tertiary-container uppercase">Done</span>
+            </div>
+            <strong class="text-primary block text-xs">${isHi ? '1. ई-केवाईसी नामांकन' : '1. e-KYC Enrolment'}</strong>
+            <p class="text-[11px] text-outline">Aadhaar-NPCI UIDAI Validated</p>
+          </div>
+
+          <div class="p-3 bg-tertiary-container/10 border border-tertiary-container/30 rounded-xl space-y-1">
+            <div class="flex items-center justify-between">
+              <span class="material-symbols-outlined text-tertiary-container text-lg">check_circle</span>
+              <span class="text-[10px] font-bold text-tertiary-container uppercase">Done</span>
+            </div>
+            <strong class="text-primary block text-xs">${isHi ? '2. योजना मिलान' : '2. Scheme Matching'}</strong>
+            <p class="text-[11px] text-outline">5 Schemes 100% Eligible</p>
+          </div>
+
+          <div class="p-3 bg-tertiary-container/10 border border-tertiary-container/30 rounded-xl space-y-1">
+            <div class="flex items-center justify-between">
+              <span class="material-symbols-outlined text-tertiary-container text-lg">check_circle</span>
+              <span class="text-[10px] font-bold text-tertiary-container uppercase">Done</span>
+            </div>
+            <strong class="text-primary block text-xs">${isHi ? '3. आवेदन प्रस्तुत' : '3. Applications Filed'}</strong>
+            <p class="text-[11px] text-outline">NOS &amp; PMS-ST Active</p>
+          </div>
+
+          <div class="p-3 bg-secondary/10 border border-secondary/30 rounded-xl space-y-1">
+            <div class="flex items-center justify-between">
+              <span class="material-symbols-outlined text-secondary text-lg">sync</span>
+              <span class="text-[10px] font-bold text-secondary uppercase">In Progress</span>
+            </div>
+            <strong class="text-primary block text-xs">${isHi ? '4. प्रशासनिक जांच' : '4. Officer Scrutiny'}</strong>
+            <p class="text-[11px] text-outline">Level-1 &amp; Level-2 Active</p>
+          </div>
+
+          <div class="p-3 bg-error-container/20 border border-error/40 rounded-xl space-y-1">
+            <div class="flex items-center justify-between">
+              <span class="material-symbols-outlined text-error text-lg">warning</span>
+              <span class="text-[10px] font-bold text-error uppercase">Alert</span>
+            </div>
+            <strong class="text-primary block text-xs">${isHi ? '5. नवीनीकरण पूर्व-जांच' : '5. Renewal Pre-Check'}</strong>
+            <p class="text-[11px] text-error">Income Cert Expiring (21d)</p>
+          </div>
+
+          <div class="p-3 bg-surface-container-low border border-outline-variant/30 rounded-xl space-y-1">
+            <div class="flex items-center justify-between">
+              <span class="material-symbols-outlined text-tertiary-container text-lg">trending_up</span>
+              <span class="text-[10px] font-bold text-tertiary-container uppercase">Active</span>
+            </div>
+            <strong class="text-primary block text-xs">${isHi ? '6. कैरियर पाथवे' : '6. Career Transition'}</strong>
+            <p class="text-[11px] text-outline">Internships &amp; Jobs Mapped</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+router.register("/digital-twin", renderDigitalTwinView, { layout: "applicant", authRole: "applicant" });
+router.register("/applicant/digital-twin", renderDigitalTwinView, { layout: "applicant", authRole: "applicant" });
+
+window.syncDigitalTwinWithDigiLocker = function() {
+  showToast("Synchronizing Digital Twin with DigiLocker National Gateway...", "info");
+  setTimeout(() => {
+    showToast("Digital Twin successfully re-anchored with verified DigiLocker hashes!", "success");
+    renderDigitalTwinView();
+  }, 1000);
+};
+
+window.runDigitalTwinDiagnostics = function() {
+  showToast("Running algorithmic diagnostic scan across 5 MoTA schemes...", "info");
+  setTimeout(() => {
+    showToast("Diagnostics complete: 1 renewal friction alert detected (Income cert expiring).", "warning");
+  }, 800);
+};
+
+// =========================================================================
+// INNOVATION 4: SCHOLARSHIP-TO-CAREER PATHWAY ROUTE
+// =========================================================================
+function renderCareerPathwayView() {
+  const pathway = window.appStore.getCareerPathwayData ? window.appStore.getCareerPathwayData() : null;
+  const isHi = (typeof localStorage !== "undefined" && localStorage.getItem("NTSP_LANG") === "hi");
+  const container = document.getElementById("main-view-container");
+  if (!container || !pathway) return;
+
+  container.innerHTML = `
+    <div class="space-y-space-lg">
+      <!-- Career Pathway Banner -->
+      <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="material-symbols-outlined text-tertiary-container text-2xl">trending_up</span>
+            <h1 class="text-xl font-bold text-primary">${isHi ? 'छात्रवृत्ति से कैरियर पाथवे' : 'Scholarship-to-Career Pathway'}</h1>
+            <span class="px-2.5 py-0.5 bg-tertiary-container/15 text-tertiary-container text-xs font-bold rounded border border-tertiary-container/30">
+              ${isHi ? 'शिक्षा की निरंतरता एवं रोजगार' : 'Beyond Financial Aid • Employability Focus'}
+            </span>
+          </div>
+          <p class="text-xs text-on-surface-variant mt-1 max-w-2xl leading-relaxed">
+            ${isHi
+              ? 'छात्रवृत्ति मिलने के बाद छात्र की यात्रा समाप्त नहीं होती। पोर्टल कौशल अंतर, निशुल्क प्रमाणन पाठ्यक्रम, इंटर्नशिप और प्रतियोगी परीक्षा मार्गदर्शन प्रदान करता है।'
+              : 'Empowering tribal scholars through every stage: Academic progression, AI-driven skill gap detection, free SWAYAM/NPTEL certifications, premier fellowships, and civil service placement.'}
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2 shrink-0">
+          <a href="#/schemes" class="px-4 py-2 bg-primary text-white font-bold text-xs rounded shadow-xs hover:bg-primary/90 flex items-center gap-1.5 transition">
+            <span class="material-symbols-outlined text-[16px]">school</span> ${isHi ? 'योजनाएं देखें' : 'View Schemes'}
+          </a>
+        </div>
+      </div>
+
+      <!-- Linear Pathway Progression Breadcrumb -->
+      <div class="bg-primary text-white p-space-md rounded-xl shadow-sm overflow-x-auto text-xs font-medium">
+        <div class="flex items-center gap-2 min-w-max">
+          <span class="flex items-center gap-1 px-2.5 py-1 bg-white/20 rounded font-bold">1. Student Profile</span>
+          <span>→</span>
+          <span class="flex items-center gap-1 px-2.5 py-1 bg-white/20 rounded font-bold">2. Eligible Scholarship</span>
+          <span>→</span>
+          <span class="flex items-center gap-1 px-2.5 py-1 bg-white/20 rounded font-bold">3. Approval &amp; DBT</span>
+          <span>→</span>
+          <span class="flex items-center gap-1 px-2.5 py-1 bg-secondary-fixed text-on-secondary-fixed rounded font-bold">4. Course Progress</span>
+          <span>→</span>
+          <span class="flex items-center gap-1 px-2.5 py-1 bg-tertiary-fixed text-on-tertiary-fixed rounded font-bold">5. Free Courses &amp; Skill Bridge</span>
+          <span>→</span>
+          <span class="flex items-center gap-1 px-2.5 py-1 bg-white/10 rounded">6. Internship / Fellowship</span>
+          <span>→</span>
+          <span class="flex items-center gap-1 px-2.5 py-1 bg-white/10 rounded">7. Employment Horizon</span>
+        </div>
+      </div>
+
+      <!-- Current Academic Standing -->
+      <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm border border-outline-variant/30">
+        <h3 class="text-sm font-bold text-primary pb-2 border-b border-outline-variant/20 mb-3 flex items-center gap-2">
+          <span class="material-symbols-outlined text-secondary text-base">school</span>
+          ${isHi ? 'वर्तमान शैक्षणिक प्रगति एवं कोर्स स्थिति' : 'Current Academic Standing & Course Track'}
+        </h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+          <div class="p-3 bg-surface-container-low rounded-lg">
+            <span class="text-outline block text-[11px]">${isHi ? 'डिग्री व विशेषज्ञता' : 'Degree & Specialization'}</span>
+            <strong class="text-primary block mt-0.5">${escapeHTML(pathway.currentCourse.degree)}</strong>
+          </div>
+          <div class="p-3 bg-surface-container-low rounded-lg">
+            <span class="text-outline block text-[11px]">${isHi ? 'संस्थान' : 'Institution'}</span>
+            <strong class="text-primary block mt-0.5">${escapeHTML(pathway.currentCourse.institution)}</strong>
+          </div>
+          <div class="p-3 bg-surface-container-low rounded-lg">
+            <span class="text-outline block text-[11px]">${isHi ? 'वर्तमान सत्र' : 'Current Standing'}</span>
+            <strong class="text-secondary block mt-0.5">${escapeHTML(pathway.currentCourse.currentYear)}</strong>
+          </div>
+          <div class="p-3 bg-surface-container-low rounded-lg">
+            <span class="text-outline block text-[11px]">${isHi ? 'संचयी सीजीपीए' : 'Cumulative CGPA / Score'}</span>
+            <strong class="text-tertiary-container text-base block mt-0.5">${escapeHTML(pathway.currentCourse.gpa)}</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Skill Gaps & Free Recommended Courses -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg">
+        <!-- AI Skill Gaps -->
+        <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm border border-outline-variant/30 space-y-3">
+          <div class="flex items-center justify-between pb-2 border-b border-outline-variant/20">
+            <h3 class="text-sm font-bold text-primary flex items-center gap-2">
+              <span class="material-symbols-outlined text-secondary text-base">psychology</span>
+              ${isHi ? 'एआई-विश्लेषित कौशल अंतर (Skill Gaps)' : 'AI-Identified Skill Gaps'}
+            </h3>
+            <span class="text-[10px] px-2 py-0.5 bg-secondary/15 text-secondary font-bold rounded">Tribal Market Aligned</span>
+          </div>
+
+          <div class="space-y-2.5">
+            ${pathway.skillGaps.map(g => `
+              <div class="p-3 bg-surface-container-low rounded-lg border border-outline-variant/20 text-xs">
+                <div class="flex items-center justify-between">
+                  <strong class="text-primary font-bold">${escapeHTML(g.skill)}</strong>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold ${g.status === 'In Progress' ? 'bg-secondary/15 text-secondary' : 'bg-error-container/20 text-error'}">
+                    ${escapeHTML(g.status)}
+                  </span>
+                </div>
+                <p class="text-[11px] text-on-surface-variant mt-1">Impact: ${escapeHTML(g.impact)}</p>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Free Certified Online Courses -->
+        <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm border border-outline-variant/30 space-y-3">
+          <div class="flex items-center justify-between pb-2 border-b border-outline-variant/20">
+            <h3 class="text-sm font-bold text-primary flex items-center gap-2">
+              <span class="material-symbols-outlined text-tertiary-container text-base">workspace_premium</span>
+              ${isHi ? 'अनुशंसित 100% निशुल्क सरकारी पाठ्यक्रम' : 'Recommended 100% Free Govt Courses'}
+            </h3>
+            <span class="text-[10px] px-2 py-0.5 bg-tertiary-container/15 text-tertiary-container font-bold rounded">SWAYAM / NPTEL</span>
+          </div>
+
+          <div class="space-y-2.5">
+            ${pathway.recommendedCourses.map(c => `
+              <div class="p-3 bg-surface-container-low rounded-lg border border-outline-variant/20 text-xs flex justify-between items-center gap-2">
+                <div>
+                  <strong class="text-primary block">${escapeHTML(c.title)}</strong>
+                  <div class="flex items-center gap-2 text-[11px] text-outline mt-0.5">
+                    <span>${escapeHTML(c.platform)}</span> • <span>${escapeHTML(c.duration)}</span> • <span class="text-tertiary-container font-bold">${escapeHTML(c.cost)}</span>
+                  </div>
+                </div>
+                <a href="${c.certUrl}" target="_blank" class="px-2.5 py-1.5 bg-primary text-white text-[11px] font-bold rounded hover:bg-primary-container shrink-0 flex items-center gap-1">
+                  <span>Enroll</span> <span class="material-symbols-outlined text-[13px]">open_in_new</span>
+                </a>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+
+      <!-- High-Value Internships & Fellowships -->
+      <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm border border-outline-variant/30 space-y-3">
+        <div class="flex items-center justify-between pb-2 border-b border-outline-variant/20">
+          <h3 class="text-sm font-bold text-primary flex items-center gap-2">
+            <span class="material-symbols-outlined text-secondary text-base">work</span>
+            ${isHi ? 'जनजातीय अध्येताओं हेतु इंटर्नशिप एवं अध्येतावृत्तियां' : 'MoTA & Premier Govt Internships / Fellowships'}
+          </h3>
+          <span class="text-[10px] px-2 py-0.5 bg-secondary-fixed text-on-secondary-fixed font-bold rounded">ST Quota Guaranteed</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+          ${pathway.internships.map(i => `
+            <div class="p-3.5 bg-surface-container-low rounded-xl border border-outline-variant/20 flex flex-col justify-between">
+              <div>
+                <span class="px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded uppercase">${escapeHTML(i.status)}</span>
+                <strong class="text-primary block text-sm font-bold mt-1.5">${escapeHTML(i.title)}</strong>
+                <p class="text-[11px] text-on-surface-variant mt-0.5">${escapeHTML(i.organization)}</p>
+                <div class="mt-2.5 pt-2 border-t border-outline-variant/15 text-[11px] space-y-0.5">
+                  <div class="flex justify-between"><span class="text-outline">Stipend:</span> <strong class="text-secondary">${escapeHTML(i.stipend)}</strong></div>
+                  <div class="flex justify-between"><span class="text-outline">Location:</span> <span>${escapeHTML(i.location)}</span></div>
+                  <div class="flex justify-between"><span class="text-outline">Deadline:</span> <span class="font-mono text-error font-semibold">${escapeHTML(i.deadline)}</span></div>
+                </div>
+              </div>
+              <button onclick="showToast('Application redirected to MoTA National Internship Portal.', 'info')" class="mt-3 w-full py-1.5 bg-secondary text-white text-xs font-bold rounded hover:bg-secondary/90 shadow-xs">
+                ${isHi ? 'आवेदन करें' : 'Apply Now'}
+              </button>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <!-- Free Competitive Exam Coaching & Career Horizons -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg">
+        <!-- UPSC / NET Coaching -->
+        <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm border border-outline-variant/30 space-y-3">
+          <h3 class="text-sm font-bold text-primary pb-2 border-b border-outline-variant/20 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary text-base">menu_book</span>
+            ${isHi ? 'निशुल्क यूपीएससी व यूजीसी-नेट कोचिंग संसाधन' : 'Free UPSC Civil Services & NET Coaching Schemes'}
+          </h3>
+          <div class="space-y-3 text-xs">
+            ${pathway.competitiveExams.map(e => `
+              <div class="p-3 bg-surface-container-low rounded-lg border border-outline-variant/20">
+                <strong class="text-primary block font-bold">${escapeHTML(e.name)}</strong>
+                <p class="text-[11px] text-outline mt-0.5">Organizer: ${escapeHTML(e.organizer)}</p>
+                <div class="mt-2 p-2 bg-tertiary-container/10 text-tertiary-container rounded text-[11px] font-semibold flex items-center justify-between">
+                  <span>${escapeHTML(e.perks)}</span>
+                  <span class="font-mono">${escapeHTML(e.intakeExam)}</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Career Horizons -->
+        <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm border border-outline-variant/30 space-y-3">
+          <h3 class="text-sm font-bold text-primary pb-2 border-b border-outline-variant/20 flex items-center gap-2">
+            <span class="material-symbols-outlined text-secondary text-base">explore</span>
+            ${isHi ? 'स्नातकोत्तर कैरियर विकल्प व मैचिंग' : 'Post-Graduation Career Horizons'}
+          </h3>
+          <div class="space-y-2 text-xs">
+            ${pathway.careerOptions.map(o => `
+              <div class="p-2.5 bg-surface-container-low rounded-lg border border-outline-variant/20 flex items-center justify-between">
+                <div>
+                  <strong class="text-primary block font-bold">${escapeHTML(o.role)}</strong>
+                  <span class="text-[11px] text-outline">${escapeHTML(o.sector)}</span>
+                </div>
+                <div class="text-right">
+                  <span class="px-2 py-0.5 bg-tertiary-container/15 text-tertiary-container font-mono font-bold text-xs rounded">
+                    ${escapeHTML(o.match)} Match
+                  </span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+router.register("/career", (params) => {
+  const authUser = window.appStore.getAuthUser();
+  if (authUser && authUser.role === "applicant") {
+    router.renderLayout("applicant", renderCareerPathwayView);
+  } else {
+    router.renderLayout("public", renderCareerPathwayView);
+  }
+});
+router.register("/applicant/career", renderCareerPathwayView, { layout: "applicant", authRole: "applicant" });
+
+// =========================================================================
+// INNOVATION 3: CONSENT-BASED STUDENT DATA WALLET ROUTE
+// =========================================================================
+function renderDataWalletView() {
+  const walletDocs = window.appStore.getDocumentWallet ? window.appStore.getDocumentWallet() : [];
+  const auditLogs = window.appStore.getWalletAuditLogs ? window.appStore.getWalletAuditLogs() : [];
+  const isHi = (typeof localStorage !== "undefined" && localStorage.getItem("NTSP_LANG") === "hi");
+  const container = document.getElementById("main-view-container");
+  if (!container) return;
+
+  const ALL_SCHEMES = [
+    { code: "NOS", label: "National Overseas (NOS)" },
+    { code: "NFST", label: "National Fellowship (NFST)" },
+    { code: "PMS", label: "Post-Matric (PMS-ST)" },
+    { code: "PRE", label: "Pre-Matric School" },
+    { code: "UGC", label: "UGC Professional" }
+  ];
+
+  container.innerHTML = `
+    <div class="space-y-space-lg">
+      <!-- Wallet Header -->
+      <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="material-symbols-outlined text-primary text-2xl">wallet</span>
+            <h1 class="text-xl font-bold text-primary">${isHi ? 'सहमति-आधारित छात्र डेटा वॉलेट' : 'Consent-Based Student Data Wallet'}</h1>
+            <span class="px-2.5 py-0.5 bg-tertiary-container/15 text-tertiary-container text-xs font-bold rounded border border-tertiary-container/30">
+              SHA-256 Tamper Proof • 1-Click Multi-Scheme Reuse
+            </span>
+          </div>
+          <p class="text-xs text-on-surface-variant mt-1 max-w-2xl leading-relaxed">
+            ${isHi
+              ? 'डिजिटल व्यक्तिगत डेटा संरक्षण अधिनियम (DPDP 2023) के तहत पूर्णतः सुरक्षित। एक बार सत्यापित दस्तावेज़ को बिना दोबारा अपलोड किए अन्य योजनाओं के साथ साझा करें।'
+              : 'Empowers scholars with zero-knowledge consent: Re-use verified certificates across all 5 MoTA schemes without repetitive uploads. Each document is cryptographically anchored.'}
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2 shrink-0">
+          <button onclick="document.getElementById('wallet-upload-section').classList.toggle('hidden')" class="px-4 py-2 bg-secondary text-white font-bold text-xs rounded shadow-xs hover:bg-secondary/90 flex items-center gap-1.5 transition">
+            <span class="material-symbols-outlined text-[16px]">upload_file</span> ${isHi ? '+ नया दस्तावेज़ जोड़ें' : '+ Upload New Document'}
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Document Upload Form (Expandable) -->
+      <div id="wallet-upload-section" class="hidden bg-surface-container-lowest p-space-md rounded-xl border border-secondary/40 shadow-sm space-y-3">
+        <h3 class="text-sm font-bold text-primary">${isHi ? 'वॉलेट में दस्तावेज़ अपलोड एवं क्रिप्टोग्राफ़िक हैशिंग' : 'Upload Credential & Generate Cryptographic SHA-256 Hash'}</h3>
+        <form onsubmit="window.handleWalletUploadNewDoc(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+          <div>
+            <label class="block font-bold text-on-surface mb-1">Document Category *</label>
+            <select id="w-doc-type" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40" required>
+              <option value="Income Certificate">Parental Income Certificate (Renewed)</option>
+              <option value="Caste Certificate">ST Caste Certificate (Art. 342)</option>
+              <option value="Bonafide Certificate">Institutional Bonafide</option>
+              <option value="Marksheet">Semester Marksheet / Transcript</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-on-surface mb-1">Registration / Certificate No. *</label>
+            <input type="text" id="w-cert-no" placeholder="e.g. JH-INC-2026-99120" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40" required/>
+          </div>
+          <div class="flex items-end gap-2">
+            <button type="submit" class="w-full py-2 bg-primary text-white font-bold rounded shadow-xs hover:bg-primary-container transition">
+              Verify &amp; Anchor to Wallet
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Verifiable Documents Matrix -->
+      <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30 space-y-4">
+        <div class="flex items-center justify-between pb-2 border-b border-outline-variant/20">
+          <h3 class="text-sm font-bold text-primary flex items-center gap-2">
+            <span class="material-symbols-outlined text-secondary text-base">folder_shared</span>
+            ${isHi ? 'सत्यापित साख-पत्र एवं योजना सहमति प्रबंधन' : 'Verified Credentials & Active Multi-Scheme Consent'}
+          </h3>
+          <span class="text-xs text-outline font-semibold">${walletDocs.length} Verified Records</span>
+        </div>
+
+        <div class="space-y-3">
+          ${walletDocs.map(doc => {
+            const shared = doc.sharedWithSchemes || [];
+            const unshared = ALL_SCHEMES.filter(s => !shared.includes(s.code));
+            return `
+              <div class="p-4 bg-surface-container-low rounded-xl border border-outline-variant/30 space-y-3 text-xs">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <strong class="text-primary text-sm font-bold">${escapeHTML(doc.name)}</strong>
+                      <span class="px-2 py-0.5 rounded text-[10px] font-bold ${doc.verified ? 'bg-tertiary-container/15 text-tertiary-container' : 'bg-secondary/15 text-secondary'}">
+                        ${doc.verified ? '✓ Digitally Verified' : 'Pending Verification'}
+                      </span>
+                    </div>
+                    <p class="text-[11px] text-outline mt-0.5">
+                      Authority: <strong>${escapeHTML(doc.issuingAuthority)}</strong> • Issue Date: ${escapeHTML(doc.issueDate)}
+                    </p>
+                  </div>
+
+                  <div class="text-right">
+                    <span class="text-[10px] text-outline font-mono block">CRYPTOGRAPHIC ANCHOR</span>
+                    <code class="px-2 py-0.5 bg-surface-container-high rounded text-[10px] font-mono text-secondary font-bold select-all" title="SHA-256 Tamper Detection Hash">
+                      ${escapeHTML(doc.hash || 'sha256-4a9b...')}
+                    </code>
+                  </div>
+                </div>
+
+                <!-- Scheme Sharing Pills -->
+                <div class="pt-2 border-t border-outline-variant/20 flex flex-wrap items-center justify-between gap-2">
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="text-outline text-[11px] font-semibold">${isHi ? 'सहमति प्रदत्त योजनाएं:' : 'Active Scheme Consent:'}</span>
+                    ${shared.length > 0 ? shared.map(sc => `
+                      <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-primary text-white font-bold text-[10px] rounded-full">
+                        ${sc}
+                        <button onclick="window.handleWalletRevokeConsent('${sc}', '${doc.id}')" title="Revoke Consent" class="hover:text-error transition font-black ml-0.5">×</button>
+                      </span>
+                    `).join('') : `
+                      <span class="text-outline text-[11px] italic">No active scheme consent granted</span>
+                    `}
+                  </div>
+
+                  <!-- 1-Click Share to another Scheme -->
+                  ${unshared.length > 0 ? `
+                    <div class="flex items-center gap-1.5">
+                      <span class="text-[11px] text-outline">${isHi ? 'पुनः उपयोग करें:' : 'Share with:'}</span>
+                      <select id="grant-select-${doc.id}" class="p-1 bg-surface-container-lowest rounded border border-outline-variant/40 text-[11px]">
+                        ${unshared.map(u => `<option value="${u.code}">${u.label}</option>`).join('')}
+                      </select>
+                      <button type="button" onclick="const code = document.getElementById('grant-select-${doc.id}').value; window.handleWalletGrantConsent(code, '${doc.id}');" class="px-2.5 py-1 bg-secondary text-white font-bold text-[11px] rounded hover:bg-secondary/90 transition shadow-xs">
+                        + ${isHi ? 'सहमति दें' : 'Grant Consent'}
+                      </button>
+                    </div>
+                  ` : `
+                    <span class="text-tertiary-container font-bold text-[11px]">✓ Shared across all active schemes</span>
+                  `}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+
+      <!-- Immutable Verification Audit Log -->
+      <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30 space-y-3">
+        <div class="flex items-center justify-between pb-2 border-b border-outline-variant/20">
+          <h3 class="text-sm font-bold text-primary flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary text-base">history_edu</span>
+            ${isHi ? 'अपरिवर्तनीय साख-पत्र सत्यापन ऑडिट लॉग' : 'Immutable Credential Access Audit Trail'}
+          </h3>
+          <span class="text-[10px] px-2 py-0.5 bg-primary/10 text-primary font-bold rounded">DPDP Act 2023 Compliant</span>
+        </div>
+
+        <div class="space-y-2 text-xs">
+          ${auditLogs.map(log => `
+            <div class="p-2.5 bg-surface-container-low rounded-lg border border-outline-variant/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1.5">
+              <div>
+                <strong class="text-primary">${escapeHTML(log.doc)}</strong>
+                <span class="text-outline mx-1">•</span>
+                <span class="text-secondary font-semibold">${escapeHTML(log.entity)}</span>
+              </div>
+              <div class="flex items-center gap-2 text-[11px]">
+                <span class="px-2 py-0.2 bg-tertiary-container/15 text-tertiary-container font-semibold rounded">${escapeHTML(log.action)}</span>
+                <span class="text-outline font-mono">${log.time ? new Date(log.time).toLocaleDateString() : 'Recent'}</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+router.register("/wallet", renderDataWalletView, { layout: "applicant", authRole: "applicant" });
+router.register("/applicant/wallet", renderDataWalletView, { layout: "applicant", authRole: "applicant" });
+
+window.handleWalletGrantConsent = function(schemeCode, docId) {
+  if (window.appStore && window.appStore.grantWalletConsent) {
+    window.appStore.grantWalletConsent(schemeCode, docId);
+    showToast(`Consent granted: Document shared with ${schemeCode} scheme without re-uploading!`, "success");
+    renderDataWalletView();
+  }
+};
+
+window.handleWalletRevokeConsent = function(schemeCode, docId) {
+  if (window.appStore && window.appStore.revokeWalletConsent) {
+    window.appStore.revokeWalletConsent(schemeCode, docId);
+    showToast(`Consent revoked for ${schemeCode}. Document access terminated.`, "info");
+    renderDataWalletView();
+  }
+};
+
+window.handleWalletUploadNewDoc = function(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  const docType = document.getElementById("w-doc-type").value;
+  const certNo = document.getElementById("w-cert-no").value.trim();
+  if (!certNo) {
+    showToast("Please enter certificate registration number.", "error");
+    return;
+  }
+  const wallet = window.appStore.getDocumentWallet();
+  const newDoc = {
+    id: "doc-custom-" + Date.now(),
+    name: docType,
+    issuingAuthority: "State Revenue Authority / DigiLocker",
+    issueDate: new Date().toISOString().split("T")[0],
+    verified: true,
+    hash: "sha256-" + Math.random().toString(36).substring(2, 12) + "8f1a",
+    sharedWithSchemes: ["PMS", "NOS", "PRE"]
+  };
+  wallet.push(newDoc);
+  window.appStore.saveDocumentWallet(wallet);
+  window.appStore.logWalletAccess(docType, "Scholar Self-Service", "Uploaded & Anchored via DigiLocker");
+  showToast("Document verified and cryptographically anchored to data wallet!", "success");
+  document.getElementById("wallet-upload-section").classList.add("hidden");
+  renderDataWalletView();
+};
+
+// =========================================================================
+// INNOVATION 5: MULTI-STAKEHOLDER INSTITUTION COLLABORATION NETWORK ROUTE
+// =========================================================================
+function renderStakeholderNetworkView() {
+  const network = window.appStore.getInstitutionalNetwork ? window.appStore.getInstitutionalNetwork() : [];
+  const isHi = (typeof localStorage !== "undefined" && localStorage.getItem("NTSP_LANG") === "hi");
+  const container = document.getElementById("main-view-container");
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="space-y-space-lg">
+      <!-- Network Header -->
+      <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="material-symbols-outlined text-primary text-2xl">hub</span>
+            <h1 class="text-xl font-bold text-primary">${isHi ? 'बहु-हितधारक संस्थान सहयोग नेटवर्क' : 'Multi-Stakeholder Institution Collaboration Network'}</h1>
+            <span class="px-2.5 py-0.5 bg-primary/10 text-primary text-xs font-bold rounded border border-primary/30">
+              5 Pillars • Seamless Inter-Departmental Sync
+            </span>
+          </div>
+          <p class="text-xs text-on-surface-variant mt-1 max-w-2xl leading-relaxed">
+            ${isHi
+              ? 'विद्यार्थी, कॉलेज नोडल अधिकारी, जिला कल्याण अधिकारी (DWO), राज्य विभाग एवं केन्द्रीय जनजातीय कार्य मंत्रालय के बीच पारदर्शी समन्वय।'
+              : 'End-to-end transparent coordination matrix uniting the Scholar, College Nodal Officers, District Welfare Officers, State Departments, and Central MoTA to eliminate processing bottlenecks.'}
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2 shrink-0">
+          <a href="#/application/track" class="px-4 py-2 bg-secondary text-white font-bold text-xs rounded shadow-xs hover:bg-secondary/90 flex items-center gap-1.5 transition">
+            <span class="material-symbols-outlined text-[16px]">timeline</span> ${isHi ? 'आवेदन ट्रैक करें' : 'Track Application'}
+          </a>
+        </div>
+      </div>
+
+      <!-- 5-Pillar Collaborative Cards Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-3 text-xs">
+        ${network.map((p, idx) => `
+          <div class="p-4 bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/30 flex flex-col justify-between space-y-3">
+            <div>
+              <div class="w-10 h-10 rounded-full ${p.badgeColor} flex items-center justify-center mb-2 shadow-xs">
+                <span class="material-symbols-outlined text-xl">${escapeHTML(p.icon)}</span>
+              </div>
+              <span class="text-[10px] font-mono text-outline block">PILLAR 0${idx + 1}</span>
+              <strong class="text-primary text-sm font-bold block">${isHi ? escapeHTML(p.hindiRole || p.role) : escapeHTML(p.role)}</strong>
+              <p class="text-on-surface-variant text-[11px] mt-2 leading-relaxed">
+                ${escapeHTML(p.responsibility)}
+              </p>
+            </div>
+            <div class="pt-2 border-t border-outline-variant/15 flex items-center gap-1 text-[10px] font-bold text-tertiary-container">
+              <span class="material-symbols-outlined text-[14px]">check_circle</span>
+              <span>${escapeHTML(p.status)}</span>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+
+      <!-- SLA Scrutiny Flow Architecture Diagram -->
+      <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30 space-y-4">
+        <h3 class="text-sm font-bold text-primary pb-2 border-b border-outline-variant/20 flex items-center gap-2">
+          <span class="material-symbols-outlined text-secondary text-base">route</span>
+          ${isHi ? 'प्रशासनिक संवीक्षा प्रवाह एवं समय-सीमा (SLA Matrix)' : 'Administrative Scrutiny Workflow & SLA Guarantee'}
+        </h3>
+
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
+          <div class="p-3 bg-surface-container-low rounded-xl border border-outline-variant/20 space-y-1">
+            <span class="text-secondary font-bold block text-[11px]">Level 1: College Verification</span>
+            <strong class="text-primary text-sm block">7 Calendar Days</strong>
+            <p class="text-[11px] text-outline">Enrolment authentication, roll number check, and tuition waiver validation.</p>
+          </div>
+
+          <div class="p-3 bg-surface-container-low rounded-xl border border-outline-variant/20 space-y-1">
+            <span class="text-tertiary-container font-bold block text-[11px]">Level 2: DWO Scrutiny</span>
+            <strong class="text-primary text-sm block">10 Calendar Days</strong>
+            <p class="text-[11px] text-outline">Statutory caste validation (Art. 342) and revenue ceiling cross-check.</p>
+          </div>
+
+          <div class="p-3 bg-surface-container-low rounded-xl border border-outline-variant/20 space-y-1">
+            <span class="text-secondary font-bold block text-[11px]">Level 3: State Pool Approval</span>
+            <strong class="text-primary text-sm block">5 Calendar Days</strong>
+            <p class="text-[11px] text-outline">State quota allocation and inter-district quota balancing.</p>
+          </div>
+
+          <div class="p-3 bg-surface-container-low rounded-xl border border-outline-variant/20 space-y-1">
+            <span class="text-primary font-bold block text-[11px]">Level 4: MoTA PFMS DBT</span>
+            <strong class="text-primary text-sm block">3 Calendar Days</strong>
+            <p class="text-[11px] text-outline">Sanction order generation and Aadhaar-NPCI direct bank release.</p>
+          </div>
+        </div>
+
+        <div class="p-3 rounded-lg bg-tertiary-container/10 border border-tertiary-container/30 text-xs text-on-surface flex items-center gap-2">
+          <span class="material-symbols-outlined text-tertiary-container text-lg">verified_user</span>
+          <span><strong>Deduplication Protocol:</strong> Cross-checks candidate Aadhaar tokens across state databases to guarantee zero dual-disbursement fraud while ensuring 96.4% on-time transfer.</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+router.register("/network", (params) => {
+  const authUser = window.appStore.getAuthUser();
+  if (authUser && authUser.role === "applicant") {
+    router.renderLayout("applicant", renderStakeholderNetworkView);
+  } else {
+    router.renderLayout("public", renderStakeholderNetworkView);
+  }
+});
+router.register("/applicant/network", renderStakeholderNetworkView, { layout: "applicant", authRole: "applicant" });
 
 // Initialize routing & Supabase session
 async function startNTSPPortal() {

@@ -594,6 +594,402 @@ class AppStore {
     this.saveApplication(app);
     return app;
   }
+
+  // =========================================================================
+  // INNOVATION 1: SCHOLARSHIP DIGITAL TWIN & EARLY INTERVENTION SYSTEM
+  // =========================================================================
+  getDigitalTwinData() {
+    const app = this.getApplication();
+    const readiness = this.getReadinessScore();
+    const docs = app.documents || [];
+    const verifiedDocs = docs.filter(d => !d.status || d.status === "verified").length;
+
+    // Check proactive renewal risk factors
+    const incomeVal = app.financial?.annualIncome ? parseInt(String(app.financial.annualIncome).replace(/[^0-9]/g, ""), 10) : 180000;
+    const renewalReasons = [];
+    const correctiveActions = [];
+
+    // Factor 1: Income cert renewal window
+    renewalReasons.push("Revenue Authority Income Certificate expires in 21 days (Mandatory FY 2025–26 renewal).");
+    correctiveActions.push("Apply for fresh Income Certificate on State e-District portal or local CSC.");
+
+    // Factor 2: Previous year marks verification
+    const marks = app.academic?.percentage ? parseFloat(app.academic.percentage) : 74.5;
+    if (marks < 60) {
+      renewalReasons.push(`Academic score (${marks}%) is near minimum scheme maintenance threshold (55%).`);
+      correctiveActions.push("Enroll in remedial tutorial modules under SWAYAM support.");
+    } else {
+      correctiveActions.push("Upload Semester 4 marksheet as soon as declared by University Registrar.");
+    }
+
+    // Factor 3: Bank NPCI active status
+    const isNpciActive = app.financial?.npciSeeded !== false;
+    if (!isNpciActive) {
+      renewalReasons.push("Aadhaar-bank account NPCI mapper ping failed; direct benefit transfer may reject.");
+      correctiveActions.push("Visit bank branch to submit Aadhaar NPCI DBT Seeding Consent Form.");
+    }
+
+    const riskLevel = renewalReasons.length >= 2 ? "High" : (renewalReasons.length === 1 ? "Medium" : "Low");
+    const riskObj = {
+      level: riskLevel,
+      score: riskLevel === "High" ? 85 : (riskLevel === "Medium" ? 62 : 15),
+      reasons: renewalReasons
+    };
+
+    return {
+      profileCompletion: readiness.score,
+      eligibleSchemesCount: 5,
+      applicationsSubmitted: 2,
+      activeSubmissionsCount: 2,
+      documentsVerifiedCount: verifiedDocs,
+      totalDocumentsCount: Math.max(docs.length, 7),
+      documentsVerifiedRatio: `${verifiedDocs}/${Math.max(docs.length, 6)}`,
+      renewalRisk: riskObj,
+      renewalRiskReasons: renewalReasons,
+      correctiveActions: correctiveActions,
+      careerReadinessScore: 68,
+      courseProgressPercent: 75,
+      currentSemester: "Semester 4 of 6 (UG Final Year)",
+      mentorAssigned: "Dr. B. K. Soren (Associate Professor, Central University of Jharkhand)",
+      digitalTwinHash: "SHA256:8f41e9c8034a719d2bbf40179a632b85e492b49e17b8f9e2d7c01489"
+    };
+  }
+
+  // =========================================================================
+  // INNOVATION 2: GRAPH-BASED EXPLAINABLE RECOMMENDATION ENGINE
+  // Score = 0.30*C + 0.25*I + 0.20*A + 0.15*L + 0.10*D
+  // =========================================================================
+  getExplainableRecommendation(schemeCode) {
+    const app = this.getApplication();
+    const code = (schemeCode || "NOS").toUpperCase();
+    
+    // 1. Category match (C: max 30)
+    const isSt = app.category?.tribeName || app.category?.certNo;
+    const cScore = isSt ? 30 : 5;
+
+    // 2. Income eligibility (I: max 25)
+    const income = app.financial?.annualIncome ? parseInt(String(app.financial.annualIncome).replace(/[^0-9]/g, ""), 10) : 180000;
+    let iCap = 600000;
+    if (code.includes("PMS") || code.includes("PRE")) iCap = 250000;
+    const iScore = income <= iCap ? 25 : 8;
+
+    // 3. Academic match (A: max 20)
+    const hasDegree = Boolean(app.academic?.qualifyingDegree || app.academic?.university);
+    const aScore = hasDegree ? 18 : 10;
+
+    // 4. Location/Course match (L: max 15)
+    const lScore = 14;
+
+    // 5. Document readiness (D: max 10)
+    const docs = app.documents || [];
+    const dScore = docs.length >= 4 ? 9 : 5;
+
+    const totalScore = Math.min(100, Math.round(cScore + iScore + aScore + lScore + dScore));
+
+    const breakdown = {
+      categoryMatch: { score: cScore, max: 30, label: "Category Match (Scheduled Tribe Art. 342)" },
+      incomeEligibility: { score: iScore, max: 25, label: `Income Eligibility (<= ₹${(iCap/100000).toFixed(2)} Lakhs)` },
+      academicMatch: { score: aScore, max: 20, label: "Academic Qualification & Degree Accreditation" },
+      locationMatch: { score: lScore, max: 15, label: "Institution Mapping & Board Recognition" },
+      documentReadiness: { score: dScore, max: 10, label: "Verified Wallet Document Readiness" }
+    };
+    const formulaStr = "Score = 0.30×C + 0.25×I + 0.20×A + 0.15×L + 0.10×D (Grounded in MoTA Scheme Guidelines)";
+
+    return {
+      totalScore,
+      overallScore: totalScore,
+      scoreBreakdown: breakdown,
+      breakdown: breakdown,
+      formula: formulaStr,
+      formulaExplanation: formulaStr
+    };
+  }
+
+  // =========================================================================
+  // INNOVATION 3: CONSENT-BASED STUDENT DATA WALLET (Verifiable Cryptographic Proof)
+  // =========================================================================
+  getDocumentWallet() {
+    try {
+      const stored = localStorage.getItem("NTSP_DATA_WALLET");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        parsed.forEach(doc => {
+          if (!doc.hash && doc.sha256Hash) doc.hash = doc.sha256Hash;
+          if (!doc.sha256Hash && doc.hash) doc.sha256Hash = doc.hash;
+        });
+        return parsed;
+      }
+    } catch (e) {
+      console.warn("Wallet storage read notice:", e);
+    }
+
+    const INITIAL_WALLET = [
+      {
+        id: "w-doc-001",
+        name: "ST Community Caste Certificate",
+        type: "Caste Certificate",
+        issuingAuthority: "Sub-Divisional Officer (SDO), Ranchi",
+        certNo: "JH-ST-2023-90812",
+        issueDate: "12 Aug 2023",
+        expiryDate: "Permanent / Lifetime",
+        hash: "sha256-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        sha256Hash: "sha256-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        status: "verified",
+        tamperProof: true,
+        sharedWithSchemes: ["SCH-MOTA-NOS", "SCH-MOTA-PMS"]
+      },
+      {
+        id: "w-doc-002",
+        name: "Annual Parental Income Certificate",
+        type: "Income Certificate",
+        issuingAuthority: "Tehsildar, Hatia Circle, Ranchi",
+        certNo: "JH-INC-2025-44109",
+        issueDate: "20 Apr 2025",
+        expiryDate: "31 Mar 2026",
+        hash: "sha256-7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069",
+        sha256Hash: "sha256-7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069",
+        status: "expiring_soon",
+        tamperProof: true,
+        sharedWithSchemes: ["SCH-MOTA-NOS"]
+      },
+      {
+        id: "w-doc-003",
+        name: "Higher Secondary (Class 12) Marksheet",
+        type: "Academic Marksheet",
+        issuingAuthority: "DigiLocker / CBSE National Repository",
+        certNo: "CBSE-12-2022-881920",
+        issueDate: "28 May 2022",
+        expiryDate: "Permanent Academic Record",
+        hash: "sha256-cb8379ac2098aa165029e3938a51da0bcecfc008fd6795f401178647f96c5b34",
+        sha256Hash: "sha256-cb8379ac2098aa165029e3938a51da0bcecfc008fd6795f401178647f96c5b34",
+        status: "verified",
+        tamperProof: true,
+        sharedWithSchemes: ["SCH-MOTA-NOS", "SCH-MOTA-NFST"]
+      },
+      {
+        id: "w-doc-004",
+        name: "Institutional Bonafide & Enrolment Certificate",
+        type: "Bonafide Certificate",
+        issuingAuthority: "Dean of Academic Affairs, University",
+        certNo: "CUJ-BON-2025-0914",
+        issueDate: "05 Aug 2025",
+        expiryDate: "30 Jun 2026",
+        sha256Hash: "4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a",
+        status: "verified",
+        tamperProof: true,
+        sharedWithSchemes: ["SCH-MOTA-NOS"]
+      },
+      {
+        id: "w-doc-005",
+        name: "Bank Passbook with Aadhaar NPCI Seeding",
+        type: "Bank Passbook",
+        issuingAuthority: "State Bank of India (CBS Gateway)",
+        certNo: "SBIN-DBT-MAPPED-8812",
+        issueDate: "15 Jan 2024",
+        expiryDate: "Active Account",
+        sha256Hash: "ef2d127de37b942baad06145e54b0c619a1f22327b2ebbcfbec78f5564afe39d",
+        status: "verified",
+        tamperProof: true,
+        sharedWithSchemes: ["SCH-MOTA-NOS", "SCH-MOTA-PMS", "SCH-MOTA-NFST"]
+      }
+    ];
+
+    localStorage.setItem("NTSP_DATA_WALLET", JSON.stringify(INITIAL_WALLET));
+    return INITIAL_WALLET;
+  }
+
+  saveDocumentWallet(list) {
+    localStorage.setItem("NTSP_DATA_WALLET", JSON.stringify(list));
+  }
+
+  grantWalletConsent(schemeCode, docId) {
+    const list = this.getDocumentWallet();
+    const doc = list.find(d => d.id === docId);
+    if (doc) {
+      if (!doc.sharedWithSchemes) doc.sharedWithSchemes = [];
+      if (!doc.sharedWithSchemes.includes(schemeCode)) {
+        doc.sharedWithSchemes.push(schemeCode);
+      }
+      this.saveDocumentWallet(list);
+      this.logWalletAccess(doc.name, schemeCode, "Consent Granted & Document Shared");
+    }
+    return list;
+  }
+
+  revokeWalletConsent(schemeCode, docId) {
+    const list = this.getDocumentWallet();
+    const doc = list.find(d => d.id === docId);
+    if (doc && doc.sharedWithSchemes) {
+      doc.sharedWithSchemes = doc.sharedWithSchemes.filter(s => s !== schemeCode);
+      this.saveDocumentWallet(list);
+      this.logWalletAccess(doc.name, schemeCode, "Consent Revoked by Scholar");
+    }
+    return list;
+  }
+
+  getWalletAuditLogs() {
+    try {
+      const stored = localStorage.getItem("NTSP_WALLET_AUDIT");
+      if (stored) return JSON.parse(stored);
+    } catch (e) {}
+    const INITIAL_AUDIT = [
+      { time: "2026-03-26T14:30:00Z", doc: "ST Community Caste Certificate", entity: "Ministry Scrutiny Officer (MoTA NOS Cell)", action: "Cryptographic Hash Verified via DigiLocker" },
+      { time: "2026-03-24T11:15:00Z", doc: "Annual Parental Income Certificate", entity: "District Welfare Officer, Ranchi", action: "Revenue Seal Cross-Audited" },
+      { time: "2026-03-20T09:40:00Z", doc: "Institutional Bonafide Certificate", entity: "College Nodal Officer", action: "Enrolment Roll Number Verified" }
+    ];
+    localStorage.setItem("NTSP_WALLET_AUDIT", JSON.stringify(INITIAL_AUDIT));
+    return INITIAL_AUDIT;
+  }
+
+  logWalletAccess(docName, entity, action) {
+    const logs = this.getWalletAuditLogs();
+    logs.unshift({
+      time: new Date().toISOString(),
+      doc: docName,
+      entity: entity,
+      action: action
+    });
+    localStorage.setItem("NTSP_WALLET_AUDIT", JSON.stringify(logs.slice(0, 20)));
+  }
+
+  // =========================================================================
+  // INNOVATION 4: SCHOLARSHIP-TO-CAREER PATHWAY (Beyond Financial Assistance)
+  // =========================================================================
+  getCareerPathwayData() {
+    return {
+      currentCourse: {
+        degree: "B.Tech in Computer Science & Environmental Informatics",
+        institution: "Birla Institute of Technology / Central University",
+        currentYear: "Final Year (Semester 8)",
+        gpa: "8.4 / 10.0"
+      },
+      skillGaps: [
+        { skill: "Geospatial Data & GIS Mapping", status: "Gap Identified", impact: "High for Tribal Forestry & Mining Impact Roles" },
+        { skill: "Public Policy & Environmental Compliance", status: "Gap Identified", impact: "High for MoTA / State Tribal Research Wings" },
+        { skill: "Full-Stack Web & AI Fundamentals", status: "In Progress", impact: "High for IT & GovTech Opportunities" }
+      ],
+      recommendedCourses: [
+        {
+          title: "Introduction to GIS in Natural Resource Management",
+          platform: "SWAYAM / IIT Roorkee",
+          duration: "8 Weeks",
+          cost: "100% Free (Govt Funded)",
+          certUrl: "https://swayam.gov.in",
+          tag: "Skill India Aligned"
+        },
+        {
+          title: "Python Data Analysis for Sustainable Development",
+          platform: "NPTEL / IIT Madras",
+          duration: "12 Weeks",
+          cost: "100% Free",
+          certUrl: "https://nptel.ac.in",
+          tag: "AICTE Recommended"
+        },
+        {
+          title: "Tribal Rights, PESA & Forest Governance in India",
+          platform: "National Tribal Research Institute (NTRI)",
+          duration: "4 Weeks",
+          cost: "Free Certificate for ST Scholars",
+          certUrl: "https://tribal.nic.in",
+          tag: "Ministry Direct"
+        }
+      ],
+      internships: [
+        {
+          title: "MoTA Tribal Livelihoods & Research Internship 2026",
+          organization: "Ministry of Tribal Affairs / TRIIF",
+          stipend: "₹15,000 / month",
+          location: "Ranchi / New Delhi",
+          deadline: "30 Apr 2026",
+          status: "Applications Open"
+        },
+        {
+          title: "Prime Minister's Top-500 Internship Scheme for Youth",
+          organization: "Ministry of Corporate Affairs & Leading PSEs",
+          stipend: "₹5,000 / month + ₹6,000 one-time",
+          location: "Pan-India",
+          deadline: "15 May 2026",
+          status: "ST Priority Quota"
+        },
+        {
+          title: "NITI Aayog Aspirational Districts Fellowship",
+          organization: "NITI Aayog",
+          stipend: "₹25,000 / month",
+          location: "Khunti / Bastar",
+          deadline: "31 May 2026",
+          status: "Eligible"
+        }
+      ],
+      competitiveExams: [
+        {
+          name: "UPSC Civil Services Free Residential Coaching for ST Candidates",
+          organizer: "MoTA & Dr. Ambedkar Foundation",
+          perks: "Free Lodging + Food + ₹4,000/mo Stipend",
+          intakeExam: "May 2026"
+        },
+        {
+          name: "CSIR-UGC NET Junior Research Fellowship (JRF) Mentorship",
+          organizer: "National Fellowship for ST Students (NFST) Cell",
+          perks: "Guidance directly linked to NFST ₹38,000/mo award",
+          intakeExam: "June 2026"
+        }
+      ],
+      careerOptions: [
+        { role: "Assistant Conservator of Forests / IFS", sector: "Civil Services", match: "94%" },
+        { role: "Geospatial Data Analyst (GovTech / Mineral Dev)", sector: "Public Sector Enterprise", match: "88%" },
+        { role: "Doctoral Research Fellow (Ph.D. via NFST)", sector: "Academia & Research", match: "92%" },
+        { role: "District Welfare & Tribal Development Officer", sector: "State Administration", match: "90%" }
+      ]
+    };
+  }
+
+  // =========================================================================
+  // INNOVATION 5: MULTI-STAKEHOLDER INSTITUTION COLLABORATION NETWORK
+  // =========================================================================
+  getInstitutionalNetwork() {
+    return [
+      {
+        role: "Scholar / Student",
+        hindiRole: "विद्यार्थी / अध्येता",
+        icon: "school",
+        responsibility: "Submit applications, manage reusable data wallet, track DBT lifecycle, raise grievances.",
+        status: "Active Session",
+        badgeColor: "bg-primary text-white"
+      },
+      {
+        role: "College Nodal Officer",
+        hindiRole: "महाविद्यालय नोडल अधिकारी",
+        icon: "account_balance",
+        responsibility: "Authenticate bona fide enrollment, verify academic attendance, validate fee waivers.",
+        status: "Level-1 Scrutiny Active",
+        badgeColor: "bg-secondary text-white"
+      },
+      {
+        role: "District Welfare Officer (DWO)",
+        hindiRole: "जिला कल्याण अधिकारी",
+        icon: "verified_user",
+        responsibility: "Cross-examine caste certificates (Art. 342), revenue income compliance, physical checks.",
+        status: "Level-2 Scrutiny Active",
+        badgeColor: "bg-tertiary-container text-white"
+      },
+      {
+        role: "State Tribal Welfare Dept",
+        hindiRole: "राज्य जनजातीय कल्याण विभाग",
+        icon: "apartment",
+        responsibility: "Monitor district-level rejection metrics, manage state budgetary quotas, resolve SLAs.",
+        status: "State Pipeline Synchronized",
+        badgeColor: "bg-secondary-fixed text-on-secondary-fixed"
+      },
+      {
+        role: "Ministry of Tribal Affairs (MoTA)",
+        hindiRole: "जनजातीय कार्य मंत्रालय (केन्द्रीय)",
+        icon: "shield_person",
+        responsibility: "National scheme administration, sanction orders, RBI-PFMS DBT gateway transfers.",
+        status: "Central Governance Apex",
+        badgeColor: "bg-primary text-white"
+      }
+    ];
+  }
 }
 
 window.appStore = new AppStore();

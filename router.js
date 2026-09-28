@@ -323,12 +323,16 @@ class Router {
 
         <nav class="bg-primary-container text-on-primary-container">
           <div class="max-w-7xl mx-auto px-margin flex items-center overflow-x-auto whitespace-nowrap py-1">
-            <a href="#/" data-nav-link="/" class="px-4 py-2 font-medium text-sm text-surface-container-lowest hover:bg-primary/40 rounded transition">${isHi ? 'मुख्य पृष्ठ' : 'Home'}</a>
-            <a href="#/schemes" data-nav-link="/schemes" class="px-4 py-2 font-medium text-sm text-surface-container-lowest hover:bg-primary/40 rounded transition">${isHi ? 'सभी योजनाएं' : 'All Schemes'}</a>
-            <a href="#/schemes/nos" data-nav-link="/schemes/nos" class="px-4 py-2 font-medium text-sm text-surface-container-lowest hover:bg-primary/40 rounded transition">${isHi ? 'विदेशी छात्रवृत्ति (NOS)' : 'Overseas Scholarship (NOS)'}</a>
-            <a href="#/schemes/nfst" data-nav-link="/schemes/nfst" class="px-4 py-2 font-medium text-sm text-surface-container-lowest hover:bg-primary/40 rounded transition">${isHi ? 'राष्ट्रीय फैलोशिप (NFST)' : 'National Fellowship (NFST)'}</a>
-            <a href="#/application/track" data-nav-link="/application/track" class="px-4 py-2 font-medium text-sm text-surface-container-lowest hover:bg-primary/40 rounded transition">${isHi ? 'आवेदन ट्रैक करें' : 'Track Application'}</a>
-            <a href="#/application/deficiency" data-nav-link="/application/deficiency" class="px-4 py-2 font-medium text-sm text-surface-container-lowest hover:bg-primary/40 rounded transition">${isHi ? 'त्रुटि निवारण केंद्र' : 'Deficiency Desk'}</a>
+            <a href="#/" data-nav-link="/" class="px-3.5 py-2 font-medium text-sm text-surface-container-lowest hover:bg-primary/40 rounded transition">${isHi ? 'मुख्य पृष्ठ' : 'Home'}</a>
+            <a href="#/schemes" data-nav-link="/schemes" class="px-3.5 py-2 font-medium text-sm text-surface-container-lowest hover:bg-primary/40 rounded transition">${isHi ? 'सभी योजनाएं' : 'All Schemes'}</a>
+            <a href="#/career" data-nav-link="/career" class="px-3.5 py-2 font-medium text-sm text-surface-container-lowest hover:bg-primary/40 rounded transition flex items-center gap-1">
+              <span class="material-symbols-outlined text-[16px]">trending_up</span> ${isHi ? 'कैरियर पाथवे' : 'Career Pathway'}
+            </a>
+            <a href="#/network" data-nav-link="/network" class="px-3.5 py-2 font-medium text-sm text-surface-container-lowest hover:bg-primary/40 rounded transition flex items-center gap-1">
+              <span class="material-symbols-outlined text-[16px]">hub</span> ${isHi ? 'हितधारक नेटवर्क' : 'Stakeholder Network'}
+            </a>
+            <a href="#/application/track" data-nav-link="/application/track" class="px-3.5 py-2 font-medium text-sm text-surface-container-lowest hover:bg-primary/40 rounded transition">${isHi ? 'आवेदन ट्रैक करें' : 'Track Application'}</a>
+            <a href="#/application/deficiency" data-nav-link="/application/deficiency" class="px-3.5 py-2 font-medium text-sm text-surface-container-lowest hover:bg-primary/40 rounded transition">${isHi ? 'त्रुटि निवारण केंद्र' : 'Deficiency Desk'}</a>
           </div>
         </nav>
       </header>
@@ -385,37 +389,52 @@ class Router {
             <p class="font-bold text-primary text-sm">${user.name}</p>
           </div>
 
-          <a href="#/applicant/dashboard" data-sidebar-link="/applicant/dashboard" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition">
+          <a href="#/applicant/dashboard" data-sidebar-link="/applicant/dashboard" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition">
             <span class="material-symbols-outlined text-[20px]">dashboard</span> ${isHi ? 'डैशबोर्ड' : 'Dashboard'}
           </a>
-          <a href="#/applicant/profile" data-sidebar-link="/applicant/profile" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition">
+          <a href="#/digital-twin" data-sidebar-link="/digital-twin" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition text-secondary font-semibold">
+            <span class="material-symbols-outlined text-[20px]">cognition</span> ${isHi ? 'डिजिटल ट्विन' : 'Digital Twin'}
+            <span class="ml-auto px-1.5 py-0.2 bg-secondary/15 text-secondary text-[10px] font-bold rounded">AI/Twin</span>
+          </a>
+          <a href="#/career" data-sidebar-link="/career" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition text-tertiary-container font-semibold">
+            <span class="material-symbols-outlined text-[20px]">trending_up</span> ${isHi ? 'कैरियर पाथवे' : 'Career Pathway'}
+            <span class="ml-auto px-1.5 py-0.2 bg-tertiary-container/15 text-tertiary-container text-[10px] font-bold rounded">Jobs</span>
+          </a>
+          <a href="#/wallet" data-sidebar-link="/wallet" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition text-primary font-semibold">
+            <span class="material-symbols-outlined text-[20px]">wallet</span> ${isHi ? 'डॉक्यूमेंट वॉलेट' : 'Data Wallet'}
+            <span class="ml-auto px-1.5 py-0.2 bg-primary/10 text-primary text-[10px] font-bold rounded">Re-use</span>
+          </a>
+          <a href="#/applicant/profile" data-sidebar-link="/applicant/profile" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition">
             <span class="material-symbols-outlined text-[20px]">person</span> ${isHi ? 'मेरी प्रोफ़ाइल' : 'My Profile'}
           </a>
-          <a href="#/application/track" data-sidebar-link="/application/track" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition">
+          <a href="#/application/track" data-sidebar-link="/application/track" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition">
             <span class="material-symbols-outlined text-[20px]">timeline</span> ${isHi ? 'आवेदन व ट्रैकिंग' : 'My Applications & Track'}
           </a>
-          <a href="#/application/new" data-sidebar-link="/application/new" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition">
+          <a href="#/application/new" data-sidebar-link="/application/new" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition">
             <span class="material-symbols-outlined text-[20px]">add_circle</span> ${isHi ? 'नई योजना हेतु आवेदन' : 'Apply for New Scheme'}
           </a>
-          <a href="#/schemes" data-sidebar-link="/schemes" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition">
+          <a href="#/schemes" data-sidebar-link="/schemes" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition">
             <span class="material-symbols-outlined text-[20px]">explore</span> ${isHi ? 'अनुशंसित योजनाएं' : 'Recommended Schemes'}
           </a>
-          <a href="#/calendar" data-sidebar-link="/calendar" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition">
+          <a href="#/calendar" data-sidebar-link="/calendar" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition">
             <span class="material-symbols-outlined text-[20px]">calendar_month</span> ${isHi ? 'छात्रवृत्ति कैलेंडर' : 'Scholarship Calendar'}
           </a>
-          <a href="#/grievance" data-sidebar-link="/grievance" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition">
+          <a href="#/network" data-sidebar-link="/network" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition">
+            <span class="material-symbols-outlined text-[20px]">hub</span> ${isHi ? 'संस्थान नेटवर्क' : 'Stakeholder Network'}
+          </a>
+          <a href="#/grievance" data-sidebar-link="/grievance" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition">
             <span class="material-symbols-outlined text-[20px]">support_agent</span> ${isHi ? 'शिकायत व निवारण केंद्र' : 'Grievance & Escalation Desk'}
           </a>
-          <a href="#/application/deficiency" data-sidebar-link="/application/deficiency" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition">
+          <a href="#/application/deficiency" data-sidebar-link="/application/deficiency" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition">
             <span class="material-symbols-outlined text-[20px]">warning</span> ${isHi ? 'त्रुटि सूचनाएं' : 'Deficiency Notifications'}
           </a>
 
-          <div class="pt-4 mt-4 border-t border-outline-variant/20">
-            <div class="p-3 bg-surface-container-low rounded-lg text-xs space-y-1">
+          <div class="pt-3 mt-3 border-t border-outline-variant/20">
+            <div class="p-2.5 bg-surface-container-low rounded-lg text-xs space-y-1">
               <span class="text-outline block font-semibold">${isHi ? 'सक्रिय ड्राफ्ट स्थिति:' : 'Active Draft Status:'}</span>
               <p class="font-bold text-primary">${app.schemeCode} 2026–27</p>
               <p class="text-secondary font-semibold font-mono text-[11px]">${app.status}</p>
-              <a href="#${app.lastSavedStep || '/application/personal'}" class="mt-2 inline-block font-bold text-secondary hover:underline">
+              <a href="#${app.lastSavedStep || '/application/personal'}" class="mt-1.5 inline-block font-bold text-secondary hover:underline">
                 ${isHi ? 'ड्राफ्ट जारी रखें →' : 'Continue Draft →'}
               </a>
             </div>
