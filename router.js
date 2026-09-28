@@ -276,6 +276,7 @@ class Router {
 
   getPublicLayoutHTML() {
     const authUser = window.appStore.getAuthUser();
+    const isHi = (typeof localStorage !== "undefined" && localStorage.getItem("NTSP_LANG") === "hi");
     return `
       ${this.getTopRibbonHTML()}
       <header class="w-full bg-surface-container-lowest shadow-sm">
@@ -292,7 +293,7 @@ class Router {
           <div class="flex items-center gap-space-md">
             <div class="hidden sm:flex items-center bg-surface-container-low px-space-md py-space-xs rounded gap-space-sm border border-outline-variant/50">
               <span class="material-symbols-outlined text-outline text-[18px]">search</span>
-              <input class="bg-transparent font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none w-44 xl:w-56" placeholder="Search schemes..." type="text" onkeydown="if(event.key==='Enter') router.navigate('/schemes')"/>
+              <input class="bg-transparent font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none w-44 xl:w-56" placeholder="${isHi ? 'योजनाएं खोजें...' : 'Search schemes...'}" type="text" onkeydown="if(event.key==='Enter') router.navigate('/schemes')"/>
             </div>
             ${authUser && authUser.role === "applicant" ? `
               <div class="flex items-center gap-2">
@@ -301,19 +302,19 @@ class Router {
                   <span class="absolute -top-0.5 -right-0.5 px-1.5 py-0.2 bg-error text-white font-bold text-[10px] rounded-full shadow-xs">3</span>
                 </button>
                 <a href="#/applicant/dashboard" class="px-4 py-2 bg-primary text-white font-semibold rounded text-sm flex items-center gap-1 shadow-sm">
-                  <span class="material-symbols-outlined text-[18px]">dashboard</span> Dashboard
+                  <span class="material-symbols-outlined text-[18px]">dashboard</span> ${isHi ? 'डैशबोर्ड' : 'Dashboard'}
                 </a>
                 <button onclick="handleApplicantLogout()" class="px-3 py-2 bg-surface-container text-on-surface rounded text-xs font-semibold hover:bg-surface-container-high" title="Sign Out">
-                  Logout
+                  ${isHi ? 'लॉगआउट' : 'Logout'}
                 </button>
               </div>
             ` : `
               <div class="flex items-center gap-2">
                 <a href="#/login" class="px-4 py-2 text-primary font-semibold hover:bg-surface-container rounded text-sm">
-                  Login
+                  ${isHi ? 'लॉगिन' : 'Login'}
                 </a>
                 <a href="#/register" class="px-4 py-2 bg-secondary text-white font-semibold rounded text-sm hover:bg-secondary/90 shadow-sm">
-                  New Registration
+                  ${isHi ? 'नया पंजीकरण' : 'New Registration'}
                 </a>
               </div>
             `}
@@ -322,12 +323,12 @@ class Router {
 
         <nav class="bg-primary-container text-on-primary-container">
           <div class="max-w-7xl mx-auto px-margin flex items-center overflow-x-auto whitespace-nowrap py-1">
-            <a href="#/" data-nav-link="/" class="px-4 py-2 font-medium text-sm text-surface-container-lowest hover:bg-primary/40 rounded transition">Home (मुख्य पृष्ठ)</a>
-            <a href="#/schemes" data-nav-link="/schemes" class="px-4 py-2 font-medium text-sm text-surface-container-lowest hover:bg-primary/40 rounded transition">All Schemes (सभी योजनाएं)</a>
-            <a href="#/schemes/nos" data-nav-link="/schemes/nos" class="px-4 py-2 font-medium text-sm text-surface-container-lowest hover:bg-primary/40 rounded transition">Overseas Scholarship (NOS)</a>
-            <a href="#/schemes/nfst" data-nav-link="/schemes/nfst" class="px-4 py-2 font-medium text-sm text-surface-container-lowest hover:bg-primary/40 rounded transition">National Fellowship (NFST)</a>
-            <a href="#/application/track" data-nav-link="/application/track" class="px-4 py-2 font-medium text-sm text-surface-container-lowest hover:bg-primary/40 rounded transition">Track Application</a>
-            <a href="#/application/deficiency" data-nav-link="/application/deficiency" class="px-4 py-2 font-medium text-sm text-surface-container-lowest hover:bg-primary/40 rounded transition">Deficiency Desk</a>
+            <a href="#/" data-nav-link="/" class="px-4 py-2 font-medium text-sm text-surface-container-lowest hover:bg-primary/40 rounded transition">${isHi ? 'मुख्य पृष्ठ' : 'Home'}</a>
+            <a href="#/schemes" data-nav-link="/schemes" class="px-4 py-2 font-medium text-sm text-surface-container-lowest hover:bg-primary/40 rounded transition">${isHi ? 'सभी योजनाएं' : 'All Schemes'}</a>
+            <a href="#/schemes/nos" data-nav-link="/schemes/nos" class="px-4 py-2 font-medium text-sm text-surface-container-lowest hover:bg-primary/40 rounded transition">${isHi ? 'विदेशी छात्रवृत्ति (NOS)' : 'Overseas Scholarship (NOS)'}</a>
+            <a href="#/schemes/nfst" data-nav-link="/schemes/nfst" class="px-4 py-2 font-medium text-sm text-surface-container-lowest hover:bg-primary/40 rounded transition">${isHi ? 'राष्ट्रीय फैलोशिप (NFST)' : 'National Fellowship (NFST)'}</a>
+            <a href="#/application/track" data-nav-link="/application/track" class="px-4 py-2 font-medium text-sm text-surface-container-lowest hover:bg-primary/40 rounded transition">${isHi ? 'आवेदन ट्रैक करें' : 'Track Application'}</a>
+            <a href="#/application/deficiency" data-nav-link="/application/deficiency" class="px-4 py-2 font-medium text-sm text-surface-container-lowest hover:bg-primary/40 rounded transition">${isHi ? 'त्रुटि निवारण केंद्र' : 'Deficiency Desk'}</a>
           </div>
         </nav>
       </header>
@@ -339,6 +340,7 @@ class Router {
   getApplicantLayoutHTML() {
     const app = window.appStore.getApplication();
     const user = window.appStore.getAuthUser() || { name: "Priya Munda", otrId: "OTR-2025-ST-884129" };
+    const isHi = (typeof localStorage !== "undefined" && localStorage.getItem("NTSP_LANG") === "hi");
 
     return `
       ${this.getTopRibbonHTML()}
@@ -349,7 +351,7 @@ class Router {
               <img alt="MoTA Logo" class="h-9 w-auto" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5iDY8HhCiAkZClSCqpitPAV8V9PCXpPODREIZWl9JAovXtMpZ0ScQpbOUIrtNEhFCzZImajxDNREYqgn5jrgmkI-tvDQCRsug3A3DNZb7_kb737zfcL3HqI48DAVo55z_jAZAQmLGS_T3hL6XoSyfC5VdXh9EpmohXr_hjt79edFc2ZkLR1bfl9uZgNUooT1OG_pl5mxF7sCxBWnTveN0oh2O5Zn2WdUwr2_XCIKh5bYdpX3gxKSdiA"/>
               <span class="font-bold text-primary text-base hidden sm:inline">National Tribal Scholarship Portal</span>
             </a>
-            <span class="px-2 py-0.5 bg-surface-container text-primary font-bold text-xs rounded">Applicant Portal</span>
+            <span class="px-2 py-0.5 bg-surface-container text-primary font-bold text-xs rounded">${isHi ? 'अभ्यर्थी पोर्टल' : 'Applicant Portal'}</span>
           </div>
 
           <div class="flex items-center gap-3">
@@ -368,7 +370,7 @@ class Router {
               <span class="absolute -top-0.5 -right-0.5 px-1.5 py-0.2 bg-error text-white font-bold text-[10px] rounded-full shadow-xs">3</span>
             </button>
             <button onclick="handleApplicantLogout()" class="text-xs text-on-surface-variant hover:text-error flex items-center gap-1 font-semibold px-2 py-1 rounded hover:bg-surface-container">
-              <span class="material-symbols-outlined text-[16px]">logout</span> Logout
+              <span class="material-symbols-outlined text-[16px]">logout</span> ${isHi ? 'लॉगआउट' : 'Logout'}
             </button>
           </div>
         </div>
@@ -379,42 +381,42 @@ class Router {
         <!-- Sidebar Navigation -->
         <aside class="lg:col-span-3 bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/30 p-space-md space-y-1">
           <div class="pb-3 mb-2 border-b border-outline-variant/20 px-2">
-            <span class="text-xs uppercase font-bold text-secondary tracking-wider block">Candidate Menu</span>
+            <span class="text-xs uppercase font-bold text-secondary tracking-wider block">${isHi ? 'अभ्यर्थी मेनू' : 'Candidate Menu'}</span>
             <p class="font-bold text-primary text-sm">${user.name}</p>
           </div>
 
           <a href="#/applicant/dashboard" data-sidebar-link="/applicant/dashboard" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition">
-            <span class="material-symbols-outlined text-[20px]">dashboard</span> Dashboard
+            <span class="material-symbols-outlined text-[20px]">dashboard</span> ${isHi ? 'डैशबोर्ड' : 'Dashboard'}
           </a>
           <a href="#/applicant/profile" data-sidebar-link="/applicant/profile" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition">
-            <span class="material-symbols-outlined text-[20px]">person</span> My Profile
+            <span class="material-symbols-outlined text-[20px]">person</span> ${isHi ? 'मेरी प्रोफ़ाइल' : 'My Profile'}
           </a>
           <a href="#/application/track" data-sidebar-link="/application/track" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition">
-            <span class="material-symbols-outlined text-[20px]">timeline</span> My Applications &amp; Track
+            <span class="material-symbols-outlined text-[20px]">timeline</span> ${isHi ? 'आवेदन व ट्रैकिंग' : 'My Applications & Track'}
           </a>
           <a href="#/application/new" data-sidebar-link="/application/new" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition">
-            <span class="material-symbols-outlined text-[20px]">add_circle</span> Apply for New Scheme
+            <span class="material-symbols-outlined text-[20px]">add_circle</span> ${isHi ? 'नई योजना हेतु आवेदन' : 'Apply for New Scheme'}
           </a>
           <a href="#/schemes" data-sidebar-link="/schemes" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition">
-            <span class="material-symbols-outlined text-[20px]">explore</span> Recommended Schemes
+            <span class="material-symbols-outlined text-[20px]">explore</span> ${isHi ? 'अनुशंसित योजनाएं' : 'Recommended Schemes'}
           </a>
           <a href="#/calendar" data-sidebar-link="/calendar" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition">
-            <span class="material-symbols-outlined text-[20px]">calendar_month</span> Scholarship Calendar
+            <span class="material-symbols-outlined text-[20px]">calendar_month</span> ${isHi ? 'छात्रवृत्ति कैलेंडर' : 'Scholarship Calendar'}
           </a>
           <a href="#/grievance" data-sidebar-link="/grievance" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition">
-            <span class="material-symbols-outlined text-[20px]">support_agent</span> Grievance &amp; Escalation Desk
+            <span class="material-symbols-outlined text-[20px]">support_agent</span> ${isHi ? 'शिकायत व निवारण केंद्र' : 'Grievance & Escalation Desk'}
           </a>
           <a href="#/application/deficiency" data-sidebar-link="/application/deficiency" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition">
-            <span class="material-symbols-outlined text-[20px]">warning</span> Deficiency Notifications
+            <span class="material-symbols-outlined text-[20px]">warning</span> ${isHi ? 'त्रुटि सूचनाएं' : 'Deficiency Notifications'}
           </a>
 
           <div class="pt-4 mt-4 border-t border-outline-variant/20">
             <div class="p-3 bg-surface-container-low rounded-lg text-xs space-y-1">
-              <span class="text-outline block font-semibold">Active Draft Status:</span>
+              <span class="text-outline block font-semibold">${isHi ? 'सक्रिय ड्राफ्ट स्थिति:' : 'Active Draft Status:'}</span>
               <p class="font-bold text-primary">${app.schemeCode} 2026–27</p>
               <p class="text-secondary font-semibold font-mono text-[11px]">${app.status}</p>
               <a href="#${app.lastSavedStep || '/application/personal'}" class="mt-2 inline-block font-bold text-secondary hover:underline">
-                Continue Draft →
+                ${isHi ? 'ड्राफ्ट जारी रखें →' : 'Continue Draft →'}
               </a>
             </div>
           </div>

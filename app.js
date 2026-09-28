@@ -277,39 +277,85 @@ function getSchemeApplyCode(code) {
   return code || "NOS";
 }
 
+// Bilingual Scheme Catalog Translations
+const SCHEME_TRANSLATIONS = {
+  "SCH-MOTA-NOS": {
+    hiName: "राष्ट्रीय विदेशी छात्रवृत्ति योजना (NOS)",
+    hiDesc: "विदेश के शीर्ष 500 क्यूएस विश्वविद्यालयों में मास्टर्स और पीएचडी डिग्री करने वाले अनुसूचित जनजाति (ST) के छात्रों के लिए पूर्ण शिक्षण शुल्क, जीवन-यापन खर्च और अंतर्राष्ट्रीय हवाई किराए की 100% वित्तीय सहायता।",
+    hiEdu: "मास्टर्स / पीएच.डी.",
+    hiLoc: "विदेश (QS टॉप 500 विश्वविद्यालय)",
+    hiTag: "विदेश अध्ययन / अंतर्राष्ट्रीय"
+  },
+  "SCH-MOTA-NFST": {
+    hiName: "एसटी छात्रों हेतु राष्ट्रीय फैलोशिप (NFST)",
+    hiDesc: "मान्यता प्राप्त भारतीय विश्वविद्यालयों, आईआईटी और एनआईटी में नियमित पूर्णकालिक एम.फिल और पीएचडी शोध करने वाले छात्रों हेतु ₹38,000/माह + एचआरए एवं वार्षिक आकस्मिक अनुदान।",
+    hiEdu: "एम.फिल / पीएच.डी. नियमित शोध",
+    hiLoc: "भारतीय विश्वविद्यालय / IITs / NITs",
+    hiTag: "शोध / डॉक्टरेट फैलोशिप"
+  },
+  "SCH-MOTA-PMS": {
+    hiName: "एसटी विद्यार्थियों हेतु पोस्ट-मैट्रिक छात्रवृत्ति (PMS)",
+    hiDesc: "उच्चतर माध्यमिक, स्नातक और व्यावसायिक पाठ्यक्रमों में अध्ययनरत अनुसूचित जनजाति के विद्यार्थियों को 100% गैर-वापसी योग्य संस्थान शुल्क प्रतिपूर्ति और मासिक रखरखाव भत्ता।",
+    hiEdu: "पोस्ट-मैट्रिक / स्नातक / स्नातकोत्तर",
+    hiLoc: "भारत (मान्यता प्राप्त कॉलेज व विश्वविद्यालय)",
+    hiTag: "पोस्ट-मैट्रिक / डिग्री"
+  },
+  "SCH-MOTA-PRE": {
+    hiName: "एसटी छात्रों हेतु प्री-मैट्रिक छात्रवृत्ति (कक्षा 9 और 10)",
+    hiDesc: "माध्यमिक स्तर पर ड्रॉप-आउट कम करने और नामांकन बढ़ाने हेतु सरकारी एवं मान्यता प्राप्त विद्यालयों की कक्षा IX और X में अध्ययनरत एसटी विद्यार्थियों को मासिक छात्रवृत्ति एवं वार्षिक तदर्थ अनुदान।",
+    hiEdu: "कक्षा 9वीं एवं 10वीं (माध्यमिक)",
+    hiLoc: "भारत (सरकारी व मान्यता प्राप्त विद्यालय)",
+    hiTag: "प्री-मैट्रिक (कक्षा 9 एवं 10)"
+  },
+  "SCH-UGC-PG-PROF": {
+    hiName: "यूजीसी पीजी व्यावसायिक पाठ्यक्रम छात्रवृत्ति (SC/ST)",
+    hiDesc: "नियमित व्यावसायिक मास्टर डिग्री (एमई/एम.टेक, एमबीए, एमसीए, एम.फार्मा, एलएलएम) के प्रथम वर्ष के अनुसूचित जनजाति/जाति के विद्यार्थियों हेतु ₹7,800/माह तक की यूजीसी मेरिट फैलोशिप।",
+    hiEdu: "स्नातकोत्तर व्यावसायिक पाठ्यक्रम",
+    hiLoc: "भारत (UGC 2(f)/12(B) विश्वविद्यालय)",
+    hiTag: "यूजीसी व्यावसायिक मास्टर"
+  }
+};
+
 function renderSchemeCardHTML(scheme) {
+  const currentLang = (typeof localStorage !== "undefined" && localStorage.getItem("NTSP_LANG") === "hi") ? "hi" : "en";
   const docCount = getRequiredDocsCount(scheme.required_documents);
   const detailRoute = getSchemeDetailRoute(scheme.code);
   const applyCode = getSchemeApplyCode(scheme.code);
   const deadline = formatSchemeDeadline(scheme.deadline);
 
+  const trans = SCHEME_TRANSLATIONS[scheme.code] || {};
+  const displayName = (currentLang === "hi" && trans.hiName) ? trans.hiName : scheme.name;
+  const displayDesc = (currentLang === "hi" && trans.hiDesc) ? trans.hiDesc : scheme.description;
+  const displayEdu = (currentLang === "hi" && trans.hiEdu) ? trans.hiEdu : (scheme.education_level || "Degree");
+  const displayLoc = (currentLang === "hi" && trans.hiLoc) ? trans.hiLoc : (scheme.study_location || "India / Abroad");
+
   let barColor = "bg-secondary";
   let applyBtnClass = "bg-secondary hover:bg-secondary/90 text-white";
-  let categoryTag = "Higher Education";
+  let categoryTag = currentLang === "hi" ? (trans.hiTag || "उच्च शिक्षा") : "Higher Education";
   let tagColor = "bg-surface-container-highest text-primary";
 
   if (scheme.code && (scheme.code.includes("PRE") || (scheme.name && scheme.name.includes("Pre-Matric")))) {
     barColor = "bg-primary";
     applyBtnClass = "bg-primary hover:bg-primary/90 text-white";
-    categoryTag = "Pre-Matric (Class IX & X)";
+    categoryTag = currentLang === "hi" ? "प्री-मैट्रिक (कक्षा 9 एवं 10)" : "Pre-Matric (Class IX & X)";
     tagColor = "bg-primary/10 text-primary font-bold";
   } else if (scheme.code && (scheme.code.includes("UGC") || scheme.code.includes("PROF") || (scheme.name && scheme.name.includes("UGC")))) {
     barColor = "bg-secondary-fixed-dim";
     applyBtnClass = "bg-secondary hover:bg-secondary/90 text-white";
-    categoryTag = "UGC / PG Professional";
+    categoryTag = currentLang === "hi" ? "यूजीसी / पीजी व्यावसायिक" : "UGC / PG Professional";
     tagColor = "bg-secondary-fixed/60 text-secondary font-bold";
   } else if (scheme.code && scheme.code.includes("NOS")) {
     barColor = "bg-secondary";
-    categoryTag = "Overseas / International";
+    categoryTag = currentLang === "hi" ? "विदेश अध्ययन / अंतर्राष्ट्रीय" : "Overseas / International";
   } else if (scheme.code && (scheme.code.includes("NFST") || scheme.code.includes("NF"))) {
     barColor = "bg-primary-container";
     applyBtnClass = "bg-primary-container hover:bg-primary text-white";
-    categoryTag = "Research / Doctoral";
+    categoryTag = currentLang === "hi" ? "शोध / डॉक्टरेट फैलोशिप" : "Research / Doctoral";
     tagColor = "bg-tertiary-container/15 text-on-tertiary-fixed-variant";
   } else if (scheme.code && scheme.code.includes("PMS")) {
     barColor = "bg-tertiary-container";
     applyBtnClass = "bg-tertiary-container hover:bg-tertiary text-white";
-    categoryTag = "Post-Matric / Degree";
+    categoryTag = currentLang === "hi" ? "पोस्ट-मैट्रिक / डिग्री" : "Post-Matric / Degree";
     tagColor = "bg-secondary-fixed/50 text-on-secondary-fixed-variant";
   }
 
@@ -318,6 +364,7 @@ function renderSchemeCardHTML(scheme) {
       <div class="h-2 ${barColor}"></div>
       <div class="p-space-lg flex-1 flex flex-col justify-between">
         <div>
+          <!-- Tags Header -->
           <div class="flex justify-between items-center mb-2 gap-2">
             <span class="px-2.5 py-0.5 rounded text-xs font-semibold ${tagColor}">
               ${escapeHTML(categoryTag)}
@@ -325,58 +372,67 @@ function renderSchemeCardHTML(scheme) {
             <span class="text-xs font-mono text-outline shrink-0">${escapeHTML(scheme.code || "")}</span>
           </div>
 
-          <h3 class="font-title-md font-bold text-primary text-xl mb-1">${escapeHTML(scheme.name)}</h3>
+          <!-- Scheme Title & Location -->
+          <h3 class="font-title-md font-bold text-primary text-xl mb-1">${escapeHTML(displayName)}</h3>
           <p class="text-secondary font-medium text-xs mb-3 flex items-center gap-1">
             <span class="material-symbols-outlined text-[15px]">location_on</span>
-            ${escapeHTML(scheme.study_location || "India / Abroad")}
+            ${escapeHTML(displayLoc)}
           </p>
           <p class="text-on-surface-variant text-sm mb-4 leading-relaxed line-clamp-3">
-            ${escapeHTML(scheme.description || "")}
+            ${escapeHTML(displayDesc)}
           </p>
 
-          <div class="bg-surface-container-low p-3 rounded-lg text-xs space-y-1.5 mb-4">
+          <!-- Specifications Box (Education, Deadline, Docs) -->
+          <div class="bg-surface-container-low p-3 rounded-lg text-xs space-y-2 mb-3 border border-outline-variant/20">
             <div class="flex justify-between items-center">
-              <span class="text-outline">Education Level:</span>
-              <span class="font-semibold text-on-surface">${escapeHTML(scheme.education_level || "Degree")}</span>
+              <span class="text-outline">${currentLang === 'hi' ? 'शिक्षा स्तर:' : 'Education Level:'}</span>
+              <span class="font-semibold text-on-surface">${escapeHTML(displayEdu)}</span>
             </div>
             <div class="flex justify-between items-center">
               <span class="text-outline flex items-center gap-1">
-                <span class="material-symbols-outlined text-[14px]">event</span> Deadline:
+                <span class="material-symbols-outlined text-[14px]">event</span> ${currentLang === 'hi' ? 'अंतिम तिथि:' : 'Deadline:'}
               </span>
               <span class="font-bold text-error">${escapeHTML(deadline)}</span>
             </div>
             <div class="flex justify-between items-center">
               <span class="text-outline flex items-center gap-1">
-                <span class="material-symbols-outlined text-[14px]">folder</span> Required Docs:
+                <span class="material-symbols-outlined text-[14px]">folder</span> ${currentLang === 'hi' ? 'आवश्यक दस्तावेज़:' : 'Required Docs:'}
               </span>
-              <span class="font-semibold text-primary font-mono bg-white px-1.5 py-0.5 rounded border border-outline-variant/30">
-                ${docCount} Documents
+              <span class="font-semibold text-primary font-mono bg-surface-container px-2 py-0.5 rounded border border-outline-variant/30">
+                ${docCount} ${currentLang === 'hi' ? 'दस्तावेज़' : 'Documents'}
               </span>
-          <div class="flex items-center justify-between text-[11px] mb-2 pt-1 border-t border-outline-variant/15">
-            <span class="text-tertiary-container font-semibold flex items-center gap-1">
-              <span class="material-symbols-outlined text-[14px]">verified</span> Govt Verified
+            </div>
+          </div>
+
+          <!-- Credibility Guarantee Row (One Clean Horizontal Line) -->
+          <div class="flex items-center justify-between text-xs py-2 px-3 mb-2.5 rounded-lg bg-surface-container-low/70 border border-outline-variant/20">
+            <span class="text-tertiary-container font-semibold flex items-center gap-1 text-[11px]">
+              <span class="material-symbols-outlined text-[15px]">verified</span>
+              <span>${currentLang === 'hi' ? 'भारत सरकार द्वारा सत्यापित' : 'Govt of India Verified'}</span>
             </span>
-            <span class="text-secondary font-bold flex items-center gap-1">
-              <span class="material-symbols-outlined text-[13px]">payments</span> 100% Free
+            <span class="text-secondary font-bold flex items-center gap-1 text-[11px]">
+              <span class="material-symbols-outlined text-[15px]">payments</span>
+              <span>${currentLang === 'hi' ? '100% निःशुल्क' : '100% Free'}</span>
             </span>
           </div>
 
-          <!-- Why Am I Eligible Button -->
-          <button onclick="openWhyAmIEligibleModal('${escapeHTML(scheme.code || applyCode)}')" class="w-full mb-2 py-1.5 px-3 bg-secondary/10 hover:bg-secondary/20 text-secondary text-xs font-bold rounded flex items-center justify-center gap-1.5 transition">
-            <span class="material-symbols-outlined text-[15px]">verified_user</span>
-            <span>Why Am I Eligible? (पात्रता विवरण)</span>
+          <!-- Why Am I Eligible Button (Clean Full-Width Row) -->
+          <button type="button" onclick="openWhyAmIEligibleModal('${escapeHTML(scheme.code || applyCode)}')" class="w-full mb-3 py-2 px-3 bg-secondary/10 hover:bg-secondary/20 text-secondary text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition border border-secondary/20 shadow-xs">
+            <span class="material-symbols-outlined text-[16px]">verified_user</span>
+            <span>${currentLang === 'hi' ? 'मैं पात्र क्यों हूँ? (पात्रता विवरण)' : 'Why Am I Eligible? (Transparency Audit)'}</span>
           </button>
         </div>
 
-        <div class="flex items-center gap-2 pt-2 border-t border-outline-variant/20">
-          <button onclick="window.speakPortalText('${escapeHTML(scheme.name)}. ${escapeHTML(scheme.description || "")}')" title="Listen (सुनें)" class="p-2 bg-surface-container hover:bg-surface-container-high text-primary rounded transition flex items-center justify-center">
+        <!-- Action Row (Listen, View Details, Apply Now on One Clean Horizontal Line) -->
+        <div class="flex items-center gap-2 pt-3 border-t border-outline-variant/20">
+          <button type="button" onclick="window.speakPortalText('${escapeHTML(displayName)}. ${escapeHTML(displayDesc)}')" title="${currentLang === 'hi' ? 'विवरण सुनें' : 'Listen'}" class="p-2.5 bg-surface-container hover:bg-surface-container-high text-primary rounded-lg transition flex items-center justify-center shrink-0">
             <span class="material-symbols-outlined text-[18px]">volume_up</span>
           </button>
-          <a href="${detailRoute}" class="flex-1 py-2.5 bg-surface-container hover:bg-surface-container-high text-primary font-bold rounded text-center text-sm transition">
-            View Details
+          <a href="${detailRoute}" class="flex-1 py-2.5 bg-surface-container hover:bg-surface-container-high text-primary font-bold rounded-lg text-center text-xs sm:text-sm transition">
+            ${currentLang === 'hi' ? 'विवरण देखें' : 'View Details'}
           </a>
-          <a href="#/application/personal?scheme=${encodeURIComponent(applyCode)}" class="flex-1 py-2.5 ${applyBtnClass} font-bold rounded text-center text-sm transition shadow-sm">
-            Apply Now
+          <a href="#/application/personal?scheme=${encodeURIComponent(applyCode)}" class="flex-1 py-2.5 ${applyBtnClass} font-bold rounded-lg text-center text-xs sm:text-sm transition shadow-sm">
+            ${currentLang === 'hi' ? 'आवेदन करें' : 'Apply Now'}
           </a>
         </div>
       </div>
