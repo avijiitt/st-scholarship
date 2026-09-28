@@ -124,10 +124,83 @@ const AppState = {
   }
 };
 
-// Accessibility Controls (GIGW 3.0)
+// Accessibility Controls (GIGW 3.0 & Digital Inclusion)
+window.changePortalFontSize = function(action) {
+  let currentScale = parseFloat(localStorage.getItem("NTSP_FONT_SCALE")) || 1;
+  if (action === "decrease" && currentScale > 0.8) currentScale -= 0.1;
+  else if (action === "reset") currentScale = 1;
+  else if (action === "increase" && currentScale < 1.35) currentScale += 0.1;
+
+  currentScale = Math.round(currentScale * 100) / 100;
+  document.documentElement.style.setProperty("--font-scale", currentScale.toString());
+  document.documentElement.style.fontSize = (currentScale * 100) + "%";
+  localStorage.setItem("NTSP_FONT_SCALE", currentScale.toString());
+  if (typeof showToast === "function") {
+    showToast(`Font Size: ${Math.round(currentScale * 100)}%`, "info");
+  }
+};
+
+window.togglePortalDarkMode = function() {
+  const isDark = document.documentElement.classList.toggle("dark");
+  document.body.classList.toggle("dark-mode", isDark);
+  localStorage.setItem("NTSP_DARK_MODE", isDark ? "true" : "false");
+  
+  document.querySelectorAll("[data-dark-toggle-icon]").forEach(el => {
+    el.textContent = isDark ? "light_mode" : "dark_mode";
+  });
+  if (typeof showToast === "function") {
+    showToast(isDark ? "🌙 Dark Mode Enabled" : "☀️ Light Mode Restored", "info");
+  }
+};
+
+window.toggleLowBandwidthMode = function() {
+  const isLow = document.body.classList.toggle("low-bandwidth-mode");
+  localStorage.setItem("NTSP_LOW_BANDWIDTH", isLow ? "true" : "false");
+  if (typeof showToast === "function") {
+    showToast(isLow ? "⚡ Low-Bandwidth / 2G Tribal Saver Active" : "Full High-Speed View Restored", "info");
+  }
+  document.querySelectorAll("[data-low-bandwidth-label]").forEach(el => {
+    el.textContent = isLow ? "2G: ON" : "2G Mode";
+  });
+};
+
+window.togglePortalLanguage = function(forcedLang) {
+  const cur = localStorage.getItem("NTSP_LANG") || "en";
+  const target = forcedLang || (cur === "en" ? "hi" : "en");
+  localStorage.setItem("NTSP_LANG", target);
+  if (typeof showToast === "function") {
+    showToast(target === "hi" ? "🇮🇳 भाषा: हिन्दी सक्रिय की गई" : "🌐 Language: English Active", "info");
+  }
+  if (window.router && typeof window.router.handleRouting === "function") {
+    window.router.handleRouting();
+  }
+};
+
+// Text-to-Speech (Voice Guidance)
+window.speakPortalText = function(text, lang = "hi-IN") {
+  if (!("speechSynthesis" in window)) {
+    if (typeof showToast === "function") showToast("Voice guidance not supported on this browser.", "error");
+    return;
+  }
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = lang;
+  utterance.rate = 0.95;
+  window.speechSynthesis.speak(utterance);
+  if (typeof showToast === "function") {
+    showToast("🔊 Playing voice guidance...", "info");
+  }
+};
+
 const Accessibility = {
   init() {
-    // Restore contrast setting
+    // Restore dark mode
+    if (localStorage.getItem("NTSP_DARK_MODE") === "true") {
+      document.documentElement.classList.add("dark");
+      document.body.classList.add("dark-mode");
+    }
+
+    // Restore high contrast
     if (localStorage.getItem("NTSP_HIGH_CONTRAST") === "true") {
       document.body.classList.add("high-contrast");
     }
@@ -136,6 +209,12 @@ const Accessibility = {
     const savedScale = localStorage.getItem("NTSP_FONT_SCALE");
     if (savedScale) {
       document.documentElement.style.setProperty("--font-scale", savedScale);
+      document.documentElement.style.fontSize = (parseFloat(savedScale) * 100) + "%";
+    }
+
+    // Restore low-bandwidth mode
+    if (localStorage.getItem("NTSP_LOW_BANDWIDTH") === "true") {
+      document.body.classList.add("low-bandwidth-mode");
     }
 
     this.bindEvents();
@@ -146,24 +225,15 @@ const Accessibility = {
     const fontBtns = document.querySelectorAll("[data-font-action]");
     fontBtns.forEach(btn => {
       btn.addEventListener("click", () => {
-        const action = btn.dataset.fontAction;
-        let currentScale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--font-scale")) || 1;
-        if (action === "decrease" && currentScale > 0.85) currentScale -= 0.1;
-        if (action === "reset") currentScale = 1;
-        if (action === "increase" && currentScale < 1.3) currentScale += 0.1;
-
-        document.documentElement.style.setProperty("--font-scale", currentScale.toFixed(2));
-        localStorage.setItem("NTSP_FONT_SCALE", currentScale.toFixed(2));
+        window.changePortalFontSize(btn.dataset.fontAction);
       });
     });
 
-    // Contrast toggle button
+    // Contrast & Dark toggle buttons
     const contrastBtns = document.querySelectorAll("[data-contrast-toggle]");
     contrastBtns.forEach(btn => {
       btn.addEventListener("click", () => {
-        document.body.classList.toggle("high-contrast");
-        const isHigh = document.body.classList.contains("high-contrast");
-        localStorage.setItem("NTSP_HIGH_CONTRAST", isHigh);
+        window.togglePortalDarkMode();
       });
     });
   }

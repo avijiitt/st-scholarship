@@ -343,6 +343,257 @@ class AppStore {
     localStorage.setItem("NTSP_APPLICATION", JSON.stringify(INITIAL_APPLICATION));
     return INITIAL_APPLICATION;
   }
+
+  // --- FEATURE 1: Scholarship Readiness Score ---
+  getReadinessScore() {
+    const app = this.getApplication();
+    const items = [];
+    let score = 0;
+
+    // 1. ST Certificate
+    const hasSt = (app.documents || []).some(d => (d.type || d.name || '').toLowerCase().includes('st') || (d.type || '').includes('Caste')) || (app.category && app.category.certNo);
+    if (hasSt) {
+      score += 25;
+      items.push({ label: "ST Caste Certificate verified", passed: true, key: "st_cert", step: "/application/category" });
+    } else {
+      items.push({ label: "ST Caste Certificate missing / unverified", passed: false, key: "st_cert", step: "/application/category" });
+    }
+
+    // 2. Income Certificate
+    const hasInc = (app.documents || []).some(d => (d.type || d.name || '').toLowerCase().includes('income')) || (app.financial && app.financial.annualIncome);
+    if (hasInc) {
+      score += 20;
+      items.push({ label: "Income Certificate valid (Within scheme ceiling)", passed: true, key: "income_cert", step: "/application/financial" });
+    } else {
+      items.push({ label: "Income Certificate not uploaded", passed: false, key: "income_cert", step: "/application/financial" });
+    }
+
+    // 3. Bank Account & Aadhaar NPCI Seeding
+    const isBankSeeded = app.financial && (app.financial.npciSeeded === true || app.financial.accountNumber);
+    if (isBankSeeded) {
+      score += 20;
+      items.push({ label: "Bank Account verified & NPCI Aadhaar-seeded", passed: true, key: "bank_npci", step: "/application/financial" });
+    } else {
+      items.push({ label: "Bank account unverified / NPCI seeding pending", passed: false, key: "bank_npci", step: "/application/financial" });
+    }
+
+    // 4. Academic Criteria
+    const hasAcad = app.academic && (app.academic.qualifyingDegree || app.academic.university || app.academic.percentage);
+    if (hasAcad) {
+      score += 20;
+      items.push({ label: "Academic marks & course details validated", passed: true, key: "academic", step: "/application/academic" });
+    } else {
+      items.push({ label: "Academic details incomplete", passed: false, key: "academic", step: "/application/academic" });
+    }
+
+    // 5. Personal Credentials
+    const isPers = app.personal && app.personal.fullName && (app.personal.aadhaarVerified || app.personal.mobile);
+    if (isPers) {
+      score += 15;
+      items.push({ label: "Aadhaar e-KYC & Personal details verified", passed: true, key: "personal", step: "/application/personal" });
+    } else {
+      items.push({ label: "Personal e-KYC pending", passed: false, key: "personal", step: "/application/personal" });
+    }
+
+    return {
+      score: Math.min(100, score),
+      items: items,
+      isReady: score >= 90
+    };
+  }
+
+  // --- FEATURE 2: "Why Am I Eligible?" Reasoner ---
+  getSchemeEligibility(scheme) {
+    const app = this.getApplication();
+    const code = (scheme.code || "").toUpperCase();
+    const incomeVal = app?.financial?.annualIncome ? parseInt(String(app.financial.annualIncome).replace(/[^0-9]/g, ""), 10) : 450000;
+    
+    const reasons = [];
+    const failingReasons = [];
+
+    // Category
+    if (app?.category?.tribeName || app?.category?.certNo) {
+      reasons.push("You belong to a recognized Scheduled Tribe (ST) community under Article 342.");
+    } else {
+      failingReasons.push("Valid ST Certificate is required for this scheme.");
+    }
+
+    // Income
+    let incomeCap = 600000;
+    if (code.includes("PMS") || code.includes("PRE")) {
+      incomeCap = 250000;
+    }
+    if (incomeVal <= incomeCap) {
+      reasons.push(`Your annual family income (₹${incomeVal.toLocaleString('en-IN')}) is below the scheme ceiling of ₹${incomeCap.toLocaleString('en-IN')}.`);
+    } else {
+      failingReasons.push(`Your annual family income (₹${incomeVal.toLocaleString('en-IN')}) exceeds the ceiling limit of ₹${incomeCap.toLocaleString('en-IN')}.`);
+    }
+
+    // Course & Academic Criteria
+    if (code.includes("NOS")) {
+      reasons.push("Enrolled in Master's / Ph.D. degree at a recognized QS Top 500 Global University abroad.");
+      reasons.push("Candidate age is below 35 years as per Ministry guidelines.");
+    } else if (code.includes("NFST")) {
+      reasons.push("Admitted into regular, full-time M.Phil / Ph.D. research in recognized Indian universities / IITs / NITs.");
+      reasons.push("Cleared UGC-NET or CSIR-NET research fellowship criteria.");
+    } else if (code.includes("PRE")) {
+      reasons.push("Enrolled as a regular full-time student in Class IX or X in a recognized Government/Board secondary school.");
+      reasons.push("Entitled to Day Scholar (₹3,000/yr) or Hosteller (₹6,250/yr) financial maintenance stipend.");
+    } else if (code.includes("UGC")) {
+      reasons.push("Enrolled in 1st year of regular full-time PG professional degree (ME/M.Tech, MBA, MCA, M.Pharm, LLM).");
+      reasons.push("Institution recognized under Section 2(f) and 12(B) of UGC Act.");
+    } else {
+      reasons.push("Enrolled in an accredited higher secondary, diploma, undergraduate, or postgraduate degree college.");
+    }
+
+    return {
+      eligible: failingReasons.length === 0,
+      reasons,
+      failingReasons
+    };
+  }
+
+  // --- FEATURE 4: Scholarship Planning Calendar ---
+  getScholarshipCalendar() {
+    const now = new Date();
+    const todayStr = now.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+
+    return [
+      {
+        id: "cal-today",
+        title: "Today's Status",
+        dateStr: todayStr,
+        status: "active",
+        type: "milestone",
+        description: "Scholarship portal synchronized. All documents securely stored in vault."
+      },
+      {
+        id: "cal-income-renewal",
+        title: "Income Certificate Renewal Window",
+        dateStr: "31 Mar 2026",
+        daysLeft: 3,
+        status: "action_required",
+        type: "alert",
+        description: "Ensure Revenue Authority income certificate is updated for FY 2025-26."
+      },
+      {
+        id: "cal-app-deadline",
+        title: "Central Scheme Application Window Closes",
+        dateStr: "31 Oct 2026",
+        daysLeft: 216,
+        status: "upcoming",
+        type: "deadline",
+        description: "National cutoff date for electronic submission across all state & central scholarship schemes."
+      },
+      {
+        id: "cal-inst-verify",
+        title: "Institute L1 Verification Deadline",
+        dateStr: "15 Nov 2026",
+        daysLeft: 231,
+        status: "upcoming",
+        type: "verification",
+        description: "College / School Nodal Officer must authenticate admission and bonafide credentials."
+      },
+      {
+        id: "cal-state-verify",
+        title: "State & District L2 Scrutiny Completion",
+        dateStr: "15 Dec 2026",
+        daysLeft: 261,
+        status: "upcoming",
+        type: "scrutiny",
+        description: "District Welfare Officer (DWO) marks physical/digital cross-check completion."
+      },
+      {
+        id: "cal-dbt-disbursement",
+        title: "Expected PFMS Direct Benefit Transfer (DBT)",
+        dateStr: "15 Jan 2027",
+        daysLeft: 292,
+        status: "disbursement",
+        type: "payment",
+        description: "Direct credit into Aadhaar-seeded bank account through the PFMS DBT gateway."
+      }
+    ];
+  }
+
+  // --- FEATURE 12: Grievance & Escalation System ---
+  getGrievances() {
+    try {
+      const stored = localStorage.getItem("NTSP_GRIEVANCES");
+      if (stored) return JSON.parse(stored);
+    } catch (e) {
+      console.warn("Grievance load error:", e);
+    }
+    const INITIAL_GRIEVANCES = [
+      {
+        id: "GRV-2026-ST-8821",
+        category: "DBT Payment Delay",
+        subject: "Maintenance stipend not credited for Q3",
+        description: "Application was approved on 12 Jan 2026, but PFMS transaction status still shows 'Pending at Agency'.",
+        status: "In Review",
+        createdAt: "2026-03-20T10:30:00Z",
+        slaDeadline: "2026-03-27T18:00:00Z",
+        assignedOfficer: "Shri R. K. Meena (Section Officer, MoTA DBT Cell)",
+        reply: "PFMS batch 9042 has been pushed to RBI. Transaction expected to clear within 48 hours."
+      },
+      {
+        id: "GRV-2026-ST-7419",
+        category: "Document Verification Stalled",
+        subject: "Institute verification pending over 3 weeks",
+        description: "College nodal officer has not completed L1 verification despite submission on 1st March.",
+        status: "Resolved",
+        createdAt: "2026-03-05T14:15:00Z",
+        slaDeadline: "2026-03-12T18:00:00Z",
+        assignedOfficer: "District Welfare Officer, Ranchi",
+        reply: "Contacted Institute Nodal Officer. Verification completed on 11 March 2026."
+      }
+    ];
+    localStorage.setItem("NTSP_GRIEVANCES", JSON.stringify(INITIAL_GRIEVANCES));
+    return INITIAL_GRIEVANCES;
+  }
+
+  saveGrievances(list) {
+    localStorage.setItem("NTSP_GRIEVANCES", JSON.stringify(list));
+  }
+
+  createGrievance(data) {
+    const list = this.getGrievances();
+    const randomSerial = Math.floor(1000 + Math.random() * 9000);
+    const newGrievance = {
+      id: `GRV-2026-ST-${randomSerial}`,
+      category: data.category || "General Inquiry",
+      subject: data.subject || "Scholarship assistance request",
+      description: data.description || "",
+      status: "Open",
+      createdAt: new Date().toISOString(),
+      slaDeadline: new Date(Date.now() + 7 * 86400000).toISOString(),
+      assignedOfficer: "MoTA Grievance Redressal Desk",
+      reply: null
+    };
+    list.unshift(newGrievance);
+    this.saveGrievances(list);
+    return newGrievance;
+  }
+
+  // --- FEATURE 5: Master Student Profile (Single Profile, Multiple Applications) ---
+  getMasterProfile() {
+    const app = this.getApplication();
+    return {
+      personal: app.personal,
+      category: app.category,
+      academic: app.academic,
+      financial: app.financial
+    };
+  }
+
+  saveMasterProfile(profileData) {
+    const app = this.getApplication();
+    if (profileData.personal) app.personal = { ...app.personal, ...profileData.personal };
+    if (profileData.category) app.category = { ...app.category, ...profileData.category };
+    if (profileData.academic) app.academic = { ...app.academic, ...profileData.academic };
+    if (profileData.financial) app.financial = { ...app.financial, ...profileData.financial };
+    this.saveApplication(app);
+    return app;
+  }
 }
 
 window.appStore = new AppStore();

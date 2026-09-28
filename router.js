@@ -220,18 +220,52 @@ class Router {
         <div class="bg-primary-container text-surface-container-lowest py-1 px-margin">
           <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center text-xs">
             <span class="tracking-wide">GOVERNMENT OF INDIA • MINISTRY OF TRIBAL AFFAIRS</span>
-            <div class="flex items-center gap-3">
-              <button data-font-action="decrease" class="hover:text-secondary-fixed">A-</button>
-              <button data-font-action="reset" class="font-bold hover:text-secondary-fixed">A</button>
-              <button data-font-action="increase" class="hover:text-secondary-fixed">A+</button>
-              <button data-contrast-toggle title="High Contrast Mode"><span class="material-symbols-outlined text-[15px]">contrast</span></button>
-              <span class="text-outline">|</span>
-              <a href="#/login" class="text-secondary-fixed hover:underline flex items-center gap-1 font-semibold">
-                <span class="material-symbols-outlined text-[14px]">school</span> Scholar Login
+            <div class="flex items-center gap-2.5 flex-wrap">
+              <!-- Language Toggle -->
+              <button onclick="window.togglePortalLanguage()" class="px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-white font-bold text-[11px] flex items-center gap-1 transition">
+                <span class="material-symbols-outlined text-[13px]">translate</span>
+                <span id="current-portal-lang">${(typeof localStorage !== "undefined" && localStorage.getItem("NTSP_LANG") === "hi") ? "English" : "हिन्दी"}</span>
+              </button>
+
+              <span class="text-white/40">|</span>
+
+              <!-- Text Sizing Controls (A-, A, A+) -->
+              <div class="flex items-center gap-1 font-bold text-xs">
+                <button onclick="window.changePortalFontSize('decrease')" title="Decrease Text Size" class="px-1.5 py-0.5 rounded hover:bg-white/20 text-white transition">A-</button>
+                <button onclick="window.changePortalFontSize('reset')" title="Default Text Size" class="px-1.5 py-0.5 rounded hover:bg-white/20 text-white font-extrabold transition">A</button>
+                <button onclick="window.changePortalFontSize('increase')" title="Increase Text Size" class="px-1.5 py-0.5 rounded hover:bg-white/20 text-white transition">A+</button>
+              </div>
+
+              <span class="text-white/40">|</span>
+
+              <!-- Dark Mode Toggle -->
+              <button onclick="window.togglePortalDarkMode()" title="Toggle Dark Mode" class="px-1.5 py-0.5 rounded hover:bg-white/20 flex items-center gap-1 text-white transition">
+                <span class="material-symbols-outlined text-[15px]" data-dark-toggle-icon>${(typeof localStorage !== "undefined" && localStorage.getItem("NTSP_DARK_MODE") === "true") ? "light_mode" : "dark_mode"}</span>
+                <span class="text-[11px] font-semibold">Theme</span>
+              </button>
+
+              <span class="text-white/40">|</span>
+
+              <!-- 2G / Low Bandwidth Tribal Mode -->
+              <button onclick="window.toggleLowBandwidthMode()" title="2G Tribal Low-Bandwidth Mode" class="px-2 py-0.5 rounded bg-secondary hover:bg-secondary/90 text-white text-[11px] font-bold flex items-center gap-1 transition shadow-xs">
+                <span class="material-symbols-outlined text-[13px]">offline_bolt</span>
+                <span data-low-bandwidth-label>${(typeof localStorage !== "undefined" && localStorage.getItem("NTSP_LOW_BANDWIDTH") === "true") ? "2G: ON" : "2G Mode"}</span>
+              </button>
+
+              <span class="text-white/40">|</span>
+
+              <a href="#/calendar" class="text-secondary-fixed hover:underline flex items-center gap-1 font-semibold text-[11px]">
+                <span class="material-symbols-outlined text-[13px]">calendar_month</span> Calendar
               </a>
-              <span class="text-outline">|</span>
-              <a href="#/admin/login" class="text-secondary-fixed hover:underline flex items-center gap-1 font-semibold">
-                <span class="material-symbols-outlined text-[14px]">admin_panel_settings</span> Official Portal
+
+              <span class="text-white/40">|</span>
+
+              <a href="#/login" class="text-secondary-fixed hover:underline flex items-center gap-1 font-semibold text-[11px]">
+                <span class="material-symbols-outlined text-[13px]">school</span> Scholar Login
+              </a>
+              <span class="text-white/40">|</span>
+              <a href="#/admin/login" class="text-secondary-fixed hover:underline flex items-center gap-1 font-semibold text-[11px]">
+                <span class="material-symbols-outlined text-[13px]">admin_panel_settings</span> Official Portal
               </a>
             </div>
           </div>
@@ -364,6 +398,12 @@ class Router {
           <a href="#/schemes" data-sidebar-link="/schemes" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition">
             <span class="material-symbols-outlined text-[20px]">explore</span> Recommended Schemes
           </a>
+          <a href="#/calendar" data-sidebar-link="/calendar" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition">
+            <span class="material-symbols-outlined text-[20px]">calendar_month</span> Scholarship Calendar
+          </a>
+          <a href="#/grievance" data-sidebar-link="/grievance" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition">
+            <span class="material-symbols-outlined text-[20px]">support_agent</span> Grievance &amp; Escalation Desk
+          </a>
           <a href="#/application/deficiency" data-sidebar-link="/application/deficiency" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition">
             <span class="material-symbols-outlined text-[20px]">warning</span> Deficiency Notifications
           </a>
@@ -431,6 +471,12 @@ class Router {
           <a href="#/admin/applications" data-sidebar-link="/admin/applications" class="flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition">
             <span class="flex items-center gap-2.5"><span class="material-symbols-outlined text-[20px]">ballot</span> Application Queue</span>
             <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-secondary-fixed text-on-secondary-fixed">${pendingCount}</span>
+          </a>
+          <a href="#/admin/analytics" data-sidebar-link="/admin/analytics" class="flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition">
+            <span class="flex items-center gap-2.5"><span class="material-symbols-outlined text-[20px]">insights</span> Funnel &amp; Rejection Analytics</span>
+          </a>
+          <a href="#/admin/grievances" data-sidebar-link="/admin/grievances" class="flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition">
+            <span class="flex items-center gap-2.5"><span class="material-symbols-outlined text-[20px]">support_agent</span> Grievance Escalation Desk</span>
           </a>
           <a href="#/admin/schemes" data-sidebar-link="/admin/schemes" class="flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition">
             <span class="flex items-center gap-2.5"><span class="material-symbols-outlined text-[20px]">tune</span> Scheme Quotas &amp; Rules</span>

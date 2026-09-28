@@ -76,6 +76,93 @@ body.high-contrast button {
   color: #ffff00 !important;
 }
 
+/* Dark Mode (High-Fidelity Tailwind & Custom Integration) */
+html.dark,
+body.dark-mode {
+  background-color: #0b111e !important;
+  color: #f1f5f9 !important;
+}
+
+html.dark body.dark-mode {
+  background-color: #0b111e !important;
+}
+
+html.dark header,
+html.dark footer,
+html.dark .bg-surface,
+html.dark .bg-surface-container,
+html.dark .bg-surface-container-lowest,
+html.dark .bg-surface-container-low,
+html.dark .bg-surface-container-high,
+html.dark .bg-surface-container-highest {
+  background-color: #162032 !important;
+  color: #f1f5f9 !important;
+  border-color: #2e3d55 !important;
+}
+
+html.dark .bg-white {
+  background-color: #1e293b !important;
+  color: #f1f5f9 !important;
+}
+
+html.dark input,
+html.dark select,
+html.dark textarea {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  border-color: #334155 !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+html.dark .text-primary {
+  color: #93c5fd !important;
+}
+
+html.dark .text-on-surface,
+html.dark .text-on-surface-variant {
+  color: #e2e8f0 !important;
+}
+
+html.dark .text-outline {
+  color: #94a3b8 !important;
+}
+
+html.dark .border-outline-variant\/30,
+html.dark .border-outline-variant\/40,
+html.dark .border-outline-variant\/20,
+html.dark .border-outline-variant {
+  border-color: #334155 !important;
+}
+
+html.dark tr.hover\:bg-surface-container-low:hover,
+html.dark div.hover\:bg-surface-container-low:hover {
+  background-color: #1e293b !important;
+}
+
+/* Low-Bandwidth / 2G Data Saver Mode */
+body.low-bandwidth-mode {
+  letter-spacing: 0.01em;
+}
+
+body.low-bandwidth-mode img:not(.keep-logo) {
+  filter: grayscale(80%) opacity(85%);
+  max-height: 140px;
+}
+
+body.low-bandwidth-mode .hero-banner-container {
+  display: none !important;
+}
+
+body.low-bandwidth-mode .shadow-lg,
+body.low-bandwidth-mode .shadow-md,
+body.low-bandwidth-mode .shadow-xl {
+  box-shadow: none !important;
+}
+
 /* Tribal Warli Pattern Borders */
 .tribal-pattern-border {
   background: repeating-linear-gradient(

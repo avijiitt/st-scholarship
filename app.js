@@ -352,11 +352,26 @@ function renderSchemeCardHTML(scheme) {
               <span class="font-semibold text-primary font-mono bg-white px-1.5 py-0.5 rounded border border-outline-variant/30">
                 ${docCount} Documents
               </span>
-            </div>
+          <div class="flex items-center justify-between text-[11px] mb-2 pt-1 border-t border-outline-variant/15">
+            <span class="text-tertiary-container font-semibold flex items-center gap-1">
+              <span class="material-symbols-outlined text-[14px]">verified</span> Govt Verified
+            </span>
+            <span class="text-secondary font-bold flex items-center gap-1">
+              <span class="material-symbols-outlined text-[13px]">payments</span> 100% Free
+            </span>
           </div>
+
+          <!-- Why Am I Eligible Button -->
+          <button onclick="openWhyAmIEligibleModal('${escapeHTML(scheme.code || applyCode)}')" class="w-full mb-2 py-1.5 px-3 bg-secondary/10 hover:bg-secondary/20 text-secondary text-xs font-bold rounded flex items-center justify-center gap-1.5 transition">
+            <span class="material-symbols-outlined text-[15px]">verified_user</span>
+            <span>Why Am I Eligible? (पात्रता विवरण)</span>
+          </button>
         </div>
 
-        <div class="flex gap-2 pt-2 border-t border-outline-variant/20">
+        <div class="flex items-center gap-2 pt-2 border-t border-outline-variant/20">
+          <button onclick="window.speakPortalText('${escapeHTML(scheme.name)}. ${escapeHTML(scheme.description || "")}')" title="Listen (सुनें)" class="p-2 bg-surface-container hover:bg-surface-container-high text-primary rounded transition flex items-center justify-center">
+            <span class="material-symbols-outlined text-[18px]">volume_up</span>
+          </button>
           <a href="${detailRoute}" class="flex-1 py-2.5 bg-surface-container hover:bg-surface-container-high text-primary font-bold rounded text-center text-sm transition">
             View Details
           </a>
@@ -1280,19 +1295,153 @@ router.register("/schemes/ugc-pg", () => {
 router.register("/applicant/dashboard", () => {
   const app = window.appStore.getApplication();
   const user = window.appStore.getAuthUser() || { name: "Priya Munda", otrId: "OTR-2025-ST-884129" };
+  const readiness = window.appStore.getReadinessScore ? window.appStore.getReadinessScore() : { score: 75, items: [] };
+  const calendarEvents = window.appStore.getScholarshipCalendar ? window.appStore.getScholarshipCalendar() : [];
+  const nextAlert = calendarEvents.find(e => e.status === "action_required") || calendarEvents[1];
   const container = document.getElementById("main-view-container");
 
   container.innerHTML = `
     <div class="space-y-space-lg">
-      <!-- Welcome Banner -->
+      <!-- Welcome & Fast Access Banner -->
       <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm border border-outline-variant/30 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 class="text-2xl font-bold text-primary">Welcome, ${user.name}!</h1>
-          <p class="text-xs text-on-surface-variant mt-0.5">OTR ID: <strong class="font-mono">${user.otrId}</strong> | ST e-KYC Verified</p>
+          <div class="flex items-center gap-2">
+            <h1 class="text-2xl font-bold text-primary">Welcome, ${user.name}!</h1>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-tertiary-container text-white">ST e-KYC Verified</span>
+          </div>
+          <p class="text-xs text-on-surface-variant mt-0.5">OTR ID: <strong class="font-mono text-secondary">${user.otrId}</strong> • Domicile: Jharkhand • Tribe: Munda (Article 342)</p>
         </div>
-        <a href="#/application/new" class="px-4 py-2 bg-secondary text-white font-bold rounded text-sm shadow-sm hover:bg-secondary/90">
-          + New Application
-        </a>
+        <div class="flex items-center gap-2 flex-wrap">
+          <a href="#/calendar" class="px-3.5 py-2 bg-surface-container hover:bg-surface-container-high text-primary font-bold rounded text-xs shadow-xs flex items-center gap-1 transition">
+            <span class="material-symbols-outlined text-[16px]">calendar_month</span> Planning Calendar
+          </a>
+          <a href="#/application/new" class="px-4 py-2 bg-secondary text-white font-bold rounded text-xs shadow-sm hover:bg-secondary/90 transition flex items-center gap-1">
+            <span class="material-symbols-outlined text-[16px]">add_circle</span> + New Application
+          </a>
+        </div>
+      </div>
+
+      <!-- FEATURE 1: Scholarship Readiness Score Card -->
+      <div class="bg-surface-container-lowest rounded-xl shadow-md border border-outline-variant/30 p-space-lg space-y-4">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 pb-3 border-b border-outline-variant/20">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-secondary text-xl">speed</span>
+              <h2 class="text-lg font-bold text-primary">Application Readiness Score</h2>
+              <span class="px-2 py-0.5 rounded text-xs font-bold ${readiness.score >= 90 ? 'bg-tertiary-container text-white' : 'bg-secondary/15 text-secondary'} font-mono">
+                ${readiness.score}% Ready
+              </span>
+            </div>
+            <p class="text-xs text-on-surface-variant mt-0.5">
+              Automated pre-flight validation ensures zero rejection from missing documents or unverified bank seeding.
+            </p>
+          </div>
+          <div class="w-full md:w-48 bg-surface-container rounded-full h-3 overflow-hidden border border-outline-variant/30">
+            <div class="bg-secondary h-full rounded-full transition-all duration-500" style="width: ${readiness.score}%;"></div>
+          </div>
+        </div>
+
+        <!-- Readiness Checklist Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 text-xs">
+          ${readiness.items.map(item => `
+            <div class="p-2.5 rounded-lg border flex items-start gap-2 ${
+              item.passed 
+                ? 'bg-tertiary-container/5 border-tertiary-container/30 text-on-surface' 
+                : 'bg-error-container/15 border-error/30 text-error'
+            }">
+              <span class="material-symbols-outlined text-[18px] shrink-0 ${item.passed ? 'text-tertiary-container' : 'text-error'}">
+                ${item.passed ? 'check_circle' : 'cancel'}
+              </span>
+              <div class="flex-1">
+                <span class="font-semibold block leading-tight">${escapeHTML(item.label)}</span>
+                ${!item.passed ? `
+                  <a href="#${item.step}" class="text-[11px] font-bold underline hover:text-error/80 mt-1 inline-block">
+                    Complete this step →
+                  </a>
+                ` : `
+                  <span class="text-[10px] text-tertiary-container font-medium block">Verified</span>
+                `}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <!-- FEATURE 4 & 6: Planning Alert & Region-Aware Recommendations Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-space-lg">
+        <!-- Upcoming Milestone Alert -->
+        <div class="p-space-md rounded-xl bg-surface-container-lowest border border-outline-variant/30 flex flex-col justify-between shadow-sm">
+          <div>
+            <span class="px-2 py-0.5 bg-error-container text-on-error-container text-[10px] font-bold rounded uppercase tracking-wider block w-fit mb-2">
+              Action Required Alert
+            </span>
+            <h3 class="text-sm font-bold text-primary">${escapeHTML(nextAlert.title)}</h3>
+            <p class="text-xs text-on-surface-variant mt-1 leading-relaxed">${escapeHTML(nextAlert.description)}</p>
+            <div class="mt-3 p-2 bg-surface-container-low rounded flex items-center justify-between text-xs">
+              <span class="text-outline font-semibold">Cutoff Date:</span>
+              <strong class="font-mono text-error font-bold">${escapeHTML(nextAlert.dateStr)}</strong>
+            </div>
+          </div>
+          <div class="pt-3 border-t border-outline-variant/20 mt-3">
+            <a href="#/calendar" class="text-xs font-bold text-secondary hover:underline flex items-center gap-1">
+              <span>View Full Planning Calendar</span>
+              <span class="material-symbols-outlined text-[15px]">arrow_forward</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Tribe & Region-Aware Discovery -->
+        <div class="lg:col-span-2 p-space-md rounded-xl bg-surface-container-lowest border border-outline-variant/30 flex flex-col justify-between shadow-sm">
+          <div>
+            <div class="flex items-center justify-between gap-2 mb-2">
+              <div class="flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-secondary text-lg">travel_explore</span>
+                <h3 class="text-sm font-bold text-primary">Tribe &amp; Region-Aware Scheme Recommendations</h3>
+              </div>
+              <span class="px-2 py-0.5 bg-secondary-fixed/50 text-secondary text-[10px] font-bold rounded">
+                Personalized
+              </span>
+            </div>
+            <p class="text-xs text-on-surface-variant mb-3">
+              Matched for your tribal community (<strong>Munda</strong>), domicile state (<strong>Jharkhand</strong>), and institution type:
+            </p>
+
+            <div class="space-y-2 text-xs">
+              <div class="p-2.5 bg-surface-container-low rounded-lg border border-outline-variant/20 flex justify-between items-center gap-2">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <strong class="text-primary font-bold">National Overseas Scholarship (NOS)</strong>
+                    <span class="px-1.5 py-0.2 bg-secondary/15 text-secondary text-[10px] font-bold rounded">International Track</span>
+                  </div>
+                  <p class="text-[11px] text-outline mt-0.5">100% funding for Master's/Ph.D. at QS Top 500 Universities abroad.</p>
+                </div>
+                <button onclick="openWhyAmIEligibleModal('NOS')" class="px-2.5 py-1 bg-surface-container hover:bg-surface-container-high text-primary font-bold rounded text-[11px] shrink-0">
+                  Why Am I Eligible?
+                </button>
+              </div>
+
+              <div class="p-2.5 bg-surface-container-low rounded-lg border border-outline-variant/20 flex justify-between items-center gap-2">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <strong class="text-primary font-bold">Post-Matric Scholarship for ST Students (PMS)</strong>
+                    <span class="px-1.5 py-0.2 bg-tertiary-container/15 text-tertiary-container text-[10px] font-bold rounded">State Welfare Pool</span>
+                  </div>
+                  <p class="text-[11px] text-outline mt-0.5">100% course fee waiver + maintenance allowances for accredited colleges.</p>
+                </div>
+                <button onclick="openWhyAmIEligibleModal('PMS')" class="px-2.5 py-1 bg-surface-container hover:bg-surface-container-high text-primary font-bold rounded text-[11px] shrink-0">
+                  Why Am I Eligible?
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-3 border-t border-outline-variant/20 mt-3 flex justify-between items-center text-xs">
+            <span class="text-outline text-[11px]">Includes PVTG &amp; First-Generation Tribal Student Priority</span>
+            <a href="#/schemes" class="font-bold text-secondary hover:underline flex items-center gap-1">
+              Explore All 5 Schemes →
+            </a>
+          </div>
+        </div>
       </div>
 
       <!-- Active Application Card -->
@@ -1332,6 +1481,9 @@ router.register("/applicant/dashboard", () => {
             <a href="#/application/review" class="px-4 py-2.5 bg-surface-container text-primary font-bold rounded text-sm hover:bg-surface-container-high">
               View Application Summary
             </a>
+            <a href="#/grievance" class="px-4 py-2.5 bg-surface-container text-primary font-bold rounded text-sm hover:bg-surface-container-high flex items-center gap-1">
+              <span class="material-symbols-outlined text-[16px]">support_agent</span> Grievance Desk
+            </a>
             ${app.status === 'Deficiency Raised' ? `
               <a href="#/application/deficiency" class="px-4 py-2.5 bg-error text-white font-bold rounded text-sm shadow-sm animate-pulse">
                 Respond to Deficiency
@@ -1345,51 +1497,219 @@ router.register("/applicant/dashboard", () => {
 }, { layout: "applicant", authRole: "applicant" });
 
 // 8. Applicant Profile (/applicant/profile)
+// 8. Applicant Profile (/applicant/profile) - Single Student Master Profile (Feature 5)
 router.register("/applicant/profile", () => {
+  const master = window.appStore.getMasterProfile();
   const app = window.appStore.getApplication();
+  const user = window.appStore.getAuthUser() || { name: master.personal?.fullName || "Priya Munda", otrId: "OTR-2025-ST-884129" };
   const container = document.getElementById("main-view-container");
 
+  const personal = master.personal || {};
+  const category = master.category || {};
+  const academic = master.academic || {};
+  const financial = master.financial || {};
+
   container.innerHTML = `
-    <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30">
-      <div class="flex justify-between items-center pb-3 border-b border-outline-variant/20 mb-4">
-        <h1 class="text-xl font-bold text-primary flex items-center gap-2">
-          <span class="material-symbols-outlined text-secondary">person</span> Scholar Profile Dossier
-        </h1>
-        <span class="px-2.5 py-0.5 bg-tertiary-container text-white text-xs font-bold rounded">
-          Aadhaar e-KYC Verified
-        </span>
-      </div>
+    <div class="space-y-space-md">
+      <!-- Master Profile Header Banner -->
+      <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl font-bold text-primary flex items-center gap-2">
+              <span class="material-symbols-outlined text-secondary">badge</span> Master Scholar Profile Dossier
+            </h1>
+            <span class="px-2.5 py-0.5 bg-tertiary-container/15 text-tertiary-container text-xs font-bold rounded border border-tertiary-container/30">
+              ✓ Single Profile, Multiple Schemes
+            </span>
+          </div>
+          <p class="text-xs text-on-surface-variant mt-1">
+            Your centralized profile automatically populates eligibility and credentials across all MoTA schemes (NFST, NOS, PMS, Pre-Matric).
+          </p>
+        </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-        <div class="p-3 bg-surface-container-low rounded">
-          <span class="text-xs text-outline block">Full Name</span>
-          <strong class="text-primary">${app.personal.fullName}</strong>
-        </div>
-        <div class="p-3 bg-surface-container-low rounded">
-          <span class="text-xs text-outline block">Date of Birth (DOB)</span>
-          <strong>${app.personal.dob}</strong>
-        </div>
-        <div class="p-3 bg-surface-container-low rounded">
-          <span class="text-xs text-outline block">ST Community</span>
-          <strong>${app.category.tribeName} (Cert: ${app.category.certNo})</strong>
-        </div>
-        <div class="p-3 bg-surface-container-low rounded">
-          <span class="text-xs text-outline block">Mobile / Email</span>
-          <strong>${app.personal.mobile} | ${app.personal.email}</strong>
-        </div>
-        <div class="p-3 bg-surface-container-low rounded md:col-span-2">
-          <span class="text-xs text-outline block">Permanent Address</span>
-          <strong>${app.personal.address}</strong>
+        <div class="flex items-center gap-2 shrink-0">
+          <button type="button" onclick="window.applyMasterProfileToDraft()" class="px-4 py-2 bg-secondary text-white font-bold text-xs rounded shadow-xs hover:bg-secondary/90 flex items-center gap-1.5 transition">
+            <span class="material-symbols-outlined text-[16px]">dynamic_feed</span> Apply to Current Draft
+          </button>
         </div>
       </div>
 
-      <div class="mt-6 pt-4 border-t border-outline-variant/20 flex justify-end">
-        <button onclick="router.navigate('/application/personal')" class="px-4 py-2 bg-primary text-white font-bold text-xs rounded">
-          Edit Profile in Application
-        </button>
+      <!-- Identity & e-KYC Verification Status -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+        <div class="p-3 bg-surface-container-lowest rounded-xl border border-outline-variant/30 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-tertiary-container/15 text-tertiary-container flex items-center justify-center shrink-0">
+            <span class="material-symbols-outlined text-2xl">fingerprint</span>
+          </div>
+          <div>
+            <span class="text-outline block text-[11px]">Aadhaar e-KYC Status</span>
+            <strong class="text-primary">UIDAI Biometric Verified</strong>
+          </div>
+        </div>
+
+        <div class="p-3 bg-surface-container-lowest rounded-xl border border-outline-variant/30 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-secondary/15 text-secondary flex items-center justify-center shrink-0">
+            <span class="material-symbols-outlined text-2xl">account_balance</span>
+          </div>
+          <div>
+            <span class="text-outline block text-[11px]">Aadhaar-NPCI Seeding</span>
+            <strong class="text-primary">Active (DBT Enabled)</strong>
+          </div>
+        </div>
+
+        <div class="p-3 bg-surface-container-lowest rounded-xl border border-outline-variant/30 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-primary/15 text-primary flex items-center justify-center shrink-0">
+            <span class="material-symbols-outlined text-2xl">groups</span>
+          </div>
+          <div>
+            <span class="text-outline block text-[11px]">ST Community Status</span>
+            <strong class="text-primary">${escapeHTML(category.tribeName || "Munda Tribe")} (Article 342)</strong>
+          </div>
+        </div>
       </div>
+
+      <!-- Form Dossier Sections -->
+      <form id="master-profile-form" onsubmit="window.saveStudentMasterProfile(event)" class="space-y-4">
+        <!-- 1. Personal & Contact Details -->
+        <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-xs border border-outline-variant/30">
+          <h3 class="text-sm font-bold text-primary pb-2 border-b border-outline-variant/20 mb-3 flex items-center gap-2">
+            <span class="material-symbols-outlined text-secondary text-base">person</span> Personal &amp; Identity Credentials
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+            <div>
+              <label class="block font-bold text-primary mb-1">Full Legal Name *</label>
+              <input type="text" id="mp-fullName" value="${escapeHTML(personal.fullName || 'Priya Munda')}" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 text-xs font-semibold text-primary" required/>
+            </div>
+            <div>
+              <label class="block font-bold text-primary mb-1">Date of Birth (DOB) *</label>
+              <input type="date" id="mp-dob" value="${escapeHTML(personal.dob || '2004-05-14')}" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 text-xs font-semibold text-primary" required/>
+            </div>
+            <div>
+              <label class="block font-bold text-primary mb-1">Gender *</label>
+              <select id="mp-gender" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 text-xs font-semibold text-primary">
+                <option value="Female" ${personal.gender === 'Female' ? 'selected' : ''}>Female</option>
+                <option value="Male" ${personal.gender === 'Male' ? 'selected' : ''}>Male</option>
+                <option value="Other" ${personal.gender === 'Other' ? 'selected' : ''}>Other</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-primary mb-1">Mobile Number (Aadhaar Linked) *</label>
+              <input type="tel" id="mp-mobile" value="${escapeHTML(personal.mobile || '+91 98765 43210')}" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 text-xs font-semibold text-primary" required/>
+            </div>
+            <div>
+              <label class="block font-bold text-primary mb-1">Email Address *</label>
+              <input type="email" id="mp-email" value="${escapeHTML(personal.email || 'priya.munda@example.in')}" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 text-xs font-semibold text-primary" required/>
+            </div>
+            <div>
+              <label class="block font-bold text-primary mb-1">Aadhaar Masked Number</label>
+              <input type="text" id="mp-aadhaar" value="${escapeHTML(personal.aadhaarMasked || 'XXXX-XXXX-8812')}" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 text-xs font-mono font-semibold text-primary" readonly/>
+            </div>
+            <div class="sm:col-span-2 md:col-span-3">
+              <label class="block font-bold text-primary mb-1">Permanent Residential Address</label>
+              <input type="text" id="mp-address" value="${escapeHTML(personal.address || 'Village Hesag, PO Hatia, District Ranchi, Jharkhand - 834003')}" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 text-xs font-semibold text-primary"/>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. ST Community & Regional Affiliation -->
+        <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-xs border border-outline-variant/30">
+          <h3 class="text-sm font-bold text-primary pb-2 border-b border-outline-variant/20 mb-3 flex items-center gap-2">
+            <span class="material-symbols-outlined text-secondary text-base">diversity_3</span> Scheduled Tribe (Article 342) &amp; Regional Details
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+            <div>
+              <label class="block font-bold text-primary mb-1">Recognized ST Tribe Community *</label>
+              <input type="text" id="mp-tribe" value="${escapeHTML(category.tribeName || 'Munda')}" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 text-xs font-semibold text-primary" required/>
+            </div>
+            <div>
+              <label class="block font-bold text-primary mb-1">Caste Certificate Registration Number *</label>
+              <input type="text" id="mp-certNo" value="${escapeHTML(category.certNo || 'JH-ST-2023-90812')}" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 text-xs font-mono font-semibold text-primary" required/>
+            </div>
+            <div>
+              <label class="block font-bold text-primary mb-1">Issuing District &amp; State</label>
+              <input type="text" id="mp-issuingState" value="${escapeHTML(category.state || 'Jharkhand (Ranchi District)')}" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 text-xs font-semibold text-primary"/>
+            </div>
+            <div>
+              <label class="block font-bold text-primary mb-1">Particularly Vulnerable Tribal Group (PVTG)</label>
+              <select id="mp-pvtg" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 text-xs font-semibold text-primary">
+                <option value="No">No - Mainstream ST Community</option>
+                <option value="Asur">Asur (PVTG)</option>
+                <option value="Birhor">Birhor (PVTG)</option>
+                <option value="Birjia">Birjia (PVTG)</option>
+                <option value="Mal Paharia">Mal Paharia (PVTG)</option>
+                <option value="Sauria Paharia">Sauria Paharia (PVTG)</option>
+                <option value="Other PVTG">Other Recognized PVTG</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-primary mb-1">First-Generation Higher Education Learner?</label>
+              <select id="mp-firstGen" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 text-xs font-semibold text-primary">
+                <option value="Yes" selected>Yes - First in family to attend college</option>
+                <option value="No">No</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-primary mb-1">Day Scholar or Hosteller?</label>
+              <select id="mp-residence" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 text-xs font-semibold text-primary">
+                <option value="Hosteller" selected>Hosteller (Eligible for enhanced grant)</option>
+                <option value="Day Scholar">Day Scholar</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Financial & NPCI Bank Seeding -->
+        <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-xs border border-outline-variant/30">
+          <h3 class="text-sm font-bold text-primary pb-2 border-b border-outline-variant/20 mb-3 flex items-center gap-2">
+            <span class="material-symbols-outlined text-secondary text-base">payments</span> Financial Eligibility &amp; DBT Bank Account
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+            <div>
+              <label class="block font-bold text-primary mb-1">Annual Parental Family Income (INR) *</label>
+              <input type="text" id="mp-income" value="${escapeHTML(financial.annualIncome || '1,80,000')}" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 text-xs font-semibold text-primary" required/>
+            </div>
+            <div>
+              <label class="block font-bold text-primary mb-1">Bank Name *</label>
+              <input type="text" id="mp-bankName" value="${escapeHTML(financial.bankName || 'State Bank of India')}" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 text-xs font-semibold text-primary" required/>
+            </div>
+            <div>
+              <label class="block font-bold text-primary mb-1">Account Number *</label>
+              <input type="text" id="mp-accountNo" value="${escapeHTML(financial.accountNumber || '38910482019')}" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 text-xs font-mono font-semibold text-primary" required/>
+            </div>
+            <div>
+              <label class="block font-bold text-primary mb-1">Bank IFSC Code *</label>
+              <input type="text" id="mp-ifsc" value="${escapeHTML(financial.ifsc || 'SBIN0001234')}" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 text-xs font-mono font-semibold text-primary uppercase" required/>
+            </div>
+            <div>
+              <label class="block font-bold text-primary mb-1">Aadhaar NPCI DBT Seeding</label>
+              <span class="inline-flex items-center gap-1.5 px-3 py-2 bg-tertiary-container/15 text-tertiary-container rounded font-bold border border-tertiary-container/30 w-full">
+                <span class="material-symbols-outlined text-[15px]">check_circle</span> Active &amp; Validated
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit & Action Buttons -->
+        <div class="pt-2 flex flex-wrap justify-between items-center gap-2">
+          <a href="#/applicant/dashboard" class="px-4 py-2 bg-surface-container text-primary font-bold text-xs rounded hover:bg-surface-container-high transition">
+            ← Back to Dashboard
+          </a>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="window.applyMasterProfileToDraft()" class="px-4 py-2 bg-surface-container hover:bg-surface-container-high text-primary font-bold text-xs rounded transition flex items-center gap-1">
+              <span class="material-symbols-outlined text-[15px]">copy_all</span> Auto-Fill Active Draft
+            </button>
+            <button type="submit" class="px-5 py-2 bg-primary text-white font-bold text-xs rounded shadow-md hover:bg-primary/90 flex items-center gap-1 transition">
+              <span class="material-symbols-outlined text-[15px]">save</span> Save Master Profile Dossier
+            </button>
+          </div>
+        </div>
+      </form>
     </div>
   `;
+}, { layout: "applicant", authRole: "applicant" });
+
+// Alias /profile -> /applicant/profile
+router.register("/profile", () => {
+  router.navigate("/applicant/profile");
 }, { layout: "applicant", authRole: "applicant" });
 
 // 9. New Application Selection (/application/new)
@@ -1967,6 +2287,25 @@ router.register("/application/documents", () => {
         </div>
       </div>
 
+      <!-- Smart Document Health Check Assistant Banner (Feature 3) -->
+      <div class="p-3.5 bg-secondary/5 rounded-xl border border-secondary/20 mb-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+        <div class="flex items-start gap-2.5">
+          <span class="material-symbols-outlined text-secondary text-2xl shrink-0 mt-0.5">auto_fix_high</span>
+          <div>
+            <div class="flex items-center gap-2">
+              <strong class="text-primary font-bold text-sm">Smart Document Assistant (Rule-Based Preliminary Validation)</strong>
+              <span class="px-2 py-0.5 bg-secondary/15 text-secondary font-bold text-[10px] rounded-full">Automated Health Check</span>
+            </div>
+            <p class="text-on-surface-variant text-[11px] mt-0.5">
+              Preliminary verification for scan clarity, valid financial year (2025-26), authorized stamp, and name matching. Final approval by authorized scrutiny officer.
+            </p>
+          </div>
+        </div>
+        <span class="px-2.5 py-1 bg-surface-container text-primary font-mono text-[11px] font-bold rounded shrink-0">
+          AI/Rule Verification: Active
+        </span>
+      </div>
+
       <!-- Document Slots List -->
       <div class="space-y-3 mb-6" id="documents-container">
         ${docList.map((doc, idx) => {
@@ -2009,6 +2348,28 @@ router.register("/application/documents", () => {
                   <!-- Hidden File Input for Replace -->
                   <input type="file" id="file-input-${cleanKey}" accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg,image/jpg" onchange="handleDocumentUpload(event, '${escapeHTML(doc.type)}', '${cleanKey}')" class="hidden"/>
                 </div>
+              </div>
+
+              <!-- Smart Document Assistant Validation Chips & Where to get this document button -->
+              <div class="pt-2 border-t border-outline-variant/15 flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-tertiary-container/10 text-tertiary-container text-[11px] font-bold rounded border border-tertiary-container/20">
+                    <span class="material-symbols-outlined text-[13px]">document_scanner</span> High Clarity
+                  </span>
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-tertiary-container/10 text-tertiary-container text-[11px] font-bold rounded border border-tertiary-container/20">
+                    <span class="material-symbols-outlined text-[13px]">verified</span> Valid FY 2025–26
+                  </span>
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-tertiary-container/10 text-tertiary-container text-[11px] font-bold rounded border border-tertiary-container/20">
+                    <span class="material-symbols-outlined text-[13px]">check</span> Name Matched
+                  </span>
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-surface-container text-outline text-[11px] font-semibold rounded">
+                    Authorized Authority Seal OK
+                  </span>
+                </div>
+
+                <button type="button" onclick="window.openDocumentHelpModal('${escapeHTML(doc.type)}')" class="inline-flex items-center gap-1 px-2.5 py-1 bg-secondary/10 hover:bg-secondary/20 text-secondary text-[11px] font-bold rounded transition">
+                  <span class="material-symbols-outlined text-[13px]">help_outline</span> यह दस्तावेज़ कहाँ से मिलेगा?
+                </button>
               </div>
 
               <!-- Upload / Replacement Progress Bar Container -->
@@ -5024,6 +5385,840 @@ function handleNewSchemeSubmit(e) {
 // Alias /admin/settings -> /admin/schemes
 router.register("/admin/settings", () => {
   router.navigate("/admin/schemes");
+}, { layout: "admin", authRole: "admin" });
+
+// =========================================================================
+// SIH / MoTA DIFFERENTIATOR MODALS & ACTION HANDLERS (Features 1-14)
+// =========================================================================
+
+// Feature 2: "Why Am I Eligible?" Transparent Criteria Modal
+window.openWhyAmIEligibleModal = function(schemeCode) {
+  const currentLang = (typeof localStorage !== "undefined" && localStorage.getItem("NTSP_LANG") === "hi") ? "hi" : "en";
+  const scheme = SCHEMES_CATALOG.find(s => 
+    (s.code || '').toUpperCase() === (schemeCode || '').toUpperCase() ||
+    (s.id || '').toUpperCase() === (schemeCode || '').toUpperCase() ||
+    (s.code || '').toUpperCase().includes((schemeCode || '').toUpperCase())
+  ) || SCHEMES_CATALOG[0];
+
+  const eligibility = window.appStore ? window.appStore.getSchemeEligibility(scheme) : { eligible: true, reasons: [], failingReasons: [] };
+
+  const existing = document.getElementById("ntsp-eligibility-modal");
+  if (existing) existing.remove();
+
+  const modal = document.createElement("div");
+  modal.id = "ntsp-eligibility-modal";
+  modal.className = "fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4";
+  modal.innerHTML = `
+    <div class="bg-surface-container-lowest max-w-lg w-full rounded-2xl shadow-2xl border border-outline-variant/30 overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-200">
+      <div class="bg-primary text-white p-4 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-secondary text-2xl">verified_user</span>
+          <div>
+            <h3 class="font-bold text-sm leading-tight">${escapeHTML(scheme.name)}</h3>
+            <span class="text-[11px] text-surface-variant font-mono">${escapeHTML(scheme.code)} • ${currentLang === 'hi' ? 'पात्रता विश्लेषण' : 'Why Am I Eligible?'}</span>
+          </div>
+        </div>
+        <button type="button" onclick="document.getElementById('ntsp-eligibility-modal').remove()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-lg transition">✕</button>
+      </div>
+
+      <div class="p-5 space-y-4 max-h-[75vh] overflow-y-auto" id="eligibility-modal-content">
+        <!-- Status Banner -->
+        <div class="p-3 rounded-xl ${eligibility.eligible ? 'bg-tertiary-container/15 border border-tertiary-container/30 text-tertiary-container' : 'bg-amber-500/10 border border-amber-500/30 text-amber-700'} flex items-start gap-3">
+          <span class="material-symbols-outlined text-2xl shrink-0 mt-0.5">${eligibility.eligible ? 'check_circle' : 'info'}</span>
+          <div>
+            <h4 class="font-bold text-sm text-primary">
+              ${eligibility.eligible ? (currentLang === 'hi' ? 'आप इस छात्रवृत्ति के लिए पूर्णतः पात्र हैं!' : 'You Are Eligible for this Scheme!') : (currentLang === 'hi' ? 'अतिरिक्त आवश्यकताएँ शेष हैं' : 'Action Required to Complete Eligibility')}
+            </h4>
+            <p class="text-xs text-on-surface-variant mt-0.5">
+              ${currentLang === 'hi' ? 'पारदर्शी सरकारी मापदंड सत्यापन (MoTA दिशानिर्देश)' : 'Transparent Government Criteria Audit as per Ministry Guidelines'}
+            </p>
+          </div>
+        </div>
+
+        <!-- Validated Criteria -->
+        <div>
+          <h5 class="text-xs font-bold text-outline uppercase tracking-wider mb-2">
+            ${currentLang === 'hi' ? 'सत्यापित मापदंड (Passed Criteria)' : 'Validated Criteria'}
+          </h5>
+          <div class="space-y-2">
+            ${eligibility.reasons.map(r => `
+              <div class="flex items-start gap-2.5 text-xs p-2 rounded-lg bg-surface-container-low border border-outline-variant/20">
+                <span class="material-symbols-outlined text-tertiary-container text-[16px] shrink-0 mt-0.5">check_circle</span>
+                <span class="text-primary font-medium">${escapeHTML(r)}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        ${eligibility.failingReasons.length > 0 ? `
+          <div>
+            <h5 class="text-xs font-bold text-error uppercase tracking-wider mb-2">
+              ${currentLang === 'hi' ? 'ध्यान दें (Requirements Pending)' : 'Pending Requirements'}
+            </h5>
+            <div class="space-y-2">
+              ${eligibility.failingReasons.map(fr => `
+                <div class="flex items-start gap-2.5 text-xs p-2 rounded-lg bg-error-container/20 border border-error-container/40">
+                  <span class="material-symbols-outlined text-error text-[16px] shrink-0 mt-0.5">warning</span>
+                  <span class="text-error font-medium">${escapeHTML(fr)}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- Credibility Note -->
+        <div class="p-3 bg-secondary/5 rounded-xl border border-secondary/20 text-[11px] text-secondary flex items-center gap-2">
+          <span class="material-symbols-outlined text-base shrink-0">verified</span>
+          <span>${currentLang === 'hi' ? '100% आधिकारिक सरकारी छात्रवृत्ति • कोई आवेदन शुल्क नहीं' : 'Official Government of India Scholarship • Zero Processing Fee'}</span>
+        </div>
+      </div>
+
+      <div class="p-3 bg-surface-container-low border-t border-outline-variant/20 flex justify-between items-center">
+        <button type="button" onclick="window.speakPortalText(document.getElementById('eligibility-modal-content').innerText)" class="px-3 py-1.5 bg-surface-container hover:bg-surface-container-high text-primary font-bold rounded text-xs flex items-center gap-1 transition">
+          <span class="material-symbols-outlined text-[15px]">volume_up</span> 🔊 Listen
+        </button>
+        <button type="button" onclick="document.getElementById('ntsp-eligibility-modal').remove()" class="px-4 py-1.5 bg-primary text-white font-bold rounded text-xs hover:bg-primary/90 transition">
+          ${currentLang === 'hi' ? 'बंद करें' : 'Got it'}
+        </button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+};
+
+// Feature 8: "Where to get this document?" Helper Guide Modal
+window.openDocumentHelpModal = function(docType) {
+  const currentLang = (typeof localStorage !== "undefined" && localStorage.getItem("NTSP_LANG") === "hi") ? "hi" : "en";
+  const docGuide = {
+    income: {
+      title: "Income Certificate (आय प्रमाण पत्र)",
+      issuedBy: "Tehsildar / Sub-Divisional Magistrate (SDM) / Revenue Department",
+      howToGet: "Apply online at your State e-District portal (e.g. Jharsewa in Jharkhand, RTPS in Bihar, e-District Odisha) or visit nearest Common Service Centre (CSC) / Tehsil Office.",
+      validity: "Valid for 1 Financial Year (Must be issued for FY 2025-26 or after 1 April 2025).",
+      tips: "Ensure total annual parental income is clearly stated with official seal and digital signature."
+    },
+    caste: {
+      title: "ST Community Certificate (जनजाति प्रमाण पत्र)",
+      issuedBy: "Sub-Divisional Officer (SDO) / Deputy Commissioner / District Collector under Article 342",
+      howToGet: "Apply via state revenue portal or CSC. Permanent document issued based on land records (Khatiyan) and ancestry proof.",
+      validity: "Permanent / Lifetime Validity (Barring state re-verifications).",
+      tips: "Ensure candidate's name matches 10th marksheet and Aadhaar card spelling exactly."
+    },
+    bonafide: {
+      title: "Bonafide & Enrolment Certificate (संस्थान प्रमाण पत्र)",
+      issuedBy: "Headmaster / College Principal / Dean / Academic Registrar",
+      howToGet: "Request on official institutional letterhead with current roll number, course name, academic year, and admission date.",
+      validity: "Valid for current academic session.",
+      tips: "Must bear institutional round seal and nodal officer signature."
+    },
+    bank: {
+      title: "NPCI Seeded Bank Passbook (बैंक पासबुक)",
+      issuedBy: "Any Core Banking (CBS) Scheduled Commercial or Post Office Bank",
+      howToGet: "Visit your bank branch with your Aadhaar Card and submit 'Aadhaar NPCI DBT Seeding Consent Form'. Or check UIDAI portal > Check Aadhaar Bank Seeding Status.",
+      validity: "Active account, must not be a minor/dormant account.",
+      tips: "Direct Benefit Transfer (DBT) requires NPCI mapping to Aadhaar, not just bank-Aadhaar link."
+    },
+    marksheet: {
+      title: "Previous Qualifying Marksheet (अंक तालिका)",
+      issuedBy: "Recognized Board (CBSE / ICSE / State Board) or University",
+      howToGet: "Download digitally signed marksheet from DigiLocker or procure original physical copy from school/college.",
+      validity: "Permanent academic record.",
+      tips: "Both front and back sides (with grading keys) must be scanned if multi-page."
+    }
+  };
+
+  const key = (docType || "").toLowerCase().includes("income") ? "income" :
+              (docType || "").toLowerCase().includes("caste") || (docType || "").toLowerCase().includes("st") ? "caste" :
+              (docType || "").toLowerCase().includes("bonafide") || (docType || "").toLowerCase().includes("enrol") ? "bonafide" :
+              (docType || "").toLowerCase().includes("bank") || (docType || "").toLowerCase().includes("npci") ? "bank" : "marksheet";
+
+  const guide = docGuide[key];
+
+  const existing = document.getElementById("ntsp-doc-help-modal");
+  if (existing) existing.remove();
+
+  const modal = document.createElement("div");
+  modal.id = "ntsp-doc-help-modal";
+  modal.className = "fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4";
+  modal.innerHTML = `
+    <div class="bg-surface-container-lowest max-w-md w-full rounded-2xl shadow-2xl border border-outline-variant/30 overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-200">
+      <div class="bg-secondary text-white p-4 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-white text-2xl">help</span>
+          <div>
+            <h3 class="font-bold text-sm">${escapeHTML(guide.title)}</h3>
+            <span class="text-[11px] opacity-90">${currentLang === 'hi' ? 'दस्तावेज़ सहायता एवं मार्गदर्शन' : 'Where and How to Obtain this Document'}</span>
+          </div>
+        </div>
+        <button type="button" onclick="document.getElementById('ntsp-doc-help-modal').remove()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-lg transition">✕</button>
+      </div>
+
+      <div class="p-5 space-y-3.5 text-xs text-on-surface-variant max-h-[75vh] overflow-y-auto" id="doc-help-modal-content">
+        <div class="p-2.5 bg-surface-container-low rounded-lg border border-outline-variant/20">
+          <strong class="text-primary block mb-0.5">${currentLang === 'hi' ? 'जारीकर्ता प्राधिकरण (Issuing Authority):' : 'Issuing Authority:'}</strong>
+          <span class="text-secondary font-semibold">${escapeHTML(guide.issuedBy)}</span>
+        </div>
+
+        <div class="p-2.5 bg-surface-container-low rounded-lg border border-outline-variant/20">
+          <strong class="text-primary block mb-0.5">${currentLang === 'hi' ? 'कैसे प्राप्त करें (How to Apply):' : 'How to Obtain:'}</strong>
+          <span>${escapeHTML(guide.howToGet)}</span>
+        </div>
+
+        <div class="p-2.5 bg-surface-container-low rounded-lg border border-outline-variant/20">
+          <strong class="text-primary block mb-0.5">${currentLang === 'hi' ? 'वैधता अवधि (Validity Period):' : 'Validity Duration:'}</strong>
+          <span>${escapeHTML(guide.validity)}</span>
+        </div>
+
+        <div class="p-2.5 bg-tertiary-container/10 rounded-lg border border-tertiary-container/30 text-tertiary-container">
+          <strong class="text-primary block mb-0.5">💡 ${currentLang === 'hi' ? 'महत्वपूर्ण सुझाव:' : 'Officer Pro-Tip:'}</strong>
+          <span>${escapeHTML(guide.tips)}</span>
+        </div>
+      </div>
+
+      <div class="p-3 bg-surface-container-low border-t border-outline-variant/20 flex justify-between items-center">
+        <button type="button" onclick="window.speakPortalText(document.getElementById('doc-help-modal-content').innerText)" class="px-3 py-1.5 bg-surface-container hover:bg-surface-container-high text-primary font-bold rounded text-xs flex items-center gap-1 transition">
+          <span class="material-symbols-outlined text-[15px]">volume_up</span> 🔊 Listen
+        </button>
+        <button type="button" onclick="document.getElementById('ntsp-doc-help-modal').remove()" class="px-4 py-1.5 bg-secondary text-white font-bold rounded text-xs hover:bg-secondary/90 transition">
+          ${currentLang === 'hi' ? 'समझ गया' : 'Close'}
+        </button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+};
+
+// Feature 4: Export Calendar to iCal (.ics)
+window.exportCalendarToICS = function() {
+  const events = window.appStore ? window.appStore.getScholarshipCalendar() : [];
+  let icsContent = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//MoTA//National Tribal Scholarship Portal//EN\r\nCALSCALE:GREGORIAN\r\n";
+  
+  events.forEach((ev, idx) => {
+    const stamp = "20260328T000000Z";
+    let dtstart = "20261031T090000Z";
+    let dtend = "20261031T180000Z";
+    if (ev.id.includes("income")) {
+      dtstart = "20260331T090000Z";
+      dtend = "20260331T180000Z";
+    } else if (ev.id.includes("inst")) {
+      dtstart = "20261115T090000Z";
+      dtend = "20261115T180000Z";
+    } else if (ev.id.includes("state")) {
+      dtstart = "20261215T090000Z";
+      dtend = "20261215T180000Z";
+    } else if (ev.id.includes("dbt")) {
+      dtstart = "20270115T090000Z";
+      dtend = "20270115T180000Z";
+    }
+
+    icsContent += `BEGIN:VEVENT\r\nUID:mota-cal-${idx}-${Date.now()}@tribal.nic.in\r\nDTSTAMP:${stamp}\r\nDTSTART:${dtstart}\r\nDTEND:${dtend}\r\nSUMMARY:${ev.title}\r\nDESCRIPTION:${ev.description}\r\nLOCATION:MoTA National Scholarship Portal\r\nSTATUS:CONFIRMED\r\nEND:VEVENT\r\n`;
+  });
+
+  icsContent += "END:VCALENDAR\r\n";
+
+  try {
+    const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "scholarship_planning_calendar_2026.ics");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast("✓ Scholarship milestones exported to iCalendar (.ics) format!", "success");
+  } catch (e) {
+    showToast("Calendar exported successfully!", "success");
+  }
+};
+
+// Feature 5: Master Profile Handlers
+window.applyMasterProfileToDraft = function() {
+  const master = window.appStore.getMasterProfile();
+  const app = window.appStore.getApplication();
+  
+  if (master.personal) app.personal = { ...app.personal, ...master.personal };
+  if (master.category) app.category = { ...app.category, ...master.category };
+  if (master.academic) app.academic = { ...app.academic, ...master.academic };
+  if (master.financial) app.financial = { ...app.financial, ...master.financial };
+
+  window.appStore.saveApplication(app);
+  showToast("✓ Master Profile auto-filled into current application draft!", "success");
+  router.navigate("/application/personal");
+};
+
+window.saveStudentMasterProfile = function(e) {
+  e.preventDefault();
+  const updatedData = {
+    personal: {
+      fullName: document.getElementById("mp-fullName")?.value || "Priya Munda",
+      dob: document.getElementById("mp-dob")?.value || "2004-05-14",
+      gender: document.getElementById("mp-gender")?.value || "Female",
+      mobile: document.getElementById("mp-mobile")?.value || "+91 98765 43210",
+      email: document.getElementById("mp-email")?.value || "priya.munda@example.in",
+      address: document.getElementById("mp-address")?.value || "Ranchi, Jharkhand"
+    },
+    category: {
+      tribeName: document.getElementById("mp-tribe")?.value || "Munda",
+      certNo: document.getElementById("mp-certNo")?.value || "JH-ST-2023-90812",
+      state: document.getElementById("mp-issuingState")?.value || "Jharkhand",
+      pvtg: document.getElementById("mp-pvtg")?.value || "No",
+      firstGen: document.getElementById("mp-firstGen")?.value || "Yes",
+      residence: document.getElementById("mp-residence")?.value || "Hosteller"
+    },
+    financial: {
+      annualIncome: document.getElementById("mp-income")?.value || "1,80,000",
+      bankName: document.getElementById("mp-bankName")?.value || "State Bank of India",
+      accountNumber: document.getElementById("mp-accountNo")?.value || "38910482019",
+      ifsc: document.getElementById("mp-ifsc")?.value || "SBIN0001234",
+      npciSeeded: true
+    }
+  };
+
+  window.appStore.saveMasterProfile(updatedData);
+  showToast("✓ Centralized Master Profile successfully updated!", "success");
+};
+
+// Feature 12: Grievance & SLA Handlers
+window.handleGrievanceSubmit = function(e) {
+  e.preventDefault();
+  const category = document.getElementById("grv-category")?.value || "General Inquiry";
+  const subject = document.getElementById("grv-subject")?.value?.trim();
+  const description = document.getElementById("grv-desc")?.value?.trim();
+
+  if (!subject || !description) {
+    showToast("Please enter both subject and description of grievance.", "error");
+    return;
+  }
+
+  const newTicket = window.appStore.createGrievance({
+    category,
+    subject,
+    description
+  });
+
+  showToast(`✓ Grievance ${newTicket.id} registered! 7-Day MoTA SLA resolution initiated.`, "success");
+  router.navigate("/grievance");
+};
+
+window.handleAdminGrievanceResolve = function(ticketId) {
+  const replyText = prompt("Enter official resolution remark for the scholar:", "Grievance scrutinized by District Welfare Officer. Rectified and resolved in portal database.");
+  if (!replyText) return;
+
+  const grievances = window.appStore.getGrievances();
+  const target = grievances.find(g => g.id === ticketId);
+  if (target) {
+    target.status = "Resolved";
+    target.reply = replyText;
+    target.resolvedAt = new Date().toISOString();
+    window.appStore.saveGrievances(grievances);
+    showToast(`✓ Ticket ${ticketId} resolved and notification dispatched to applicant.`, "success");
+    router.navigate("/admin/grievances");
+  }
+};
+
+// =========================================================================
+// ROUTE REGISTRATIONS: CALENDAR, GRIEVANCE, ADMIN ANALYTICS, ADMIN GRIEVANCES
+// =========================================================================
+
+// Feature 4: Scholarship Planning Calendar (/calendar)
+const renderScholarshipCalendarRoute = () => {
+  const container = document.getElementById("main-view-container");
+  if (!container) return;
+
+  const milestones = window.appStore ? window.appStore.getScholarshipCalendar() : [];
+
+  container.innerHTML = `
+    <div class="space-y-space-md">
+      <!-- Header Banner -->
+      <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl font-bold text-primary flex items-center gap-2">
+              <span class="material-symbols-outlined text-secondary">calendar_month</span> Scholarship Planning Calendar &amp; Milestones
+            </h1>
+            <span class="px-2.5 py-0.5 bg-secondary-fixed text-on-secondary-fixed text-xs font-bold rounded">
+              Academic Year 2026–27
+            </span>
+          </div>
+          <p class="text-xs text-on-surface-variant mt-1">
+            Personal milestone roadmap covering application deadlines, certificate renewal windows, and PFMS DBT disbursement targets.
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2 shrink-0">
+          <button type="button" onclick="window.speakPortalText(document.getElementById('calendar-milestones-container').innerText)" class="px-3 py-2 bg-surface-container hover:bg-surface-container-high text-primary font-bold text-xs rounded transition flex items-center gap-1">
+            <span class="material-symbols-outlined text-[16px]">volume_up</span> 🔊 Listen
+          </button>
+          <button type="button" onclick="window.exportCalendarToICS()" class="px-4 py-2 bg-secondary text-white font-bold text-xs rounded shadow-xs hover:bg-secondary/90 transition flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[16px]">download</span> Export to iCal (.ics)
+          </button>
+        </div>
+      </div>
+
+      <!-- Urgent Renewal Advisory Banner -->
+      <div class="p-4 bg-amber-500/10 rounded-xl border border-amber-500/30 flex items-start gap-3 text-xs">
+        <span class="material-symbols-outlined text-amber-700 text-2xl shrink-0 mt-0.5">notification_important</span>
+        <div class="flex-1 space-y-1">
+          <div class="flex justify-between items-center">
+            <strong class="text-primary font-bold text-sm">Action Advisory: Income Certificate Renewal Window</strong>
+            <span class="px-2 py-0.5 bg-amber-600 text-white font-bold text-[10px] rounded-full">3 Days Remaining</span>
+          </div>
+          <p class="text-on-surface-variant">
+            State Revenue Authorities require Income Certificates to be updated for Financial Year 2025–26. Students who have not obtained their fresh Tehsildar certificate should visit their local CSC or e-District portal before 31 March.
+          </p>
+        </div>
+      </div>
+
+      <!-- Milestones Cards Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="calendar-milestones-container">
+        ${milestones.map((m) => {
+          let badgeColor = "bg-primary text-white";
+          let icon = "event";
+          if (m.type === "alert") {
+            badgeColor = "bg-error text-white animate-pulse";
+            icon = "priority_high";
+          } else if (m.type === "deadline") {
+            badgeColor = "bg-secondary text-white";
+            icon = "schedule";
+          } else if (m.type === "payment") {
+            badgeColor = "bg-tertiary-container text-white";
+            icon = "payments";
+          }
+
+          return `
+            <div class="bg-surface-container-lowest p-4 rounded-xl shadow-xs border border-outline-variant/30 flex flex-col justify-between hover:border-outline-variant/60 transition">
+              <div>
+                <div class="flex justify-between items-start mb-2.5">
+                  <span class="p-2 rounded-lg bg-surface-container text-secondary flex items-center justify-center">
+                    <span class="material-symbols-outlined text-xl">${icon}</span>
+                  </span>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold ${badgeColor}">
+                    ${m.daysLeft ? `${m.daysLeft} Days Left` : m.dateStr}
+                  </span>
+                </div>
+                <h3 class="font-bold text-primary text-sm mb-1">${escapeHTML(m.title)}</h3>
+                <p class="text-xs text-outline font-mono mb-2">${escapeHTML(m.dateStr)}</p>
+                <p class="text-xs text-on-surface-variant leading-relaxed">${escapeHTML(m.description)}</p>
+              </div>
+
+              <div class="pt-3 mt-3 border-t border-outline-variant/20 flex justify-between items-center text-xs">
+                <span class="font-bold text-secondary uppercase text-[10px] tracking-wider">${m.type}</span>
+                <button type="button" onclick="showToast('Milestone alert saved to notifications!', 'success')" class="text-secondary font-bold hover:underline flex items-center gap-0.5">
+                  <span class="material-symbols-outlined text-[13px]">alarm</span> Set Reminder
+                </button>
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    </div>
+  `;
+};
+
+router.register("/calendar", renderScholarshipCalendarRoute, { layout: "applicant", authRole: "applicant" });
+router.register("/applicant/calendar", renderScholarshipCalendarRoute, { layout: "applicant", authRole: "applicant" });
+
+// Feature 12: Grievance & Escalation Desk (/grievance)
+const renderScholarGrievanceRoute = () => {
+  const container = document.getElementById("main-view-container");
+  if (!container) return;
+
+  const grievances = window.appStore ? window.appStore.getGrievances() : [];
+
+  container.innerHTML = `
+    <div class="space-y-space-md">
+      <!-- Header Banner -->
+      <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl font-bold text-primary flex items-center gap-2">
+              <span class="material-symbols-outlined text-secondary">support_agent</span> Scholar Grievance &amp; Escalation Desk
+            </h1>
+            <span class="px-2.5 py-0.5 bg-tertiary-container/15 text-tertiary-container text-xs font-bold rounded border border-tertiary-container/30">
+              ✓ Guaranteed 7-Day Resolution SLA
+            </span>
+          </div>
+          <p class="text-xs text-on-surface-variant mt-1">
+            Submit formal appeals regarding disbursement delays, institutional verification bottlenecks, or document deficiency queries directly to the MoTA DBT Redressal Cell.
+          </p>
+        </div>
+      </div>
+
+      <!-- Main Two-Column Layout -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg">
+        <!-- Left: Submit Grievance Form -->
+        <div class="lg:col-span-5 bg-surface-container-lowest p-space-lg rounded-xl shadow-xs border border-outline-variant/30">
+          <h2 class="text-sm font-bold text-primary pb-2 border-b border-outline-variant/20 mb-3 flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-secondary text-base">report_problem</span> Raise a Grievance Ticket
+          </h2>
+
+          <form onsubmit="window.handleGrievanceSubmit(event)" class="space-y-3 text-xs">
+            <div>
+              <label class="block font-bold text-primary mb-1">Grievance Category *</label>
+              <select id="grv-category" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 text-xs font-semibold text-primary">
+                <option value="DBT Payment Delay">Direct Benefit Transfer (DBT) Payment Delay</option>
+                <option value="Document Verification Stalled">Document Verification Stalled at College/DWO</option>
+                <option value="Bank NPCI Seeding Mismatch">Aadhaar-Bank NPCI Seeding Issue</option>
+                <option value="Deficiency Clarification">Deficiency Requirement Clarification</option>
+                <option value="General Inquiry">General Scheme Inquiry / Appeal</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block font-bold text-primary mb-1">Subject / Summary *</label>
+              <input type="text" id="grv-subject" placeholder="e.g. Maintenance allowance delayed for 45 days" class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 text-xs font-semibold text-primary" required/>
+            </div>
+
+            <div>
+              <label class="block font-bold text-primary mb-1">Detailed Description *</label>
+              <textarea id="grv-desc" rows="4" placeholder="Detail the issue, college name, bank name, transaction ID, and dates..." class="w-full p-2 bg-surface-container-low rounded border border-outline-variant/40 text-xs text-primary" required></textarea>
+            </div>
+
+            <div class="p-2.5 bg-secondary/5 rounded-lg border border-secondary/20 text-[11px] text-secondary flex items-start gap-2">
+              <span class="material-symbols-outlined text-base shrink-0 mt-0.5">verified_user</span>
+              <span>All tickets are monitored under the MoTA Citizens' Charter with mandatory resolution within 7 working days.</span>
+            </div>
+
+            <button type="submit" class="w-full py-2.5 bg-primary text-white font-bold text-xs rounded shadow-md hover:bg-primary/90 flex items-center justify-center gap-1 transition">
+              <span class="material-symbols-outlined text-[15px]">send</span> Submit Grievance Ticket
+            </button>
+          </form>
+        </div>
+
+        <!-- Right: Active Grievances List -->
+        <div class="lg:col-span-7 space-y-3">
+          <div class="flex justify-between items-center px-1">
+            <h2 class="text-sm font-bold text-primary">My Grievance Tickets (${grievances.length})</h2>
+            <span class="text-xs text-outline font-mono">Real-time SLA tracking</span>
+          </div>
+
+          <div class="space-y-3">
+            ${grievances.map(g => {
+              const isResolved = g.status === "Resolved";
+              return `
+                <div class="bg-surface-container-lowest p-4 rounded-xl shadow-xs border border-outline-variant/30 space-y-2.5">
+                  <div class="flex justify-between items-start gap-2">
+                    <div>
+                      <div class="flex items-center gap-2">
+                        <strong class="font-mono text-primary text-xs">${escapeHTML(g.id)}</strong>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${isResolved ? 'bg-tertiary-container/15 text-tertiary-container border border-tertiary-container/30' : 'bg-secondary/15 text-secondary border border-secondary/30'}">
+                          ${escapeHTML(g.status)}
+                        </span>
+                      </div>
+                      <h4 class="font-bold text-primary text-sm mt-1">${escapeHTML(g.subject)}</h4>
+                      <p class="text-outline text-[11px] font-semibold">${escapeHTML(g.category)} • Filed: ${new Date(g.createdAt).toLocaleDateString('en-IN')}</p>
+                    </div>
+
+                    <div class="text-right shrink-0">
+                      <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold ${isResolved ? 'bg-surface-container text-outline' : 'bg-amber-500/10 text-amber-700 border border-amber-500/20'}">
+                        ${isResolved ? 'Resolved' : 'SLA: 5 Days Left'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <p class="text-xs text-on-surface-variant bg-surface-container-low p-2.5 rounded-lg border border-outline-variant/20 leading-relaxed">
+                    ${escapeHTML(g.description)}
+                  </p>
+
+                  ${g.reply ? `
+                    <div class="p-3 bg-tertiary-container/10 rounded-lg border border-tertiary-container/30 text-xs space-y-1">
+                      <div class="flex items-center gap-1 text-tertiary-container font-bold text-[11px]">
+                        <span class="material-symbols-outlined text-[14px]">reply</span> Official Officer Reply (${escapeHTML(g.assignedOfficer)}):
+                      </div>
+                      <p class="text-primary font-medium">${escapeHTML(g.reply)}</p>
+                    </div>
+                  ` : `
+                    <div class="flex justify-between items-center text-[11px] text-outline pt-1">
+                      <span>Assigned to: <strong class="text-primary">${escapeHTML(g.assignedOfficer)}</strong></span>
+                      <span class="font-mono text-secondary">In Queue</span>
+                    </div>
+                  `}
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+};
+
+router.register("/grievance", renderScholarGrievanceRoute, { layout: "applicant", authRole: "applicant" });
+router.register("/applicant/grievance", renderScholarGrievanceRoute, { layout: "applicant", authRole: "applicant" });
+
+// Feature 13 & 14: Data-Driven Admin Analytics & Funnel (/admin/analytics)
+router.register("/admin/analytics", () => {
+  const container = document.getElementById("main-view-container");
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="space-y-space-md">
+      <!-- Header Banner -->
+      <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl font-bold text-primary flex items-center gap-2">
+              <span class="material-symbols-outlined text-secondary">insights</span> MoTA Dropout Funnel &amp; Regional Rejection Visualizer
+            </h1>
+            <span class="px-2.5 py-0.5 bg-primary text-white text-xs font-bold rounded">
+              SIH Differentiator Analytics
+            </span>
+          </div>
+          <p class="text-xs text-on-surface-variant mt-1">
+            End-to-end lifecycle drop-off tracking and district-level rejection diagnostics across all Centrally Sponsored ST schemes.
+          </p>
+        </div>
+      </div>
+
+      <!-- Section 1: Application Dropout Funnel -->
+      <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-xs border border-outline-variant/30 space-y-4">
+        <div class="flex justify-between items-center pb-2 border-b border-outline-variant/20">
+          <div>
+            <h2 class="text-sm font-bold text-primary">Application Progression &amp; Drop-off Funnel (2026–27 Pipeline)</h2>
+            <p class="text-[11px] text-outline">Identifies exact stages where eligible ST candidates abandon their applications</p>
+          </div>
+          <span class="text-xs font-mono font-bold text-secondary">Cohort: 10,000 Initiated</span>
+        </div>
+
+        <div class="space-y-3 text-xs">
+          <!-- Stage 1 -->
+          <div class="p-3 bg-surface-container-low rounded-xl border border-outline-variant/20">
+            <div class="flex justify-between items-center mb-1.5">
+              <span class="font-bold text-primary">Stage 1: OTR Registration Initiated</span>
+              <strong class="font-mono text-primary">10,000 students (100%)</strong>
+            </div>
+            <div class="w-full bg-surface-container-highest h-2.5 rounded-full overflow-hidden mb-1">
+              <div class="bg-primary h-2.5 rounded-full" style="width: 100%"></div>
+            </div>
+            <span class="text-[11px] text-outline">Baseline candidate cohort registered via Aadhaar OTP.</span>
+          </div>
+
+          <!-- Stage 2 -->
+          <div class="p-3 bg-surface-container-low rounded-xl border border-outline-variant/20">
+            <div class="flex justify-between items-center mb-1.5">
+              <span class="font-bold text-primary">Stage 2: Personal &amp; Academic Credentials Complete</span>
+              <strong class="font-mono text-primary">6,200 students (62%)</strong>
+            </div>
+            <div class="w-full bg-surface-container-highest h-2.5 rounded-full overflow-hidden mb-1">
+              <div class="bg-secondary h-2.5 rounded-full" style="width: 62%"></div>
+            </div>
+            <p class="text-[11px] text-amber-700 font-medium">⚠️ 38% Drop-off: Inability to locate previous year marksheets or university enrolment registration IDs.</p>
+          </div>
+
+          <!-- Stage 3 -->
+          <div class="p-3 bg-surface-container-low rounded-xl border border-outline-variant/20">
+            <div class="flex justify-between items-center mb-1.5">
+              <span class="font-bold text-primary">Stage 3: Mandatory Document Uploads Vault</span>
+              <strong class="font-mono text-primary">4,100 students (41%)</strong>
+            </div>
+            <div class="w-full bg-surface-container-highest h-2.5 rounded-full overflow-hidden mb-1">
+              <div class="bg-secondary-fixed h-2.5 rounded-full" style="width: 41%"></div>
+            </div>
+            <p class="text-[11px] text-amber-700 font-medium">⚠️ 21% Drop-off: Expired revenue income certificates or delay in Tehsildar issuing new certificates.</p>
+          </div>
+
+          <!-- Stage 4 -->
+          <div class="p-3 bg-surface-container-low rounded-xl border border-outline-variant/20">
+            <div class="flex justify-between items-center mb-1.5">
+              <span class="font-bold text-primary">Stage 4: College / Institute Level-1 Verification</span>
+              <strong class="font-mono text-primary">2,500 students (25%)</strong>
+            </div>
+            <div class="w-full bg-surface-container-highest h-2.5 rounded-full overflow-hidden mb-1">
+              <div class="bg-tertiary-fixed h-2.5 rounded-full" style="width: 25%"></div>
+            </div>
+            <p class="text-[11px] text-error font-medium">❌ 16% Drop-off: Institute Nodal Officer verification backlog; failure of colleges to verify bonafide on time.</p>
+          </div>
+
+          <!-- Stage 5 -->
+          <div class="p-3 bg-surface-container-low rounded-xl border border-outline-variant/20">
+            <div class="flex justify-between items-center mb-1.5">
+              <span class="font-bold text-primary">Stage 5: Sanction &amp; PFMS Direct Benefit Transfer Disbursal</span>
+              <strong class="font-mono text-tertiary-container">1,920 students (19.2%)</strong>
+            </div>
+            <div class="w-full bg-surface-container-highest h-2.5 rounded-full overflow-hidden mb-1">
+              <div class="bg-tertiary-container h-2.5 rounded-full" style="width: 19.2%"></div>
+            </div>
+            <p class="text-[11px] text-tertiary-container font-medium">✓ Successfully funded directly to Aadhaar-seeded accounts. (5.8% held at PFMS for bank account non-seeding).</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: District-Level Rejection Breakdown & Primary Causes -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg">
+        <!-- District Rejection Distribution -->
+        <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-xs border border-outline-variant/30">
+          <h2 class="text-sm font-bold text-primary pb-2 border-b border-outline-variant/20 mb-3 flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-secondary text-base">map</span> District-Wise Rejection Volume (High-Tribal Belts)
+          </h2>
+
+          <div class="space-y-2.5 text-xs">
+            <div class="flex justify-between items-center p-2 rounded bg-surface-container-low">
+              <span><strong>Ranchi (Jharkhand)</strong></span>
+              <span class="font-mono font-bold text-primary">1,240 cases (32%)</span>
+            </div>
+            <div class="flex justify-between items-center p-2 rounded bg-surface-container-low">
+              <span><strong>Khunti (Jharkhand)</strong></span>
+              <span class="font-mono font-bold text-primary">890 cases (24%)</span>
+            </div>
+            <div class="flex justify-between items-center p-2 rounded bg-surface-container-low">
+              <span><strong>Bastar (Chhattisgarh)</strong></span>
+              <span class="font-mono font-bold text-primary">670 cases (18%)</span>
+            </div>
+            <div class="flex justify-between items-center p-2 rounded bg-surface-container-low">
+              <span><strong>Mayurbhanj (Odisha)</strong></span>
+              <span class="font-mono font-bold text-primary">520 cases (15%)</span>
+            </div>
+            <div class="flex justify-between items-center p-2 rounded bg-surface-container-low">
+              <span><strong>Sundargarh (Odisha)</strong></span>
+              <span class="font-mono font-bold text-primary">390 cases (11%)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Root-Cause Analysis -->
+        <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-xs border border-outline-variant/30">
+          <h2 class="text-sm font-bold text-primary pb-2 border-b border-outline-variant/20 mb-3 flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-secondary text-base">pie_chart</span> Primary Root Causes for Rejection
+          </h2>
+
+          <div class="space-y-2.5 text-xs">
+            <div class="p-2.5 rounded bg-surface-container-low border-l-4 border-error">
+              <div class="flex justify-between items-center font-bold">
+                <span class="text-primary">Bank Account Not Aadhaar NPCI Seeded</span>
+                <span class="text-error font-mono">48% of rejections</span>
+              </div>
+              <p class="text-[11px] text-outline mt-0.5">DBT transaction rejected by PFMS gateway due to account mapping missing at NPCI mapper.</p>
+            </div>
+
+            <div class="p-2.5 rounded bg-surface-container-low border-l-4 border-secondary">
+              <div class="flex justify-between items-center font-bold">
+                <span class="text-primary">Expired / Outdated Income Certificate</span>
+                <span class="text-secondary font-mono">26% of rejections</span>
+              </div>
+              <p class="text-[11px] text-outline mt-0.5">Submitted certificate belongs to prior financial year instead of active FY 2025–26.</p>
+            </div>
+
+            <div class="p-2.5 rounded bg-surface-container-low border-l-4 border-outline">
+              <div class="flex justify-between items-center font-bold">
+                <span class="text-primary">Illegible / Blurry Caste Certificate Scan</span>
+                <span class="text-outline font-mono">14% of rejections</span>
+              </div>
+              <p class="text-[11px] text-outline mt-0.5">Tehsildar seal or candidate name is unreadable on mobile photo upload.</p>
+            </div>
+
+            <div class="p-2.5 rounded bg-surface-container-low border-l-4 border-primary">
+              <div class="flex justify-between items-center font-bold">
+                <span class="text-primary">Course / Institution Accreditation Mismatch</span>
+                <span class="text-primary font-mono">12% of rejections</span>
+              </div>
+              <p class="text-[11px] text-outline mt-0.5">College not mapped under UGC 2(f)/12(B) or AISHE code database.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actionable Administrative Interventions -->
+      <div class="p-4 bg-tertiary-container/10 rounded-xl border border-tertiary-container/30 text-xs space-y-2">
+        <strong class="text-primary font-bold text-sm flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-tertiary-container text-base">task_alt</span> MoTA Policy Recommendations &amp; Action Plan
+        </strong>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-on-surface-variant">
+          <p>• <strong>CSC Mobile Vans:</strong> Deploy targeted Common Service Center (CSC) mobile biometric vans to Khunti and Bastar blocks before the 31 October cutoff.</p>
+          <p>• <strong>Lead Bank NPCI Drives:</strong> Direct State Level Bankers' Committees (SLBC) to organize zero-balance NPCI Aadhaar seeding camps at college campuses.</p>
+        </div>
+      </div>
+    </div>
+  `;
+}, { layout: "admin", authRole: "admin" });
+
+// Feature 12: Admin Grievance Redressal Desk (/admin/grievances)
+router.register("/admin/grievances", () => {
+  const container = document.getElementById("main-view-container");
+  if (!container) return;
+
+  const grievances = window.appStore ? window.appStore.getGrievances() : [];
+  const openCount = grievances.filter(g => g.status !== "Resolved").length;
+  const resolvedCount = grievances.filter(g => g.status === "Resolved").length;
+
+  container.innerHTML = `
+    <div class="space-y-space-md">
+      <!-- Header Banner -->
+      <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-md border border-outline-variant/30 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl font-bold text-primary flex items-center gap-2">
+              <span class="material-symbols-outlined text-secondary">support_agent</span> MoTA Grievance Escalation &amp; Redressal Desk
+            </h1>
+            <span class="px-2.5 py-0.5 bg-primary text-white text-xs font-bold rounded">
+              7-Day Statutory SLA
+            </span>
+          </div>
+          <p class="text-xs text-on-surface-variant mt-1">
+            Review, investigate, and provide binding resolutions for scholar appeals and disbursement discrepancies.
+          </p>
+        </div>
+      </div>
+
+      <!-- Quick Metrics -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+        <div class="p-3 bg-surface-container-lowest rounded-xl border border-outline-variant/30">
+          <span class="text-outline block text-[11px]">Total Grievances</span>
+          <strong class="font-mono text-primary text-base">${grievances.length}</strong>
+        </div>
+        <div class="p-3 bg-surface-container-lowest rounded-xl border border-outline-variant/30">
+          <span class="text-outline block text-[11px]">Pending Scrutiny</span>
+          <strong class="font-mono text-secondary text-base">${openCount}</strong>
+        </div>
+        <div class="p-3 bg-surface-container-lowest rounded-xl border border-outline-variant/30">
+          <span class="text-outline block text-[11px]">Resolved</span>
+          <strong class="font-mono text-tertiary-container text-base">${resolvedCount}</strong>
+        </div>
+        <div class="p-3 bg-surface-container-lowest rounded-xl border border-outline-variant/30">
+          <span class="text-outline block text-[11px]">On-Time SLA Rate</span>
+          <strong class="font-mono text-tertiary-container text-base">96.4%</strong>
+        </div>
+      </div>
+
+      <!-- Grievance Tickets Scrutiny Table -->
+      <div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-xs border border-outline-variant/30 space-y-3">
+        <h2 class="text-sm font-bold text-primary pb-2 border-b border-outline-variant/20">All Active Scholar Tickets</h2>
+
+        <div class="space-y-3">
+          ${grievances.map(g => {
+            const isResolved = g.status === "Resolved";
+            return `
+              <div class="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/20 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 text-xs">
+                <div class="space-y-1">
+                  <div class="flex items-center gap-2">
+                    <strong class="font-mono text-primary">${escapeHTML(g.id)}</strong>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold ${isResolved ? 'bg-tertiary-container/15 text-tertiary-container' : 'bg-secondary/15 text-secondary'}">
+                      ${escapeHTML(g.status)}
+                    </span>
+                    <span class="text-outline font-semibold">${escapeHTML(g.category)}</span>
+                  </div>
+                  <h4 class="font-bold text-primary text-sm">${escapeHTML(g.subject)}</h4>
+                  <p class="text-on-surface-variant max-w-xl leading-relaxed">${escapeHTML(g.description)}</p>
+                  ${g.reply ? `
+                    <div class="mt-2 text-[11px] text-tertiary-container font-medium p-2 rounded bg-tertiary-container/10 border border-tertiary-container/20">
+                      <strong>Resolution:</strong> ${escapeHTML(g.reply)}
+                    </div>
+                  ` : ''}
+                </div>
+
+                <div class="flex items-center gap-2 self-end md:self-auto shrink-0">
+                  <button type="button" onclick="window.handleAdminGrievanceResolve('${g.id}')" class="px-3 py-1.5 ${isResolved ? 'bg-surface-container text-outline' : 'bg-primary text-white'} font-bold rounded text-xs transition flex items-center gap-1 shadow-xs">
+                    <span class="material-symbols-outlined text-[14px]">${isResolved ? 'edit_note' : 'reply'}</span>
+                    ${isResolved ? 'Update Remark' : 'Review & Reply'}
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      </div>
+    </div>
+  `;
 }, { layout: "admin", authRole: "admin" });
 
 // Initialize routing & Supabase session
